@@ -12,18 +12,22 @@ const navLinks = [
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [prevPath, setPrevPath] = useState('')
   const location = useLocation()
+
+  // Close mobile menu on route change
+  if (location.pathname !== prevPath) {
+    setPrevPath(location.pathname)
+    if (isMobileOpen) {
+      setIsMobileOpen(false)
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileOpen(false)
-  }, [location.pathname])
 
   return (
     <nav
