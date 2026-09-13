@@ -17,9 +17,10 @@ public class TestAttemptSummaryDto
     public int Id { get; set; }
     public int TestId { get; set; }
     public string TestTitle { get; set; } = string.Empty;
-    public string StudentId { get; set; } = string.Empty;
+    public string? StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
-    public string StudentEmail { get; set; } = string.Empty;
+    public string? StudentEmail { get; set; }
+    public bool IsGuest { get; set; }
     public decimal Score { get; set; }
     public int CorrectCount { get; set; }
     public int TotalQuestions { get; set; }

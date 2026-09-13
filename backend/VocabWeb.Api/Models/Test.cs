@@ -26,6 +26,15 @@ public class Test
     public int TotalQuestions { get; set; } = 20;
     public int? TimeLimitMinutes { get; set; }
     public decimal PassScore { get; set; } = 5.0m;
+    
+    // Access Controls
+    public string PublicCode { get; set; } = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+    public bool RequiresAccessCode { get; set; } = false;
+    public string? AccessCodeHash { get; set; }
+    public int? MaxAttempts { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? Deadline { get; set; }
+
     public bool IsArchived { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

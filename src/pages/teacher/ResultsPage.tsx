@@ -8,9 +8,10 @@ interface AttemptItem {
   id: number
   testId: number
   testTitle: string
-  studentId: string
+  studentId?: string
   studentName: string
-  studentEmail: string
+  studentEmail?: string
+  isGuest?: boolean
   score: number
   correctCount: number
   totalQuestions: number
@@ -276,9 +277,18 @@ export const ResultsPage: React.FC = () => {
                 {filteredAttempts.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/70 transition-colors">
                     <td className="py-3.5 px-4">
-                      <div>
-                        <p className="font-semibold text-gray-900">{item.studentName || 'Học sinh'}</p>
-                        <p className="text-xs text-gray-400">{item.studentEmail}</p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="font-semibold text-gray-900 flex items-center gap-2">
+                            {item.studentName || 'Học sinh'}
+                            {item.isGuest && (
+                              <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 border border-gray-200 text-[10px] font-bold uppercase rounded">
+                                Khách
+                              </span>
+                            )}
+                          </p>
+                          {item.studentEmail && <p className="text-xs text-gray-400">{item.studentEmail}</p>}
+                        </div>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">

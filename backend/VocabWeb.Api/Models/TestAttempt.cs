@@ -6,8 +6,15 @@ public class TestAttempt
     public int TestId { get; set; }
     public Test Test { get; set; } = null!;
 
-    public string StudentId { get; set; } = string.Empty;
-    public ApplicationUser Student { get; set; } = null!;
+    public string? StudentId { get; set; }
+    public ApplicationUser? Student { get; set; }
+
+    public string? GuestDisplayName { get; set; }
+    public string? GuestSessionId { get; set; }
+    public string? ParticipantDisplayNameSnapshot { get; set; }
+
+    public int AttemptNumber { get; set; } = 1;
+    public string Status { get; set; } = "IN_PROGRESS"; // IN_PROGRESS, SUBMITTED, ABANDONED
 
     public decimal Score { get; set; } // 0.0 to 10.0 scale, 1 decimal place
     public int CorrectCount { get; set; }

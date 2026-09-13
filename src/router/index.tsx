@@ -19,6 +19,11 @@ import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 import { ClassPage } from '../pages/learn/ClassPage'
 import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
 
+// Test Access
+import { TestAccessPage } from '../pages/learn/test/TestAccessPage'
+import { TestIntroPage } from '../pages/learn/test/TestIntroPage'
+import { TestSessionPage } from '../pages/learn/test/TestSessionPage'
+
 // Teacher System
 import { TeacherLayout } from '../components/layout/TeacherLayout'
 import { DashboardPage } from '../pages/teacher/DashboardPage'
@@ -81,6 +86,11 @@ export const AppRouter = () => {
           {/* Learn / Student Areas */}
           <Route path="/class/:slug" element={<ClassPage />} />
           <Route path="/learn/vocabulary/:id" element={<VocabularyReviewPage />} />
+          
+          {/* Test Access Flow */}
+          <Route path="/test/:publicCode" element={<TestAccessPage />} />
+          <Route path="/test/:publicCode/intro" element={<TestIntroPage />} />
+          <Route path="/test/:publicCode/session/:attemptId" element={<TestSessionPage />} />
 
           {/* Teacher Full-Stack Protected Area */}
           <Route path="/teacher" element={<TeacherRoute />}>

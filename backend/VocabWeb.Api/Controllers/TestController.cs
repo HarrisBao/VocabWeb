@@ -61,6 +61,11 @@ public class TestController : ControllerBase
                 TotalQuestions = t.TotalQuestions,
                 PassScore = t.PassScore,
                 TimeLimitMinutes = t.TimeLimitMinutes,
+                PublicCode = t.PublicCode,
+                RequiresAccessCode = t.RequiresAccessCode,
+                MaxAttempts = t.MaxAttempts,
+                StartDate = t.StartDate,
+                Deadline = t.Deadline,
                 AttemptCount = t.Attempts.Count,
                 CreatedAt = t.CreatedAt
             })
@@ -98,6 +103,11 @@ public class TestController : ControllerBase
             TotalQuestions = test.TotalQuestions,
             PassScore = test.PassScore,
             TimeLimitMinutes = test.TimeLimitMinutes,
+            PublicCode = test.PublicCode,
+            RequiresAccessCode = test.RequiresAccessCode,
+            MaxAttempts = test.MaxAttempts,
+            StartDate = test.StartDate,
+            Deadline = test.Deadline,
             AttemptCount = test.Attempts.Count,
             CreatedAt = test.CreatedAt
         });
@@ -136,8 +146,18 @@ public class TestController : ControllerBase
             TotalQuestions = dto.TotalQuestions,
             PassScore = dto.PassScore,
             TimeLimitMinutes = dto.TimeLimitMinutes,
+            RequiresAccessCode = dto.RequiresAccessCode,
+            MaxAttempts = dto.MaxAttempts,
+            StartDate = dto.StartDate,
+            Deadline = dto.Deadline,
             CreatedAt = DateTime.UtcNow
         };
+        
+        if (dto.RequiresAccessCode && !string.IsNullOrWhiteSpace(dto.NewAccessCode))
+        {
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Test>();
+            test.AccessCodeHash = hasher.HashPassword(test, dto.NewAccessCode.Trim());
+        }
 
         _db.Tests.Add(test);
         await _db.SaveChangesAsync();
@@ -154,6 +174,11 @@ public class TestController : ControllerBase
             TotalQuestions = test.TotalQuestions,
             PassScore = test.PassScore,
             TimeLimitMinutes = test.TimeLimitMinutes,
+            PublicCode = test.PublicCode,
+            RequiresAccessCode = test.RequiresAccessCode,
+            MaxAttempts = test.MaxAttempts,
+            StartDate = test.StartDate,
+            Deadline = test.Deadline,
             AttemptCount = 0,
             CreatedAt = test.CreatedAt
         });
@@ -181,6 +206,23 @@ public class TestController : ControllerBase
         test.TotalQuestions = dto.TotalQuestions;
         test.PassScore = dto.PassScore;
         test.TimeLimitMinutes = dto.TimeLimitMinutes;
+        test.RequiresAccessCode = dto.RequiresAccessCode;
+        test.MaxAttempts = dto.MaxAttempts;
+        test.StartDate = dto.StartDate;
+        test.Deadline = dto.Deadline;
+
+        if (dto.RequiresAccessCode)
+        {
+            if (!string.IsNullOrWhiteSpace(dto.NewAccessCode))
+            {
+                var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Test>();
+                test.AccessCodeHash = hasher.HashPassword(test, dto.NewAccessCode.Trim());
+            }
+        }
+        else
+        {
+            test.AccessCodeHash = null;
+        }
 
         await _db.SaveChangesAsync();
 
