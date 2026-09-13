@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Data;
 using VocabWeb.Api.DTOs.Learn;
 using VocabWeb.Api.Models;
+using VocabWeb.Api.Models.ActivityEngine;
+using VocabWeb.Api.Services.ActivityEngine;
 
 namespace VocabWeb.Api.Controllers;
 
@@ -12,10 +14,12 @@ namespace VocabWeb.Api.Controllers;
 public class LearnController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IQuestionGenerationService _questionGeneration;
 
-    public LearnController(AppDbContext context)
+    public LearnController(AppDbContext context, IQuestionGenerationService questionGeneration)
     {
         _context = context;
+        _questionGeneration = questionGeneration;
     }
 
     [HttpGet("classes/{slug}")]
@@ -141,5 +145,108 @@ public class LearnController : ControllerBase
         };
 
         return Ok(dto);
+    }
+
+    [HttpGet("vocabulary/{id}/practice/availability")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<PracticeAvailabilityDto>>> GetPracticeAvailability(int id)
+    {
+        var vocabSet = await _context.VocabularySets
+            .Include(vs => vs.Items)
+            .FirstOrDefaultAsync(vs => vs.Id == id);
+
+        if (vocabSet == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
+
+        var definitions = _questionGeneration.GetActivityDefinitions();
+        var result = new List<PracticeAvailabilityDto>();
+
+        foreach (var def in definitions)
+        {
+            bool isAvailable = true;
+            string reason = "";
+
+            // Evaluate simple rules
+            if (vocabSet.Items.Count == 0)
+            {
+                isAvailable = false;
+                reason = "ChÆ°a cÃ³ tá»« vá»±ng.";
+            }
+            else if (def.RequiredInputs.Contains("Meaning") && vocabSet.Items.Count < 2)
+            {
+                // Activities needing distractors usually require at least 2 words
+                if (def.Type == ActivityType.WORD_TO_MEANING || def.Type == ActivityType.MEANING_TO_WORD || def.Type == ActivityType.LISTEN_TO_MEANING || def.Type == ActivityType.LISTEN_TO_WORD)
+                {
+                    isAvailable = false;
+                    reason = "Cáº§n Ã­t nháº¥t 2 tá»« vá»±ng Ä‘á»ƒ táº¡o cÃ¡c Ä‘Ã¡p Ã¡n lá»±a chá» n.";
+                }
+            }
+            
+            // Generate a dummy session just to test if QuestionGenerationService can actually fulfill it
+            if (isAvailable)
+            {
+                var questions = _questionGeneration.GenerateQuestions(vocabSet.Items.ToList(), new List<ActivityType> { def.Type });
+                if (questions.Count == 0)
+                {
+                    isAvailable = false;
+                    reason = "KhÃ´ng Ä‘á»§ dá»¯ liá»‡u há»£p lá»‡ cho hoáº¡t Ä‘á»™ng nÃ y.";
+                }
+            }
+
+            result.Add(new PracticeAvailabilityDto
+            {
+                Type = def.Type,
+                Name = def.Name,
+                IsAvailable = isAvailable,
+                Reason = reason
+            });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpGet("vocabulary/{id}/practice/generate")]
+    [AllowAnonymous]
+    public async Task<ActionResult<CurrentStageDto>> GeneratePracticeSession(int id, [FromQuery] ActivityType type)
+    {
+        var vocabSet = await _context.VocabularySets
+            .Include(vs => vs.Items)
+            .FirstOrDefaultAsync(vs => vs.Id == id);
+
+        if (vocabSet == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
+
+        var questions = _questionGeneration.GenerateQuestions(vocabSet.Items.ToList(), new List<ActivityType> { type });
+        
+        var safeQuestions = questions.Select((q, index) =>
+        {
+            var targetItem = vocabSet.Items.FirstOrDefault(v => v.Id == q.TargetVocabularyItemId);
+            return new StudentQuestionDto
+            {
+                Id = q.TargetVocabularyItemId.ToString(), // No need to protect for practice
+                QuestionIndex = index,
+                Prompt = q.QuestionPrompt,
+                TargetWord = targetItem?.Word,
+                TargetMeaning = targetItem?.Meaning,
+                AudioBehavior = q.AudioBehavior.ToString(),
+                Options = q.Options?.Select(o => new StudentQuestionOptionDto
+                {
+                    VocabularyItemId = o.VocabularyItemId,
+                    Text = o.Text
+                }).ToList()
+            };
+        }).ToList();
+
+        var definitions = _questionGeneration.GetActivityDefinitions();
+        var label = definitions.FirstOrDefault(d => d.Type == type)?.Name ?? type.ToString();
+
+        return Ok(new CurrentStageDto
+        {
+            StageIndex = 0,
+            TotalStages = 1,
+            ActivityType = type.ToString(),
+            ActivityTypeLabel = label,
+            TimeLimitSnapshotMinutes = null, // No timer for practice
+            StartedAt = DateTime.UtcNow,
+            Questions = safeQuestions
+        });
     }
 }
