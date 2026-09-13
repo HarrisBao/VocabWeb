@@ -15,6 +15,10 @@ import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 // Lessons
 import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 
+// Learn
+import { ClassPage } from '../pages/learn/ClassPage'
+import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
+
 // Teacher System
 import { TeacherLayout } from '../components/layout/TeacherLayout'
 import { DashboardPage } from '../pages/teacher/DashboardPage'
@@ -73,6 +77,10 @@ export const AppRouter = () => {
 
           {/* Forgot Password */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+          {/* Learn / Student Areas */}
+          <Route path="/class/:slug" element={<ClassPage />} />
+          <Route path="/learn/vocabulary/:id" element={<VocabularyReviewPage />} />
 
           {/* Teacher Full-Stack Protected Area */}
           <Route path="/teacher" element={<TeacherRoute />}>
