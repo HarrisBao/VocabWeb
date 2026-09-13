@@ -83,7 +83,7 @@ public class LearnTestSessionController : ControllerBase
             return BadRequest(new { message = "Lượt làm bài đã kết thúc." });
 
         var sequence = attempt.ActivitySequenceSnapshot.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-        
+
         if (attempt.CurrentStageIndex >= sequence.Count)
         {
             return BadRequest(new { message = "Đã hoàn thành tất cả hoạt động. Vui lòng nộp bài." });
@@ -104,8 +104,8 @@ public class LearnTestSessionController : ControllerBase
 
         // Map to safe DTO without CorrectAnswer
         var questionProtector = _protector.CreateProtector("QuestionTarget");
-        
-        var safeQuestions = generatedQuestions.Select((q, index) => 
+
+        var safeQuestions = generatedQuestions.Select((q, index) =>
         {
             var targetItem = attempt.Test.VocabularySet.Items.FirstOrDefault(v => v.Id == q.TargetVocabularyItemId);
             return new StudentQuestionDto
@@ -148,7 +148,7 @@ public class LearnTestSessionController : ControllerBase
             return BadRequest(new { message = "Thứ tự hoạt động không đồng bộ." });
 
         var sequence = attempt.ActivitySequenceSnapshot.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-        
+
         if (stageIndex >= sequence.Count)
             return BadRequest(new { message = "Hoạt động không tồn tại." });
 
@@ -158,11 +158,15 @@ public class LearnTestSessionController : ControllerBase
 
         // Map DTO to Engine Submission format
         var questionProtector = _protector.CreateProtector("QuestionTarget");
-        var engineSubmissions = dto.Answers.Select(a => {
+        var engineSubmissions = dto.Answers.Select(a =>
+        {
             int targetId = 0;
-            try {
+            try
+            {
                 targetId = int.Parse(questionProtector.Unprotect(a.QuestionId));
-            } catch {
+            }
+            catch
+            {
                 // Invalid question ID, skip or treat as technical failure
             }
             return new UserAnswerSubmission
@@ -185,7 +189,7 @@ public class LearnTestSessionController : ControllerBase
         foreach (var sub in engineSubmissions)
         {
             var result = evaluation.Results.FirstOrDefault(r => r.QuestionId == sub.QuestionId);
-            
+
             bool isCorrect = result?.IsCorrect ?? false;
             string correctAnswer = result?.CorrectAnswer ?? string.Empty;
 
@@ -240,18 +244,18 @@ public class LearnTestSessionController : ControllerBase
             return BadRequest(new { message = "Lượt làm bài đã kết thúc." });
 
         var sequence = attempt.ActivitySequenceSnapshot.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-        
+
         if (attempt.CurrentStageIndex < sequence.Count)
             return BadRequest(new { message = "Bạn chưa hoàn thành tất cả các hoạt động." });
 
         var answers = attempt.Answers;
-        int totalValid = answers.Count(a => a.UserAnswer != "[TECHNICAL_FAILURE]"); 
-        
+        int totalValid = answers.Count(a => a.UserAnswer != "[TECHNICAL_FAILURE]");
+
         int totalCorrect = answers.Count(a => a.IsCorrect && a.UserAnswer != "[TECHNICAL_FAILURE]");
         int totalAttempted = totalValid;
 
-        decimal finalScore = totalAttempted > 0 
-            ? Math.Round((decimal)totalCorrect / totalAttempted * 10, 1) 
+        decimal finalScore = totalAttempted > 0
+            ? Math.Round((decimal)totalCorrect / totalAttempted * 10, 1)
             : 0;
 
         attempt.Score = finalScore;
@@ -263,7 +267,8 @@ public class LearnTestSessionController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { 
+        return Ok(new
+        {
             score = attempt.Score,
             correctCount = attempt.CorrectCount,
             totalQuestions = attempt.TotalQuestions, // total defined by teacher

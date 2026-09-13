@@ -19,7 +19,7 @@ public class TokenService : ITokenService
     public string GenerateAccessToken(ApplicationUser user, string role)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
-        var secretKey = _configuration["JWT_KEY"] ?? jwtSettings["Key"] 
+        var secretKey = _configuration["JWT_KEY"] ?? jwtSettings["Key"]
             ?? "IeltsThanhLeLearning_SecretKey_For_Jwt_Token_Validation_2026_Minimum256Bits!";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -67,7 +67,7 @@ public class TokenService : ITokenService
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
         var jwtSettings = _configuration.GetSection("Jwt");
-        var secretKey = _configuration["JWT_KEY"] ?? jwtSettings["Key"] 
+        var secretKey = _configuration["JWT_KEY"] ?? jwtSettings["Key"]
             ?? "IeltsThanhLeLearning_SecretKey_For_Jwt_Token_Validation_2026_Minimum256Bits!";
 
         var tokenValidationParameters = new TokenValidationParameters

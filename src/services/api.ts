@@ -1,6 +1,6 @@
 // API Client with JWT Bearer authentication and token refresh handling
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7035/api'
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean

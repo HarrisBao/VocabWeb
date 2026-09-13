@@ -42,7 +42,7 @@ public class QuestionGenerationService : IQuestionGenerationService
         for (int i = 0; i < totalQuestions; i++)
         {
             var activityType = requestedActivityTypes[Rng.Next(requestedActivityTypes.Count)];
-            
+
             // Random target, ensuring it's not the exact same as the previous one if possible
             var validTargets = vocabularyItems.Where(v => v.Id != previousTargetId).ToList();
             if (!validTargets.Any()) validTargets = vocabularyItems; // Fallback if only 1 item exists
@@ -50,7 +50,7 @@ public class QuestionGenerationService : IQuestionGenerationService
             var target = validTargets[Rng.Next(validTargets.Count)];
 
             var question = GenerateSingleQuestion(target, activityType, vocabularyItems);
-            
+
             // Question Quality Rule: if question generation failed (e.g., not enough valid distractors), skip and try to regenerate?
             // To simplify for this phase, if it returns null, we just continue (or we could retry). Let's retry a few times.
             int retries = 0;
@@ -124,7 +124,7 @@ public class QuestionGenerationService : IQuestionGenerationService
                 q.QuestionPrompt = "Nghe và gõ lại từ";
                 q.AudioBehavior = AudioBehavior.AUTO_PLAY_TARGET;
                 break;
-                
+
             case ActivityType.WORD_TO_TYPE_MEANING:
                 q.QuestionPrompt = target.Word;
                 break;

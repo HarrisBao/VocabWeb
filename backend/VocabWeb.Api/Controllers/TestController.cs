@@ -37,13 +37,20 @@ public class TestController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTests()
+    public async Task<IActionResult> GetTests([FromQuery] int? classId)
     {
         var teacherId = GetTeacherId();
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
-        var tests = await _db.Tests
-            .Where(t => t.TeacherId == teacherId && !t.IsArchived)
+        var query = _db.Tests
+            .Where(t => t.TeacherId == teacherId && !t.IsArchived);
+
+        if (classId.HasValue)
+        {
+            query = query.Where(t => t.ClassId == classId.Value);
+        }
+
+        var tests = await query
             .Include(t => t.VocabularySet)
             .Include(t => t.Class)
             .Include(t => t.Attempts)
@@ -152,7 +159,7 @@ public class TestController : ControllerBase
             Deadline = dto.Deadline,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         if (dto.RequiresAccessCode && !string.IsNullOrWhiteSpace(dto.NewAccessCode))
         {
             var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Test>();

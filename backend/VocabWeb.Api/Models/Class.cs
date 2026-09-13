@@ -8,7 +8,7 @@ public class Class
     public string? Description { get; set; }
     public string FixedLinkToken { get; set; } = Guid.NewGuid().ToString("N");
     public bool IsArchived { get; set; } = false;
-    
+
     // Access control
     public bool AllowGuestAccess { get; set; } = true;
     public bool RequireLogin { get; set; } = false;

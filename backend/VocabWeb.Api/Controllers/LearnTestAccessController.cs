@@ -71,7 +71,7 @@ public class LearnTestAccessController : ControllerBase
         bool isLoggedIn = User.Identity?.IsAuthenticated ?? false;
         string? studentId = null;
         string? participantName;
-        
+
         if (isLoggedIn)
         {
             studentId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -96,7 +96,7 @@ public class LearnTestAccessController : ControllerBase
 
             var hasher = new PasswordHasher<Test>();
             var result = hasher.VerifyHashedPassword(test, test.AccessCodeHash ?? "", dto.AccessCode.Trim());
-            
+
             if (result != PasswordVerificationResult.Success)
             {
                 return BadRequest(new { message = "Mã vào bài chưa đúng." });
@@ -197,8 +197,8 @@ public class LearnTestAccessController : ControllerBase
             StudentId = string.IsNullOrEmpty(ticketData.StudentId) ? null : ticketData.StudentId,
             GuestSessionId = ticketData.GuestSessionId,
             GuestDisplayName = ticketData.GuestDisplayName,
-            ParticipantDisplayNameSnapshot = !string.IsNullOrEmpty(ticketData.StudentId) 
-                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh") 
+            ParticipantDisplayNameSnapshot = !string.IsNullOrEmpty(ticketData.StudentId)
+                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh")
                 : ticketData.GuestDisplayName,
             AttemptNumber = attemptsCount + 1,
             Status = "IN_PROGRESS",

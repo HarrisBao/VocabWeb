@@ -15,13 +15,13 @@ public class TestDto
     public int TotalQuestions { get; set; }
     public int? TimeLimitMinutes { get; set; }
     public decimal PassScore { get; set; }
-    
+
     public string PublicCode { get; set; } = string.Empty;
     public bool RequiresAccessCode { get; set; }
     public int? MaxAttempts { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? Deadline { get; set; }
-    
+
     public int AttemptCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -48,15 +48,15 @@ public class CreateTestDto
 
     [Range(0, 10, ErrorMessage = "Điểm đạt thang 10")]
     public decimal PassScore { get; set; } = 5.0m;
-    
+
     public bool RequiresAccessCode { get; set; }
-    
+
     [MaxLength(64)]
     public string? NewAccessCode { get; set; }
-    
+
     [Range(1, 100)]
     public int? MaxAttempts { get; set; }
-    
+
     public DateTime? StartDate { get; set; }
     public DateTime? Deadline { get; set; }
 }

@@ -13,10 +13,10 @@ public class StudentQuestionDto
     public string Prompt { get; set; } = string.Empty;
     public string? TargetWord { get; set; }
     public string? TargetMeaning { get; set; }
-    
+
     // Do NOT include CorrectAnswer here!
     public List<StudentQuestionOptionDto>? Options { get; set; }
-    
+
     // Used for pronunciation / listening
     public string? AudioBehavior { get; set; }
 }

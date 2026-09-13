@@ -27,7 +27,7 @@ interface ClassLesson {
   level: string
   wordCount: number
   isPinned: boolean
-  isVisible: boolean
+  isHidden: boolean
   displayOrder: number
 }
 
@@ -59,6 +59,14 @@ interface ClassDetails {
 
 type TabType = 'lessons' | 'members' | 'results' | 'settings'
 
+interface TestItem {
+  id: number
+  title: string
+  description?: string
+  enabledTypes: string[]
+  attemptCount: number
+}
+
 export const ClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('lessons')
@@ -81,9 +89,22 @@ export const ClassDetailPage: React.FC = () => {
 
   const [copiedLink, setCopiedLink] = useState(false)
 
+  const [classTests, setClassTests] = useState<TestItem[]>([])
+  const [togglingVisibilityId, setTogglingVisibilityId] = useState<number | null>(null)
+
   useEffect(() => {
     fetchClassDetails()
+    fetchClassTests()
   }, [id])
+
+  const fetchClassTests = async () => {
+    try {
+      const data = await api.get<TestItem[]>(`/teacher/test?classId=${id}`)
+      setClassTests(data)
+    } catch {
+      // Ignore
+    }
+  }
 
   const fetchClassDetails = async () => {
     setLoading(true)
@@ -142,12 +163,37 @@ export const ClassDetailPage: React.FC = () => {
     }
   }
 
-  const handleToggleVisibility = async (lessonId: number) => {
+  const handleToggleVisibility = async (lessonId: number, currentIsHidden: boolean) => {
+    if (togglingVisibilityId === lessonId) return
+    setTogglingVisibilityId(lessonId)
+
+    // Optimistic Update
+    setCls(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        lessons: prev.lessons.map(l =>
+          l.id === lessonId ? { ...l, isHidden: !currentIsHidden } : l
+        )
+      }
+    })
+
     try {
       await api.put(`/teacher/class/${id}/lessons/${lessonId}/visibility`)
-      fetchClassDetails()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Thao tác thất bại.' })
+      // Rollback
+      setCls(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          lessons: prev.lessons.map(l =>
+            l.id === lessonId ? { ...l, isHidden: currentIsHidden } : l
+          )
+        }
+      })
+      setMessage({ type: 'error', text: err.message || 'Thay đổi trạng thái hiển thị thất bại.' })
+    } finally {
+      setTogglingVisibilityId(null)
     }
   }
 
@@ -299,7 +345,7 @@ export const ClassDetailPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            📊 Kết quả
+            📝 Bài kiểm tra
           </button>
 
           <button
@@ -332,11 +378,35 @@ export const ClassDetailPage: React.FC = () => {
                             📌 Đã ghim
                           </span>
                         )}
-                        {!lesson.isVisible && (
-                          <span className="text-xs bg-gray-100 text-gray-600 font-bold px-2 py-0.5 rounded">
-                            👁️ Đang ẩn
-                          </span>
-                        )}
+                        <button
+                          onClick={() => handleToggleVisibility(lesson.id, lesson.isHidden)}
+                          disabled={togglingVisibilityId === lesson.id}
+                          className={[
+                            'flex items-center gap-1 px-2 py-0.5 rounded font-bold text-xs transition-colors border',
+                            lesson.isHidden
+                              ? 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                              : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+                            togglingVisibilityId === lesson.id ? 'opacity-70 cursor-wait' : 'cursor-pointer'
+                          ].join(' ')}
+                          title={lesson.isHidden ? 'Hiện bài này cho học sinh' : 'Ẩn bài này khỏi học sinh'}
+                        >
+                          {togglingVisibilityId === lesson.id ? (
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : lesson.isHidden ? (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
+                          <span>{lesson.isHidden ? 'Đang ẩn' : 'Đang hiện'}</span>
+                        </button>
                       </div>
                     </div>
 
@@ -359,17 +429,6 @@ export const ClassDetailPage: React.FC = () => {
                         title={lesson.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
                       >
                         📌
-                      </button>
-
-                      <button
-                        onClick={() => handleToggleVisibility(lesson.id)}
-                        className={[
-                          'p-1.5 rounded-lg text-xs font-semibold border transition-colors',
-                          !lesson.isVisible ? 'bg-gray-100 text-gray-600 border-gray-200' : 'text-green-700 bg-green-50 border-green-200'
-                        ].join(' ')}
-                        title={!lesson.isVisible ? 'Bỏ ẩn' : 'Ẩn khỏi học sinh'}
-                      >
-                        {!lesson.isVisible ? '🙈' : '👁️'}
                       </button>
 
                       <button
@@ -449,27 +508,65 @@ export const ClassDetailPage: React.FC = () => {
         </Card>
       )}
 
-      {/* TAB 3: KẾT QUẢ */}
+      {/* TAB 3: BÀI KIỂM TRA */}
       {activeTab === 'results' && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Kết quả bài kiểm tra của lớp</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Bảng điểm và lịch sử làm bài thi của học sinh trong lớp.</p>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bài kiểm tra của lớp</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Danh sách các bài kiểm tra được gán cho lớp này.</p>
             </div>
-          </div>
-
-          <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-xl">
-            <div className="text-3xl mb-3">📊</div>
-            <p className="text-sm font-bold text-gray-700 mb-1">Chưa có dữ liệu bài làm</p>
-            <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
-              Kết quả làm bài sẽ tự động hiển thị tại đây khi học viên hoàn thành các bài kiểm tra được gán vào lớp.
-            </p>
             <Link to="/teacher/tests/new">
-              <Button size="sm" variant="secondary">+ Tạo bài kiểm tra cho lớp này</Button>
+              <Button size="sm" variant="secondary" className="font-bold">+ Tạo bài kiểm tra</Button>
             </Link>
           </div>
-        </Card>
+
+          {classTests.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classTests.map((test) => (
+                <Card key={test.id} className="p-5 flex flex-col justify-between border border-gray-200">
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-1 leading-tight line-clamp-2">
+                      {test.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-3 line-clamp-1">{test.description}</p>
+                    <div className="space-y-1.5 text-xs text-gray-600 mb-4 border-y border-gray-100 py-3">
+                      <div className="flex justify-between">
+                        <span>Số hoạt động:</span>
+                        <span className="font-bold">{test.enabledTypes.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Số lượt làm:</span>
+                        <span className="font-bold text-gray-900">{test.attemptCount} lượt</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Link to={`/teacher/tests/${test.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" fullWidth>
+                        Xem bài
+                      </Button>
+                    </Link>
+                    <Link to={`/teacher/tests/${test.id}/results`} className="flex-1">
+                      <Button variant="primary" size="sm" fullWidth>
+                        Kết quả
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-xl bg-white">
+              <div className="text-3xl mb-3">📝</div>
+              <p className="text-sm font-bold text-gray-700 mb-1">Lớp chưa có bài kiểm tra</p>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
+                Chưa có bài kiểm tra nào được gán cho lớp này.
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* TAB 4: CÀI ĐẶT */}
@@ -591,3 +688,4 @@ export const ClassDetailPage: React.FC = () => {
     </div>
   )
 }
+

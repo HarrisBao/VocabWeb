@@ -109,223 +109,223 @@ public class QuestionEngineService : IQuestionEngineService
         {
             case "WORD_TO_MEANING":
             case "LISTEN_TO_MEANING":
-            {
-                // Word -> Choose Meaning: Target is Word, choices are Meanings.
-                // RULE: Deduplicate meanings across options. Same normalized meaning must appear only once!
-                var distractors = allItems
-                    .Where(i => !i.Word.Equals(target.Word, StringComparison.OrdinalIgnoreCase))
-                    .Where(i => NormalizeMeaning(i.Meaning) != targetNormMeaning)
-                    .GroupBy(i => NormalizeMeaning(i.Meaning))
-                    .Select(g => g.First().Meaning)
-                    .OrderBy(_ => rng.Next())
-                    .Take(3)
-                    .ToList();
-
-                if (distractors.Count < 3)
                 {
-                    // Insufficient valid distractors; skip target for this question type
-                    return null;
+                    // Word -> Choose Meaning: Target is Word, choices are Meanings.
+                    // RULE: Deduplicate meanings across options. Same normalized meaning must appear only once!
+                    var distractors = allItems
+                        .Where(i => !i.Word.Equals(target.Word, StringComparison.OrdinalIgnoreCase))
+                        .Where(i => NormalizeMeaning(i.Meaning) != targetNormMeaning)
+                        .GroupBy(i => NormalizeMeaning(i.Meaning))
+                        .Select(g => g.First().Meaning)
+                        .OrderBy(_ => rng.Next())
+                        .Take(3)
+                        .ToList();
+
+                    if (distractors.Count < 3)
+                    {
+                        // Insufficient valid distractors; skip target for this question type
+                        return null;
+                    }
+
+                    var options = new List<string>(distractors) { target.Meaning }
+                        .OrderBy(_ => rng.Next())
+                        .ToList();
+
+                    var isAudio = type == "LISTEN_TO_MEANING";
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = isAudio ? "Nghe và chọn ý nghĩa đúng của từ:" : $"Chọn ý nghĩa chính xác cho từ: \"{target.Word}\"",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Meaning,
+                        Options = options,
+                        AudioText = target.Word
+                    };
                 }
-
-                var options = new List<string>(distractors) { target.Meaning }
-                    .OrderBy(_ => rng.Next())
-                    .ToList();
-
-                var isAudio = type == "LISTEN_TO_MEANING";
-                return new GeneratedQuestionDto
-                {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = isAudio ? "Nghe và chọn ý nghĩa đúng của từ:" : $"Chọn ý nghĩa chính xác cho từ: \"{target.Word}\"",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Meaning,
-                    Options = options,
-                    AudioText = target.Word
-                };
-            }
 
             case "MEANING_TO_WORD":
             case "LISTEN_TO_WORD":
-            {
-                // Meaning -> Choose Word: Target is Meaning, choices are Words.
-                // RULE: Words sharing the same target Meaning must NOT compete against one another in distractors!
-                var distractors = allItems
-                    .Where(i => !i.Word.Equals(target.Word, StringComparison.OrdinalIgnoreCase))
-                    .Where(i => NormalizeMeaning(i.Meaning) != targetNormMeaning) // Distractor must have different meaning!
-                    .GroupBy(i => i.Word.Trim().ToLowerInvariant())
-                    .Select(g => g.First().Word)
-                    .OrderBy(_ => rng.Next())
-                    .Take(3)
-                    .ToList();
-
-                if (distractors.Count < 3)
                 {
-                    return null;
+                    // Meaning -> Choose Word: Target is Meaning, choices are Words.
+                    // RULE: Words sharing the same target Meaning must NOT compete against one another in distractors!
+                    var distractors = allItems
+                        .Where(i => !i.Word.Equals(target.Word, StringComparison.OrdinalIgnoreCase))
+                        .Where(i => NormalizeMeaning(i.Meaning) != targetNormMeaning) // Distractor must have different meaning!
+                        .GroupBy(i => i.Word.Trim().ToLowerInvariant())
+                        .Select(g => g.First().Word)
+                        .OrderBy(_ => rng.Next())
+                        .Take(3)
+                        .ToList();
+
+                    if (distractors.Count < 3)
+                    {
+                        return null;
+                    }
+
+                    var options = new List<string>(distractors) { target.Word }
+                        .OrderBy(_ => rng.Next())
+                        .ToList();
+
+                    var isAudio = type == "LISTEN_TO_WORD";
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = isAudio ? "Nghe và chọn từ vựng đúng:" : $"Chọn từ vựng tiếng Anh tương ứng với nghĩa: \"{target.Meaning}\"",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        Options = options,
+                        AudioText = target.Word
+                    };
                 }
-
-                var options = new List<string>(distractors) { target.Word }
-                    .OrderBy(_ => rng.Next())
-                    .ToList();
-
-                var isAudio = type == "LISTEN_TO_WORD";
-                return new GeneratedQuestionDto
-                {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = isAudio ? "Nghe và chọn từ vựng đúng:" : $"Chọn từ vựng tiếng Anh tương ứng với nghĩa: \"{target.Meaning}\"",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    Options = options,
-                    AudioText = target.Word
-                };
-            }
 
             case "MEANING_TO_TYPE_WORD":
-            {
-                return new GeneratedQuestionDto
                 {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = $"Nhập từ tiếng Anh tương ứng với nghĩa: \"{target.Meaning}\"",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    Options = new List<string>()
-                };
-            }
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = $"Nhập từ tiếng Anh tương ứng với nghĩa: \"{target.Meaning}\"",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        Options = new List<string>()
+                    };
+                }
 
             case "LISTEN_TO_TYPE_WORD":
-            {
-                return new GeneratedQuestionDto
                 {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = "Nghe phát âm và gõ lại từ vựng chính xác:",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    AudioText = target.Word,
-                    Options = new List<string>()
-                };
-            }
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = "Nghe phát âm và gõ lại từ vựng chính xác:",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        AudioText = target.Word,
+                        Options = new List<string>()
+                    };
+                }
 
             case "WORD_TO_TYPE_MEANING":
-            {
-                return new GeneratedQuestionDto
                 {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = $"Nhập ý nghĩa tiếng Việt của từ: \"{target.Word}\"",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Meaning,
-                    Options = new List<string>()
-                };
-            }
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = $"Nhập ý nghĩa tiếng Việt của từ: \"{target.Word}\"",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Meaning,
+                        Options = new List<string>()
+                    };
+                }
 
             case "MISSING_LETTERS":
-            {
-                // Mask 1 or 2 characters from the word
-                var word = target.Word.Trim();
-                if (word.Length <= 3) return null;
-
-                var chars = word.ToCharArray();
-                int maskCount = word.Length > 6 ? 2 : 1;
-                var maskIndices = Enumerable.Range(1, word.Length - 2).OrderBy(_ => rng.Next()).Take(maskCount).ToList();
-                foreach (var idx in maskIndices)
                 {
-                    chars[idx] = '_';
+                    // Mask 1 or 2 characters from the word
+                    var word = target.Word.Trim();
+                    if (word.Length <= 3) return null;
+
+                    var chars = word.ToCharArray();
+                    int maskCount = word.Length > 6 ? 2 : 1;
+                    var maskIndices = Enumerable.Range(1, word.Length - 2).OrderBy(_ => rng.Next()).Take(maskCount).ToList();
+                    foreach (var idx in maskIndices)
+                    {
+                        chars[idx] = '_';
+                    }
+
+                    var maskedWord = new string(chars);
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = $"Điền chữ cái còn thiếu để hoàn thiện từ: {maskedWord} ({target.Meaning})",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        Options = new List<string>()
+                    };
                 }
-
-                var maskedWord = new string(chars);
-                return new GeneratedQuestionDto
-                {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = $"Điền chữ cái còn thiếu để hoàn thiện từ: {maskedWord} ({target.Meaning})",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    Options = new List<string>()
-                };
-            }
 
             case "UNSCRAMBLE_WORD":
-            {
-                var word = target.Word.Trim().ToLowerInvariant();
-                if (word.Length < 4) return null;
-
-                var scrambled = new string(word.OrderBy(_ => rng.Next()).ToArray());
-                if (scrambled == word)
                 {
-                    scrambled = new string(word.Reverse().ToArray());
+                    var word = target.Word.Trim().ToLowerInvariant();
+                    if (word.Length < 4) return null;
+
+                    var scrambled = new string(word.OrderBy(_ => rng.Next()).ToArray());
+                    if (scrambled == word)
+                    {
+                        scrambled = new string(word.Reverse().ToArray());
+                    }
+
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = $"Sắp xếp lại các chữ cái sau thành từ đúng: {string.Join(" ", scrambled.ToCharArray())} (Nghĩa: {target.Meaning})",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        Options = new List<string>()
+                    };
                 }
 
-                return new GeneratedQuestionDto
-                {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = $"Sắp xếp lại các chữ cái sau thành từ đúng: {string.Join(" ", scrambled.ToCharArray())} (Nghĩa: {target.Meaning})",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    Options = new List<string>()
-                };
-            }
-
             case "MATCH_WORD_MEANING":
-            {
-                // MATCHING RULE: In a matching batch, only one item with the same normalized Meaning may appear!
-                var batchCandidates = allItems
-                    .GroupBy(i => NormalizeMeaning(i.Meaning))
-                    .Select(g => g.First()) // deduplicate identical meanings
-                    .OrderBy(_ => rng.Next())
-                    .Take(4)
-                    .ToList();
-
-                if (batchCandidates.Count < 3) return null;
-
-                var pairs = batchCandidates.Select(b => new MatchingPairDto
                 {
-                    Word = b.Word,
-                    Meaning = b.Meaning
-                }).ToList();
+                    // MATCHING RULE: In a matching batch, only one item with the same normalized Meaning may appear!
+                    var batchCandidates = allItems
+                        .GroupBy(i => NormalizeMeaning(i.Meaning))
+                        .Select(g => g.First()) // deduplicate identical meanings
+                        .OrderBy(_ => rng.Next())
+                        .Take(4)
+                        .ToList();
 
-                return new GeneratedQuestionDto
-                {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = "Ghép cặp từ vựng tiếng Anh với nghĩa tương ứng:",
-                    MatchingPairs = pairs,
-                    CorrectAnswer = string.Join(";", pairs.Select(p => $"{p.Word}={p.Meaning}"))
-                };
-            }
+                    if (batchCandidates.Count < 3) return null;
+
+                    var pairs = batchCandidates.Select(b => new MatchingPairDto
+                    {
+                        Word = b.Word,
+                        Meaning = b.Meaning
+                    }).ToList();
+
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = "Ghép cặp từ vựng tiếng Anh với nghĩa tương ứng:",
+                        MatchingPairs = pairs,
+                        CorrectAnswer = string.Join(";", pairs.Select(p => $"{p.Word}={p.Meaning}"))
+                    };
+                }
 
             case "PRONUNCIATION":
-            {
-                return new GeneratedQuestionDto
                 {
-                    QuestionIndex = questionIndex,
-                    Type = type,
-                    TypeLabel = label,
-                    Prompt = $"Phát âm từ sau qua microphone: \"{target.Word}\" {target.IPA}",
-                    TargetWord = target.Word,
-                    TargetMeaning = target.Meaning,
-                    CorrectAnswer = target.Word,
-                    AudioText = target.Word,
-                    Options = new List<string>()
-                };
-            }
+                    return new GeneratedQuestionDto
+                    {
+                        QuestionIndex = questionIndex,
+                        Type = type,
+                        TypeLabel = label,
+                        Prompt = $"Phát âm từ sau qua microphone: \"{target.Word}\" {target.IPA}",
+                        TargetWord = target.Word,
+                        TargetMeaning = target.Meaning,
+                        CorrectAnswer = target.Word,
+                        AudioText = target.Word,
+                        Options = new List<string>()
+                    };
+                }
 
             default:
                 return null;

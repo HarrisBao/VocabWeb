@@ -34,7 +34,7 @@ import { ClassDetailPage } from '../pages/teacher/ClassDetailPage'
 import { TestListPage } from '../pages/teacher/TestListPage'
 import { TestCreatePage } from '../pages/teacher/TestCreatePage'
 import { TestDetailPage } from '../pages/teacher/TestDetailPage'
-import { ResultsPage } from '../pages/teacher/ResultsPage'
+import { ClassTestResultsPage } from '../pages/teacher/ClassTestResultsPage'
 import { ProfilePage } from '../pages/teacher/ProfilePage'
 
 // 404
@@ -104,8 +104,8 @@ export const AppRouter = () => {
             <Route path="tests" element={<TestListPage />} />
             <Route path="tests/new" element={<TestCreatePage />} />
             <Route path="tests/:id" element={<TestDetailPage />} />
-            <Route path="tests/:id/results" element={<ResultsPage />} />
-            <Route path="results" element={<ResultsPage />} />
+            <Route path="tests/:id/results" element={<ClassTestResultsPage />} />
+            <Route path="results" element={<Navigate to="/teacher/classes" replace />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 

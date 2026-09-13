@@ -25,7 +25,7 @@ public class LearnController : ControllerBase
         // For slug, we can use the Code or FixedLinkToken. The UI uses /class/dp-x82h
         // Let's assume slug maps to FixedLinkToken for guest access, or Code (if unique).
         // The teacher class link is often the FixedLinkToken. We'll check both.
-        
+
         var cls = await _context.Classes
             .Include(c => c.Lessons.Where(l => !l.IsHidden))
                 .ThenInclude(l => l.VocabularySet)
@@ -84,13 +84,13 @@ public class LearnController : ControllerBase
 
         // Check access
         bool hasAccess = false;
-        
+
         // 1. If it's public
         if (vocabSet.IsPublic)
         {
             hasAccess = true;
         }
-        
+
         // 2. If it's linked to a class that the user has access to
         if (!hasAccess && classId.HasValue)
         {
@@ -110,7 +110,7 @@ public class LearnController : ControllerBase
                 }
             }
         }
-        
+
         // 3. If it's their own set (teacher)
         if (!hasAccess && User.Identity!.IsAuthenticated)
         {

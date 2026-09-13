@@ -26,7 +26,7 @@ public class Test
     public int TotalQuestions { get; set; } = 20;
     public int? TimeLimitMinutes { get; set; }
     public decimal PassScore { get; set; } = 5.0m;
-    
+
     // Access Controls
     public string PublicCode { get; set; } = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
     public bool RequiresAccessCode { get; set; } = false;

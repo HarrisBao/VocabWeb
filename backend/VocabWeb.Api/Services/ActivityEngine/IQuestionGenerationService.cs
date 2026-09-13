@@ -15,7 +15,7 @@ public interface IQuestionGenerationService
     /// <param name="totalQuestions">Tổng số câu hỏi mong muốn.</param>
     /// <returns>Danh sách câu hỏi đã được tạo hợp lệ.</returns>
     List<GeneratedQuestion> GenerateQuestions(List<VocabularyItem> vocabularyItems, List<ActivityType> requestedActivityTypes, int totalQuestions);
-    
+
     /// <summary>
     /// Trả về metadata cấu hình của các hoạt động.
     /// </summary>
