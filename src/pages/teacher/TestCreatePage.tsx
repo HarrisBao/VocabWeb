@@ -4,20 +4,7 @@ import { api } from '../../services/api'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-
-const CANONICAL_TEST_TYPES = [
-  { id: 'WORD_TO_MEANING', label: '1. Từ → Chọn nghĩa', desc: 'Hiển thị từ tiếng Anh, chọn nghĩa tiếng Việt chính xác' },
-  { id: 'MEANING_TO_WORD', label: '2. Nghĩa → Chọn từ', desc: 'Hiển thị nghĩa tiếng Việt, chọn từ tiếng Anh tương ứng' },
-  { id: 'LISTEN_TO_WORD', label: '3. Nghe → Chọn từ', desc: 'Phát âm thanh từ vựng, chọn từ tiếng Anh đúng' },
-  { id: 'LISTEN_TO_MEANING', label: '4. Nghe → Chọn nghĩa', desc: 'Phát âm thanh từ vựng, chọn nghĩa tiếng Việt đúng' },
-  { id: 'MEANING_TO_TYPE_WORD', label: '5. Nghĩa → Điền từ', desc: 'Cho nghĩa tiếng Việt, học sinh gõ lại từ tiếng Anh' },
-  { id: 'LISTEN_TO_TYPE_WORD', label: '6. Nghe → Điền từ', desc: 'Nghe phát âm chuẩn, gõ lại từ vựng chính xác' },
-  { id: 'WORD_TO_TYPE_MEANING', label: '7. Từ → Điền nghĩa', desc: 'Cho từ tiếng Anh, học sinh gõ lại nghĩa tiếng Việt' },
-  { id: 'MISSING_LETTERS', label: '8. Điền chữ còn thiếu', desc: 'Ẩn 1-2 ký tự trong từ, học sinh hoàn thiện từ' },
-  { id: 'UNSCRAMBLE_WORD', label: '9. Sắp xếp chữ thành từ', desc: 'Xáo trộn thứ tự các chữ cái, sắp xếp thành từ đúng' },
-  { id: 'MATCH_WORD_MEANING', label: '10. Ghép Từ ↔ Nghĩa', desc: 'Ghép cặp thẻ từ vựng với nghĩa tương ứng trong cùng batch' },
-  { id: 'PRONUNCIATION', label: '11. Phát âm (Microphone)', desc: 'Học sinh đọc từ vựng vào micro để chấm điểm nhận diện giọng nói' },
-]
+import { ACTIVITY_REGISTRY } from '../../registry/ActivityRegistry'
 
 interface SelectOption {
   id: number
@@ -100,7 +87,7 @@ export const TestCreatePage: React.FC = () => {
   }
 
   const handleSelectAll = () => {
-    setEnabledTypes(CANONICAL_TEST_TYPES.map(t => t.id))
+    setEnabledTypes(ACTIVITY_REGISTRY.map(t => t.type))
   }
 
   const handleDeselectAll = () => {
@@ -312,12 +299,12 @@ export const TestCreatePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {CANONICAL_TEST_TYPES.map((type) => {
-              const isChecked = enabledTypes.includes(type.id)
+            {ACTIVITY_REGISTRY.map((type, index) => {
+              const isChecked = enabledTypes.includes(type.type)
               return (
                 <div
-                  key={type.id}
-                  onClick={() => toggleTestType(type.id)}
+                  key={type.type}
+                  onClick={() => toggleTestType(type.type)}
                   className={[
                     'p-3.5 rounded-xl border cursor-pointer transition-all flex items-start gap-3 select-none',
                     isChecked
@@ -325,15 +312,21 @@ export const TestCreatePage: React.FC = () => {
                       : 'border-gray-200 bg-white hover:bg-gray-50'
                   ].join(' ')}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => {}}
-                    className="w-4 h-4 mt-1 rounded text-green-600 focus:ring-green-500"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{type.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{type.desc}</p>
+                  <div className="pt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      readOnly
+                      className="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500 cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-semibold text-sm ${isChecked ? 'text-green-900' : 'text-gray-800'}`}>
+                      {index + 1}. {type.displayName}
+                    </p>
+                    <p className={`text-xs mt-1 leading-relaxed ${isChecked ? 'text-green-700/80' : 'text-gray-500'}`}>
+                      {type.description}
+                    </p>
                   </div>
                 </div>
               )

@@ -194,7 +194,7 @@ public class LearnController : ControllerBase
 
             result.Add(new PracticeAvailabilityDto
             {
-                Type = def.Type,
+                Type = def.Type.ToString(),
                 Name = def.Name,
                 IsAvailable = isAvailable,
                 Reason = reason

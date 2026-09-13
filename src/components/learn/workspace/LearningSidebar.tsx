@@ -1,5 +1,6 @@
 import React from 'react';
-import { BookOpen, List, CheckCircle, Volume2, Keyboard, Type, Shuffle, ArrowLeftRight, Mic, Info } from 'lucide-react';
+import { BookOpen, List, CheckCircle, Volume2, Keyboard, ArrowLeftRight, Mic, Info } from 'lucide-react';
+import { ACTIVITY_REGISTRY, ActivityDefinition } from '../../../registry/ActivityRegistry';
 
 export interface PracticeAvailabilityDto {
   type: string;
@@ -16,7 +17,7 @@ interface LearningSidebarProps {
   onMobileClose?: () => void;
 }
 
-const GROUPS = [
+const SIDEBAR_GROUPS = [
   {
     id: 'REVIEW',
     title: 'ÔN TỪ',
@@ -28,31 +29,26 @@ const GROUPS = [
   {
     id: 'RECOGNITION',
     title: 'NHẬN BIẾT',
-    types: ['WORD_TO_MEANING', 'MEANING_TO_WORD'],
     icon: <CheckCircle size={16} />
   },
   {
     id: 'LISTENING',
     title: 'NGHE',
-    types: ['LISTEN_TO_WORD', 'LISTEN_TO_MEANING', 'LISTEN_TO_TYPE_WORD'],
     icon: <Volume2 size={16} />
   },
   {
     id: 'TYPING_SPELLING',
     title: 'GÕ & CHÍNH TẢ',
-    types: ['MEANING_TO_TYPE_WORD', 'WORD_TO_TYPE_MEANING', 'MISSING_LETTERS', 'UNSCRAMBLE_WORD'],
     icon: <Keyboard size={16} />
   },
   {
     id: 'MATCHING',
     title: 'LIÊN KẾT',
-    types: ['MATCH_WORD_MEANING'],
     icon: <ArrowLeftRight size={16} />
   },
   {
     id: 'SPEAKING',
     title: 'PHÁT ÂM',
-    types: ['PRONUNCIATION'],
     icon: <Mic size={16} />
   }
 ];
@@ -66,7 +62,7 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({ currentMode, o
 
   return (
     <div className={`w-full flex flex-col gap-6 ${className}`}>
-      {GROUPS.map(group => {
+      {SIDEBAR_GROUPS.map(group => {
         // Special case for non-practice items
         if (group.id === 'REVIEW') {
           return (
@@ -90,22 +86,28 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({ currentMode, o
           );
         }
 
-        // Practice activities
-        const groupAvailabilities = group.types?.map(type => availabilities.find(a => a.type === type)).filter(Boolean) as PracticeAvailabilityDto[];
-        if (!groupAvailabilities || groupAvailabilities.length === 0) return null;
+        // Practice activities from registry
+        const groupActivities = ACTIVITY_REGISTRY.filter(a => a.category === group.id);
+        if (groupActivities.length === 0) return null;
 
         return (
           <div key={group.id} className="space-y-1">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">{group.title}</h3>
-            {groupAvailabilities.map(av => {
-              const isActive = currentMode === av.type;
+            {groupActivities.map(activity => {
+              const isActive = currentMode === activity.type;
+              
+              // Find availability from backend array. Default to false if not loaded.
+              const avail = availabilities.find(a => a.type === activity.type);
+              const isAvailable = avail ? avail.isAvailable : false;
+              const reason = avail ? avail.reason : 'Đang tải trạng thái...';
+
               return (
-                <div key={av.type} className="group relative">
+                <div key={activity.type} className="group relative">
                   <button
-                    onClick={() => handleSelect(av.type, av.isAvailable)}
-                    disabled={!av.isAvailable}
+                    onClick={() => handleSelect(activity.type, isAvailable)}
+                    disabled={!isAvailable}
                     className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-left ${
-                      !av.isAvailable 
+                      !isAvailable 
                         ? 'opacity-50 cursor-not-allowed text-gray-500 border-l-4 border-transparent' 
                         : isActive
                           ? 'bg-green-50 text-green-700 border-l-4 border-green-600 font-bold'
@@ -114,15 +116,15 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({ currentMode, o
                   >
                     <div className="flex items-center gap-3">
                       <span className={isActive ? 'text-green-600' : 'text-gray-400'}>{group.icon}</span>
-                      <span>{av.name}</span>
+                      <span>{activity.displayName}</span>
                     </div>
-                    {!av.isAvailable && (
-                      <Info size={14} className="text-gray-400" />
+                    {!isAvailable && (
+                      <Info size={14} className="text-gray-400 shrink-0" />
                     )}
                   </button>
-                  {!av.isAvailable && (
+                  {!isAvailable && (
                     <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
-                      {av.reason}
+                      {reason}
                       <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-y-4 border-y-transparent border-r-4 border-r-gray-900"></div>
                     </div>
                   )}
