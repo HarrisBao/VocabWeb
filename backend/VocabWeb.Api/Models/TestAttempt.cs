@@ -13,6 +13,10 @@ public class TestAttempt
     public string? GuestSessionId { get; set; }
     public string? ParticipantDisplayNameSnapshot { get; set; }
 
+    // Snapshot of sequence
+    public string ActivitySequenceSnapshot { get; set; } = string.Empty;
+    public int CurrentStageIndex { get; set; } = 0;
+
     public int AttemptNumber { get; set; } = 1;
     public string Status { get; set; } = "IN_PROGRESS"; // IN_PROGRESS, SUBMITTED, ABANDONED
 

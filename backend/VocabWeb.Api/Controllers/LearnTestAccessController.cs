@@ -203,7 +203,9 @@ public class LearnTestAccessController : ControllerBase
             AttemptNumber = attemptsCount + 1,
             Status = "IN_PROGRESS",
             StartedAt = DateTime.UtcNow,
-            TotalQuestions = test.TotalQuestions
+            TotalQuestions = test.TotalQuestions,
+            ActivitySequenceSnapshot = test.EnabledTypes,
+            CurrentStageIndex = 0
         };
 
         _context.TestAttempts.Add(attempt);

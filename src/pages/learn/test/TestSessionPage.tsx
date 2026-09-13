@@ -1,50 +1,147 @@
-import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { TestSessionApi, CurrentStageDto, ActivityResultDto, StudentAnswerSubmissionDto, TestFinalResultDto } from '../../../services/testSession'
+import { StudentActivityRenderer } from '../../../components/learn/test/StudentActivityRenderer'
+import { ActivityResultScreen } from '../../../components/learn/test/ActivityResultScreen'
 
 export const TestSessionPage: React.FC = () => {
-  const { publicCode, attemptId } = useParams<{ publicCode: string, attemptId: string }>();
-  const navigate = useNavigate();
+  const { publicCode, attemptId } = useParams<{ publicCode: string; attemptId: string }>()
+  const navigate = useNavigate()
+  
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [stage, setStage] = useState<CurrentStageDto | null>(null)
+  const [activityResult, setActivityResult] = useState<ActivityResultDto | null>(null)
+  const [finalResult, setFinalResult] = useState<TestFinalResultDto | null>(null)
 
-  const ticket = sessionStorage.getItem(`ielts_ticket_${publicCode}`);
+  const loadCurrentStage = async () => {
+    setLoading(true)
+    setError(null)
+    setActivityResult(null)
+    try {
+      const data = await TestSessionApi.getCurrentStage(Number(attemptId))
+      setStage(data)
+    } catch (err: any) {
+      if (err.response?.data?.message === 'Đã hoàn thành tất cả hoạt động. Vui lòng nộp bài.') {
+        submitTest()
+      } else {
+        setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải bài kiểm tra.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitTest = async () => {
+    setLoading(true)
+    try {
+      const result = await TestSessionApi.submitTest(Number(attemptId))
+      setFinalResult(result)
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi nộp bài')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (!ticket) {
-      navigate(`/test/${publicCode}`);
+    if (attemptId) {
+      loadCurrentStage()
     }
-  }, [ticket, navigate, publicCode]);
+  }, [attemptId])
 
-  const participantName = localStorage.getItem('ieltsThanhLe.guestDisplayName') || 'Bạn';
+  const handleStageComplete = async (answers: StudentAnswerSubmissionDto[]) => {
+    if (!stage) return
+    setLoading(true)
+    try {
+      const result = await TestSessionApi.completeStage(Number(attemptId), stage.stageIndex, { answers })
+      setActivityResult(result)
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi khi nộp hoạt động')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNextActivity = () => {
+    if (activityResult?.isLastActivity) {
+      submitTest()
+    } else {
+      loadCurrentStage()
+    }
+  }
+
+  if (loading && !stage && !finalResult) {
+    return <div className="flex justify-center items-center h-screen"><p className="text-gray-500">Đang tải bài kiểm tra...</p></div>
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen p-4 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button onClick={() => navigate(`/test/${publicCode}`)} className="text-green-600 underline">Quay lại trang chủ bài kiểm tra</button>
+      </div>
+    )
+  }
+
+  if (finalResult) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 max-w-2xl w-full text-center animate-in fade-in slide-in-from-bottom-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Hoàn thành bài kiểm tra!</h1>
+          
+          <div className="my-10">
+            <p className="text-7xl font-black text-green-600 mb-2">{finalResult.score} <span className="text-3xl text-gray-400">/ 10</span></p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-10">
+            <div className="bg-gray-50 rounded-2xl p-6">
+              <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-1">Số câu đúng</p>
+              <p className="text-2xl font-bold text-gray-900">{finalResult.correctCount} / {finalResult.totalAttempted}</p>
+            </div>
+            <div className="bg-gray-50 rounded-2xl p-6">
+              <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-1">Thời gian</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {Math.floor(finalResult.durationSeconds / 60)} phút {finalResult.durationSeconds % 60} giây
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate(`/test/${publicCode}`)}
+            className="text-gray-500 font-medium hover:text-gray-900 transition-colors"
+          >
+            Thoát
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">
-          📝
-        </div>
-        
-        <h1 className="text-2xl font-black text-gray-900 mb-2">Bài kiểm tra đã sẵn sàng</h1>
-        
-        <div className="my-6 bg-gray-50 border border-gray-100 rounded-xl p-4">
-          <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-1">Người làm bài</p>
-          <p className="font-bold text-gray-900">{participantName}</p>
-          
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-1">Mã lượt làm bài</p>
-            <p className="font-mono font-bold text-gray-700">#{attemptId}</p>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
+        <h1 className="font-bold text-green-700">IELTS Thanh Lê Learning</h1>
+        {stage && !activityResult && (
+          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            Hoạt động {stage.stageIndex + 1} / {stage.totalStages}
           </div>
-        </div>
+        )}
+      </header>
 
-        <p className="text-gray-500 text-sm mb-6">
-          (Phase 5: Đã khởi tạo thành công TestAttempt. Giao diện làm bài thực tế sẽ được phát triển ở phase tiếp theo.)
-        </p>
-
-        <button 
-          onClick={() => navigate('/')} 
-          className="text-green-600 font-semibold hover:underline"
-        >
-          Trở về trang chủ
-        </button>
-      </div>
+      {/* Main Content Area */}
+      <main className="max-w-4xl mx-auto py-6">
+        {loading && <div className="text-center py-12 text-gray-400">Đang xử lý...</div>}
+        
+        {!loading && activityResult && (
+          <ActivityResultScreen result={activityResult} onNext={handleNextActivity} />
+        )}
+        
+        {!loading && !activityResult && stage && (
+          <StudentActivityRenderer stage={stage} onComplete={handleStageComplete} />
+        )}
+      </main>
     </div>
-  );
-};
+  )
+}
