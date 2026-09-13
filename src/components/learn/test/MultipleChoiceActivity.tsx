@@ -1,36 +1,46 @@
 import React, { useState, useEffect } from 'react'
 import type { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
 import { useAudioManager } from '../../../hooks/useAudioManager'
+import { PracticeAnswerOption, getPastelVariant, OptionState } from './PracticeAnswerOption'
 
 interface Props {
   questions: StudentQuestionDto[]
   activityType: string
   onComplete: (answers: StudentAnswerSubmissionDto[]) => void
+  mode?: 'PRACTICE' | 'TEST'
 }
 
-export const MultipleChoiceActivity: React.FC<Props> = ({ questions, onComplete }) => {
+export const MultipleChoiceActivity: React.FC<Props> = ({ questions, onComplete, mode = 'TEST' }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<StudentAnswerSubmissionDto[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null)
+  const [hasRevealed, setHasRevealed] = useState(false)
   
   const question = questions[currentIndex]
   const isLast = currentIndex === questions.length - 1
   const { playWord } = useAudioManager()
 
-  // Auto play audio if activity requires it (e.g., LISTEN_TO_WORD, PRONUNCIATION would use other renderers, but if multiple choice needs it)
   useEffect(() => {
     if (question && question.audioBehavior === 'AUTO_PLAY_TARGET' && question.targetWord) {
       playWord(question.targetWord)
     }
   }, [currentIndex, question, playWord])
 
+  const handleOptionClick = (optId: number) => {
+    if (hasRevealed && mode === 'PRACTICE') return; // locked
+    setSelectedOptionId(optId);
+
+    if (mode === 'PRACTICE') {
+      setHasRevealed(true);
+    }
+  }
+
   const handleNext = () => {
     if (selectedOptionId === null) return
 
     const newAnswer: StudentAnswerSubmissionDto = {
       questionId: question.id,
-      targetVocabularyItemId: question.options?.find(o => o.vocabularyItemId === selectedOptionId)?.vocabularyItemId || 0, // Fallback, not great. Actually the target item ID isn't directly exposed in Multiple Choice DTO unless selected? Wait. 
-      // Ah, the targetVocabularyItemId for submission is the selected item's ID!
+      targetVocabularyItemId: selectedOptionId,
       answerValue: selectedOptionId.toString(),
       technicalFailure: false
     }
@@ -42,6 +52,7 @@ export const MultipleChoiceActivity: React.FC<Props> = ({ questions, onComplete 
     } else {
       setAnswers(newAnswers)
       setSelectedOptionId(null)
+      setHasRevealed(false)
       setCurrentIndex(curr => curr + 1)
     }
   }
@@ -82,24 +93,41 @@ export const MultipleChoiceActivity: React.FC<Props> = ({ questions, onComplete 
       </div>
 
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {question.options?.map((opt) => (
-          <button
-            key={opt.vocabularyItemId}
-            onClick={() => setSelectedOptionId(opt.vocabularyItemId)}
-            className={`p-6 rounded-xl border-2 text-lg font-medium transition-all text-left ${
-              selectedOptionId === opt.vocabularyItemId 
-                ? 'border-green-500 bg-green-50 text-green-900 shadow-sm' 
-                : 'border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50'
-            }`}
-          >
-            {opt.text}
-          </button>
-        ))}
+        {question.options?.map((opt, index) => {
+          let state: OptionState = 'DEFAULT';
+          
+          if (mode === 'PRACTICE' && hasRevealed) {
+            const isCorrectOption = opt.vocabularyItemId.toString() === question.id;
+            const isSelected = selectedOptionId === opt.vocabularyItemId;
+            if (isCorrectOption) {
+              state = 'CORRECT';
+            } else if (isSelected) {
+              state = 'INCORRECT';
+            } else {
+              state = 'MUTED';
+            }
+          } else if (mode === 'TEST') {
+            state = selectedOptionId === opt.vocabularyItemId ? 'SELECTED' : 'DEFAULT';
+          }
+
+          const variant = getPastelVariant(index, currentIndex);
+
+          return (
+            <PracticeAnswerOption
+              key={opt.vocabularyItemId}
+              text={opt.text}
+              variant={variant}
+              state={state}
+              onClick={() => handleOptionClick(opt.vocabularyItemId)}
+              disabled={mode === 'PRACTICE' ? hasRevealed : false}
+            />
+          );
+        })}
       </div>
 
       <button
         onClick={handleNext}
-        disabled={selectedOptionId === null}
+        disabled={selectedOptionId === null || (mode === 'PRACTICE' && !hasRevealed)}
         className={`w-full max-w-sm py-4 rounded-full font-bold text-lg shadow-sm transition-all ${
           selectedOptionId !== null
             ? 'bg-green-600 hover:bg-green-700 text-white active:scale-95'

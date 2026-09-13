@@ -135,7 +135,7 @@ export const PracticeActivityView: React.FC<PracticeActivityViewProps> = ({ voca
         <h2 className={`text-sm font-bold uppercase tracking-wider ${colors.text}`}>{activityName}</h2>
       </div>
       <div className="p-4 bg-white">
-        {stage && <StudentActivityRenderer stage={stage} onComplete={handleComplete} />}
+        {stage && <StudentActivityRenderer stage={stage} onComplete={handleComplete} mode="PRACTICE" />}
       </div>
     </div>
   );

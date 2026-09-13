@@ -8,19 +8,20 @@ import { PronunciationActivity } from './PronunciationActivity'
 interface Props {
   stage: CurrentStageDto
   onComplete: (answers: StudentAnswerSubmissionDto[]) => void
+  mode?: 'PRACTICE' | 'TEST'
 }
 
-export const StudentActivityRenderer: React.FC<Props> = ({ stage, onComplete }) => {
+export const StudentActivityRenderer: React.FC<Props> = ({ stage, onComplete, mode = 'TEST' }) => {
   const { activityType, questions } = stage
 
   switch (activityType) {
     case 'WORD_TO_MEANING':
     case 'MEANING_TO_WORD':
-      return <MultipleChoiceActivity questions={questions} activityType={activityType} onComplete={onComplete} />
+      return <MultipleChoiceActivity questions={questions} activityType={activityType} onComplete={onComplete} mode={mode} />
       
     case 'LISTEN_TO_WORD':
     case 'LISTEN_TO_MEANING':
-      return <ListeningChoiceActivity questions={questions} activityType={activityType} onComplete={onComplete} />
+      return <ListeningChoiceActivity questions={questions} activityType={activityType} onComplete={onComplete} mode={mode} />
       
     case 'MISSING_LETTERS':
     case 'MEANING_TO_TYPE_WORD':
