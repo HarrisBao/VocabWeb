@@ -18,6 +18,7 @@ const SPECIALIZATIONS = [
 
 export const TeacherRegisterPage: React.FC = () => {
   const navigate = useNavigate()
+  const { registerTeacher } = useAuth()
   const [form, setForm] = useState<TeacherRegisterFormData>({
     fullName: '',
     email: '',
@@ -27,6 +28,7 @@ export const TeacherRegisterPage: React.FC = () => {
     phoneNumber: '',
   })
   const [errors, setErrors] = useState<FormErrors>({})
+  const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
@@ -51,10 +53,15 @@ export const TeacherRegisterPage: React.FC = () => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    // TODO: Connect to ASP.NET Core Web API — POST /api/auth/teacher/register
-    await new Promise(r => setTimeout(r, 1500))
-    setLoading(false)
-    navigate('/teacher/login')
+    setServerError(null)
+    try {
+      await registerTeacher(form)
+      navigate('/teacher/dashboard')
+    } catch (err: any) {
+      setServerError(err.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const passwordStrength = (): { label: string; color: string; width: string } => {
@@ -79,6 +86,15 @@ export const TeacherRegisterPage: React.FC = () => {
       subtitle="Đăng ký để quản lý lớp học và tạo bài kiểm tra từ vựng IELTS."
       role="teacher"
     >
+      {serverError && (
+        <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1">{serverError}</div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
           label="Họ và tên"
