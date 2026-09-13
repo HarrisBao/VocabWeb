@@ -11,6 +11,7 @@ bin/
 obj/
 *.user
 appsettings.Local.json
+.vs/
 
 # Environment variables (NEVER commit real env files)
 .env
