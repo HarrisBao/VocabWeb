@@ -25,10 +25,6 @@ export const TestListPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  useEffect(() => {
-    fetchTests()
-  }, [])
-
   const fetchTests = async () => {
     setLoading(true)
     try {
@@ -40,6 +36,10 @@ export const TestListPage: React.FC = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchTests()
+  }, [])
 
   const handleDeleteTest = async (id: number, title: string) => {
     if (!window.confirm(`Bạn có chắc muốn xóa bài kiểm tra "${title}"?`)) return

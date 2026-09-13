@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAudioManager } from '../../hooks/useAudioManager';
 import { AudioSettingsPopover } from '../../components/learn/AudioSettingsPopover';
@@ -37,10 +37,9 @@ export const VocabularyReviewPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'flashcard' | 'list'>('flashcard');
   const [direction, setDirection] = useState<'forward'|'backward'|'none'>('none');
 
-  const { preferences, playWord, stop } = useAudioManager();
+  const { preferences, playWord } = useAudioManager();
 
   // For tracking which items we've visited in random mode
-  const [randomSequence, setRandomSequence] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {

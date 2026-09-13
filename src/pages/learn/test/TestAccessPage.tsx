@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Button } from '../../../components/ui/Button';
-import { v4 as uuidv4 } from 'uuid';
 
 interface PublicTestMetadata {
   publicCode: string;
@@ -73,7 +72,7 @@ export const TestAccessPage: React.FC = () => {
     try {
       let sessionId = localStorage.getItem('ieltsThanhLe.guestSessionId');
       if (!isAuthenticated && !sessionId) {
-        sessionId = uuidv4();
+        sessionId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         localStorage.setItem('ieltsThanhLe.guestSessionId', sessionId);
       }
       

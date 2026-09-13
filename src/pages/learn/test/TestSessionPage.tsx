@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { TestSessionApi, CurrentStageDto, ActivityResultDto, StudentAnswerSubmissionDto, TestFinalResultDto } from '../../../services/testSession'
+import { TestSessionApi } from '../../../services/testSession'
+import type { CurrentStageDto, ActivityResultDto, StudentAnswerSubmissionDto, TestFinalResultDto } from '../../../services/testSession'
 import { StudentActivityRenderer } from '../../../components/learn/test/StudentActivityRenderer'
 import { ActivityResultScreen } from '../../../components/learn/test/ActivityResultScreen'
 
@@ -15,17 +16,18 @@ export const TestSessionPage: React.FC = () => {
   const [finalResult, setFinalResult] = useState<TestFinalResultDto | null>(null)
 
   const loadCurrentStage = async () => {
+    if (!publicCode) return;
     setLoading(true)
     setError(null)
     setActivityResult(null)
     try {
-      const data = await TestSessionApi.getCurrentStage(Number(attemptId))
+      const data = await TestSessionApi.getCurrentStage(publicCode, Number(attemptId))
       setStage(data)
     } catch (err: any) {
-      if (err.response?.data?.message === 'Đã hoàn thành tất cả hoạt động. Vui lòng nộp bài.') {
+      if (err.message === 'Đã hoàn thành tất cả hoạt động. Vui lòng nộp bài.') {
         submitTest()
       } else {
-        setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải bài kiểm tra.')
+        setError(err.message || 'Có lỗi xảy ra khi tải bài kiểm tra.')
       }
     } finally {
       setLoading(false)
@@ -33,12 +35,13 @@ export const TestSessionPage: React.FC = () => {
   }
 
   const submitTest = async () => {
+    if (!publicCode) return;
     setLoading(true)
     try {
-      const result = await TestSessionApi.submitTest(Number(attemptId))
+      const result = await TestSessionApi.submitTest(publicCode, Number(attemptId))
       setFinalResult(result)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Lỗi nộp bài')
+      setError(err.message || 'Lỗi nộp bài')
     } finally {
       setLoading(false)
     }
@@ -51,13 +54,13 @@ export const TestSessionPage: React.FC = () => {
   }, [attemptId])
 
   const handleStageComplete = async (answers: StudentAnswerSubmissionDto[]) => {
-    if (!stage) return
+    if (!stage || !publicCode) return
     setLoading(true)
     try {
-      const result = await TestSessionApi.completeStage(Number(attemptId), stage.stageIndex, { answers })
+      const result = await TestSessionApi.completeStage(publicCode, Number(attemptId), stage.stageIndex, { answers })
       setActivityResult(result)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Lỗi khi nộp hoạt động')
+      setError(err.message || 'Lỗi khi nộp hoạt động')
     } finally {
       setLoading(false)
     }

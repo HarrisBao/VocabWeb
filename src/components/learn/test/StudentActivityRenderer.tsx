@@ -1,5 +1,5 @@
 import React from 'react'
-import { CurrentStageDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
+import type { CurrentStageDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
 import { MultipleChoiceActivity } from './MultipleChoiceActivity'
 import { ListeningChoiceActivity } from './ListeningChoiceActivity'
 import { MissingLettersActivity } from './MissingLettersActivity'

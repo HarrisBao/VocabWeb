@@ -20,19 +20,21 @@ interface TestDetails {
   createdAt: string
 }
 
-export enum ActivityType {
-  WORD_TO_MEANING = 0,
-  MEANING_TO_WORD = 1,
-  LISTEN_TO_WORD = 2,
-  LISTEN_TO_MEANING = 3,
-  MEANING_TO_TYPE_WORD = 4,
-  LISTEN_TO_TYPE_WORD = 5,
-  WORD_TO_TYPE_MEANING = 6,
-  MISSING_LETTERS = 7,
-  UNSCRAMBLE_WORD = 8,
-  MATCH_WORD_MEANING = 9,
-  PRONUNCIATION = 10,
-}
+export const ActivityType = {
+  WORD_TO_MEANING: 0,
+  MEANING_TO_WORD: 1,
+  LISTEN_TO_WORD: 2,
+  LISTEN_TO_MEANING: 3,
+  MEANING_TO_TYPE_WORD: 4,
+  LISTEN_TO_TYPE_WORD: 5,
+  WORD_TO_TYPE_MEANING: 6,
+  MISSING_LETTERS: 7,
+  UNSCRAMBLE_WORD: 8,
+  MATCH_WORD_MEANING: 9,
+  PRONUNCIATION: 10,
+} as const
+
+export type ActivityType = typeof ActivityType[keyof typeof ActivityType]
 
 export interface QuestionOption {
   vocabularyItemId: number;
@@ -45,7 +47,7 @@ export interface GeneratedQuestion {
   targetVocabularyItemId: number;
   questionPrompt: string;
   options: QuestionOption[];
-  audioBehavior: number;
+  audioBehavior: 0 | 1 | 2 | 3;
 }
 
 export interface EvaluationResult {

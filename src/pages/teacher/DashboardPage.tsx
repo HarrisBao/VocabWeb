@@ -191,7 +191,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-gray-900 truncate">{s.title}</span>
-                      <Badge variant="primary">{s.level}</Badge>
+                      <Badge variant="blue">{s.level}</Badge>
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">{s.wordCount} từ vựng</p>
                   </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
-import { Volume2 } from 'lucide-react'
+import type { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
 import { useAudioManager } from '../../../hooks/useAudioManager'
 
 interface Props {
@@ -9,7 +8,7 @@ interface Props {
   onComplete: (answers: StudentAnswerSubmissionDto[]) => void
 }
 
-export const MultipleChoiceActivity: React.FC<Props> = ({ questions, activityType, onComplete }) => {
+export const MultipleChoiceActivity: React.FC<Props> = ({ questions, onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<StudentAnswerSubmissionDto[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null)
@@ -72,7 +71,7 @@ export const MultipleChoiceActivity: React.FC<Props> = ({ questions, activityTyp
               className="p-2 text-gray-400 hover:text-green-600 transition-colors rounded-full hover:bg-green-50"
               title="Nghe phát âm"
             >
-              <Volume2 className="w-6 h-6" />
+              <span className="text-2xl">🔊</span>
             </button>
           </h2>
         )}

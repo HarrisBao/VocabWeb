@@ -85,7 +85,7 @@ export const ResultsPage: React.FC = () => {
   const filteredAttempts = attempts.filter(item => {
     const matchesSearch =
       item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.studentEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.studentEmail && item.studentEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
       item.testTitle.toLowerCase().includes(searchTerm.toLowerCase())
 
     if (filterStatus === 'passed') return matchesSearch && item.isPassed

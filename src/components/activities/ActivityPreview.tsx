@@ -1,25 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
 
 // DTOs matching the backend
-export enum ActivityType {
-  WORD_TO_MEANING = 0,
-  MEANING_TO_WORD = 1,
-  LISTEN_TO_WORD = 2,
-  LISTEN_TO_MEANING = 3,
-  MEANING_TO_TYPE_WORD = 4,
-  LISTEN_TO_TYPE_WORD = 5,
-  WORD_TO_TYPE_MEANING = 6,
-  MISSING_LETTERS = 7,
-  UNSCRAMBLE_WORD = 8,
-  MATCH_WORD_MEANING = 9,
-  PRONUNCIATION = 10,
-}
+export const ActivityType = {
+  WORD_TO_MEANING: 0,
+  MEANING_TO_WORD: 1,
+  LISTEN_TO_WORD: 2,
+  LISTEN_TO_MEANING: 3,
+  MEANING_TO_TYPE_WORD: 4,
+  LISTEN_TO_TYPE_WORD: 5,
+  WORD_TO_TYPE_MEANING: 6,
+  MISSING_LETTERS: 7,
+  UNSCRAMBLE_WORD: 8,
+  MATCH_WORD_MEANING: 9,
+  PRONUNCIATION: 10,
+} as const;
 
-export enum AudioBehavior {
-  NO_AUDIO = 0,
-  AUTO_PLAY_TARGET = 1,
-  REPLAY_TARGET = 2,
-}
+export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+
+export const AudioBehavior = {
+  NO_AUDIO: 0,
+  AUTO_PLAY_TARGET: 1,
+  PLAY_ON_CLICK_ONLY: 2,
+  AUTO_PLAY_OPTIONS: 3,
+} as const;
+
+export type AudioBehavior = typeof AudioBehavior[keyof typeof AudioBehavior];
 
 export interface QuestionOption {
   vocabularyItemId: number;

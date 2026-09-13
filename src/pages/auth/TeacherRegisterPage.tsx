@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { useAuth } from '../../contexts/AuthContext'
 import type { TeacherRegisterFormData, FormErrors } from '../../types/auth'
 
 const SPECIALIZATIONS = [

@@ -325,14 +325,14 @@ export const ClassDetailPage: React.FC = () => {
                 <Card key={lesson.id} className="p-5 flex flex-col justify-between border border-gray-200">
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <Badge variant="primary">{lesson.vocabularySetLevel}</Badge>
+                      <Badge variant="blue">{lesson.level}</Badge>
                       <div className="flex items-center gap-1.5">
                         {lesson.isPinned && (
                           <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded border border-amber-200">
                             📌 Đã ghim
                           </span>
                         )}
-                        {lesson.isHidden && (
+                        {!lesson.isVisible && (
                           <span className="text-xs bg-gray-100 text-gray-600 font-bold px-2 py-0.5 rounded">
                             👁️ Đang ẩn
                           </span>
@@ -340,8 +340,12 @@ export const ClassDetailPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <h3 className="font-bold text-base text-gray-900 mb-1">{lesson.vocabularySetTitle}</h3>
-                    <p className="text-xs text-gray-500 mb-4">{lesson.wordCount} từ vựng</p>
+                    <h3 className="font-bold text-gray-900 mb-1 leading-tight line-clamp-2">
+                      {lesson.vocabularySetTitle}
+                    </h3>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {lesson.wordCount} từ vựng
+                    </p>
                   </div>
 
                   <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
@@ -361,11 +365,11 @@ export const ClassDetailPage: React.FC = () => {
                         onClick={() => handleToggleVisibility(lesson.id)}
                         className={[
                           'p-1.5 rounded-lg text-xs font-semibold border transition-colors',
-                          lesson.isHidden ? 'bg-gray-100 text-gray-600 border-gray-200' : 'text-green-700 bg-green-50 border-green-200'
+                          !lesson.isVisible ? 'bg-gray-100 text-gray-600 border-gray-200' : 'text-green-700 bg-green-50 border-green-200'
                         ].join(' ')}
-                        title={lesson.isHidden ? 'Bỏ ẩn' : 'Ẩn khỏi học sinh'}
+                        title={!lesson.isVisible ? 'Bỏ ẩn' : 'Ẩn khỏi học sinh'}
                       >
-                        {lesson.isHidden ? '🙈' : '👁️'}
+                        {!lesson.isVisible ? '🙈' : '👁️'}
                       </button>
 
                       <button
@@ -417,11 +421,11 @@ export const ClassDetailPage: React.FC = () => {
                 <div key={m.id} className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold text-xs">
-                      {m.studentName.slice(0, 2).toUpperCase()}
+                      {m.fullName.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900">{m.studentName}</p>
-                      <p className="text-xs text-gray-500">{m.studentEmail}</p>
+                      <p className="text-sm font-bold text-gray-900">{m.fullName}</p>
+                      <p className="text-xs text-gray-500">{m.email}</p>
                     </div>
                   </div>
                   <span className="text-xs text-gray-400">Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}</span>

@@ -159,7 +159,7 @@ export const VocabularyListPage: React.FC = () => {
             <Card key={set.id} hover className="flex flex-col justify-between p-6">
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <Badge variant="primary">{set.level}</Badge>
+                  <Badge variant="blue">{set.level}</Badge>
                   <span className="text-xs text-gray-500 font-medium">
                     {set.wordCount} từ
                   </span>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
-import { Volume2 } from 'lucide-react'
+import type { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
 import { useAudioManager } from '../../../hooks/useAudioManager'
 
 interface Props {
@@ -9,7 +8,7 @@ interface Props {
   onComplete: (answers: StudentAnswerSubmissionDto[]) => void
 }
 
-export const MissingLettersActivity: React.FC<Props> = ({ questions, activityType, onComplete }) => {
+export const MissingLettersActivity: React.FC<Props> = ({ questions, onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<StudentAnswerSubmissionDto[]>([])
   const [inputValue, setInputValue] = useState('')
@@ -67,7 +66,7 @@ export const MissingLettersActivity: React.FC<Props> = ({ questions, activityTyp
              onClick={() => playWord(question.targetWord!)}
              className="mb-4 text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 p-3 rounded-full transition-colors"
            >
-             <Volume2 className="w-8 h-8" />
+             <span className="text-3xl">🔊</span>
            </button>
         )}
         

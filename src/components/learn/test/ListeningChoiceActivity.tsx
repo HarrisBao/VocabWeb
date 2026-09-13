@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
-import { Volume2 } from 'lucide-react'
+import type { StudentQuestionDto, StudentAnswerSubmissionDto } from '../../../services/testSession'
 import { useAudioManager } from '../../../hooks/useAudioManager'
 
 interface Props {
@@ -9,11 +8,10 @@ interface Props {
   onComplete: (answers: StudentAnswerSubmissionDto[]) => void
 }
 
-export const ListeningChoiceActivity: React.FC<Props> = ({ questions, activityType, onComplete }) => {
+export const ListeningChoiceActivity: React.FC<Props> = ({ questions, onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<StudentAnswerSubmissionDto[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null)
-  const [hasPlayed, setHasPlayed] = useState(false)
   
   const question = questions[currentIndex]
   const isLast = currentIndex === questions.length - 1
@@ -22,7 +20,6 @@ export const ListeningChoiceActivity: React.FC<Props> = ({ questions, activityTy
   useEffect(() => {
     if (question && question.targetWord) {
       playWord(question.targetWord)
-      setHasPlayed(true)
     }
   }, [currentIndex, question, playWord])
 
@@ -43,7 +40,6 @@ export const ListeningChoiceActivity: React.FC<Props> = ({ questions, activityTy
     } else {
       setAnswers(newAnswers)
       setSelectedOptionId(null)
-      setHasPlayed(false)
       setCurrentIndex(curr => curr + 1)
     }
   }
@@ -70,7 +66,7 @@ export const ListeningChoiceActivity: React.FC<Props> = ({ questions, activityTy
           className="w-24 h-24 bg-green-100 hover:bg-green-200 text-green-700 flex items-center justify-center rounded-full shadow-inner transition-colors active:scale-95 mb-4"
           title="Nghe lại"
         >
-          <Volume2 className="w-12 h-12" />
+          <span className="text-5xl">🔊</span>
         </button>
         <p className="text-xl text-gray-700 font-medium">
           {question.prompt}

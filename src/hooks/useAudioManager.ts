@@ -20,7 +20,7 @@ export const useAudioManager = () => {
     if (saved) {
       try {
         return { ...DEFAULT_PREFERENCES, ...JSON.parse(saved) };
-      } catch (e) {
+      } catch {
         return DEFAULT_PREFERENCES;
       }
     }

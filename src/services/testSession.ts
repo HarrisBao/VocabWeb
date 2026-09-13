@@ -56,25 +56,25 @@ export interface TestFinalResultDto {
 // Ensure the ticket is passed if the api client doesn't inject it globally, or we can use custom headers.
 // Since api.ts probably handles auth, we'll pass X-Access-Ticket in headers.
 
-const getHeaders = () => {
-  const ticket = localStorage.getItem('guest_access_ticket')
+const getHeaders = (publicCode: string): Record<string, string> => {
+  const ticket = sessionStorage.getItem(`ielts_ticket_${publicCode}`)
   return ticket ? { 'X-Access-Ticket': ticket } : {}
 }
 
 export const TestSessionApi = {
-  getCurrentStage: (attemptId: number) => {
+  getCurrentStage: (publicCode: string, attemptId: number) => {
     return api.get<CurrentStageDto>(`/learn/attempts/${attemptId}/current-stage`, {
-      headers: getHeaders()
+      headers: getHeaders(publicCode)
     })
   },
-  completeStage: (attemptId: number, stageIndex: number, data: SubmitStageRequestDto) => {
+  completeStage: (publicCode: string, attemptId: number, stageIndex: number, data: SubmitStageRequestDto) => {
     return api.post<ActivityResultDto>(`/learn/attempts/${attemptId}/stages/${stageIndex}/complete`, data, {
-      headers: getHeaders()
+      headers: getHeaders(publicCode)
     })
   },
-  submitTest: (attemptId: number) => {
+  submitTest: (publicCode: string, attemptId: number) => {
     return api.post<TestFinalResultDto>(`/learn/attempts/${attemptId}/submit`, {}, {
-      headers: getHeaders()
+      headers: getHeaders(publicCode)
     })
   }
 }
