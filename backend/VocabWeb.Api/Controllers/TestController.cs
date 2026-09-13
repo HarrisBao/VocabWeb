@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Data;
 using VocabWeb.Api.DTOs;
 using VocabWeb.Api.Models;
+using VocabWeb.Api.Models.ActivityEngine;
 using VocabWeb.Api.Services;
+using VocabWeb.Api.Services.ActivityEngine;
 
 namespace VocabWeb.Api.Controllers;
 
@@ -15,16 +17,24 @@ namespace VocabWeb.Api.Controllers;
 public class TestController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly IQuestionEngineService _questionEngine;
+    private readonly IQuestionGenerationService _questionGeneration;
+    private readonly IAnswerEvaluationService _answerEvaluation;
 
-    public TestController(AppDbContext db, IQuestionEngineService questionEngine)
+    public TestController(AppDbContext db, IQuestionGenerationService questionGeneration, IAnswerEvaluationService answerEvaluation)
     {
         _db = db;
-        _questionEngine = questionEngine;
+        _questionGeneration = questionGeneration;
+        _answerEvaluation = answerEvaluation;
     }
 
     private string? GetTeacherId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+    [HttpGet("activities")]
+    public IActionResult GetActivities()
+    {
+        return Ok(_questionGeneration.GetActivityDefinitions());
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetTests()
@@ -209,8 +219,41 @@ public class TestController : ControllerBase
 
         if (test == null) return NotFound(new { message = "Không tìm thấy bài kiểm tra." });
 
-        var preview = _questionEngine.GenerateTestQuestions(test, test.VocabularySet.Items.ToList());
+        var enabledTypes = test.EnabledTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(t => Enum.Parse<ActivityType>(t))
+            .ToList();
 
-        return Ok(preview);
+        var questions = _questionGeneration.GenerateQuestions(test.VocabularySet.Items.ToList(), enabledTypes, test.TotalQuestions);
+
+        return Ok(questions);
+    }
+
+    public class EvaluateRequestDto
+    {
+        public int TestId { get; set; }
+        public List<UserAnswerSubmission> Submissions { get; set; } = new();
+    }
+
+    [HttpPost("preview-evaluate")]
+    public async Task<IActionResult> PreviewEvaluate([FromBody] EvaluateRequestDto dto)
+    {
+        var teacherId = GetTeacherId();
+        if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
+
+        var test = await _db.Tests
+            .Where(t => t.Id == dto.TestId && t.TeacherId == teacherId && !t.IsArchived)
+            .Include(t => t.VocabularySet)
+                .ThenInclude(vs => vs.Items)
+            .FirstOrDefaultAsync();
+
+        if (test == null) return NotFound(new { message = "Không tìm thấy bài kiểm tra." });
+
+        var evaluation = _answerEvaluation.EvaluateAnswers(dto.Submissions, test.VocabularySet.Items.ToList());
+
+        return Ok(new
+        {
+            FinalScore = evaluation.FinalScore,
+            Results = evaluation.Results
+        });
     }
 }

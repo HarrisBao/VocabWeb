@@ -1,4 +1,5 @@
 using System.Text;
+using VocabWeb.Api.Services.ActivityEngine;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,8 @@ builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
 builder.Services.AddScoped<IIpaService, IpaService>();
 builder.Services.AddScoped<IQuestionEngineService, QuestionEngineService>();
+builder.Services.AddScoped<IQuestionGenerationService, QuestionGenerationService>();
+builder.Services.AddScoped<IAnswerEvaluationService, AnswerEvaluationService>();
 
 // 5. CORS Configuration
 builder.Services.AddCors(options =>
