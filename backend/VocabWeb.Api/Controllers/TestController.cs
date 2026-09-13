@@ -150,7 +150,6 @@ public class TestController : ControllerBase
             VocabularySetId = dto.VocabularySetId,
             ClassId = dto.ClassId,
             EnabledTypes = enabledTypesString,
-            TotalQuestions = dto.TotalQuestions,
             PassScore = dto.PassScore,
             TimeLimitMinutes = dto.TimeLimitMinutes,
             RequiresAccessCode = dto.RequiresAccessCode,
@@ -178,7 +177,7 @@ public class TestController : ControllerBase
             VocabularySetTitle = set.Title,
             ClassId = test.ClassId,
             EnabledTypes = dto.EnabledTypes,
-            TotalQuestions = test.TotalQuestions,
+            TotalQuestions = test.TotalQuestions, // Can still return 0 since we removed it
             PassScore = test.PassScore,
             TimeLimitMinutes = test.TimeLimitMinutes,
             PublicCode = test.PublicCode,
@@ -210,7 +209,6 @@ public class TestController : ControllerBase
         test.VocabularySetId = dto.VocabularySetId;
         test.ClassId = dto.ClassId;
         test.EnabledTypes = string.Join(",", dto.EnabledTypes.Distinct());
-        test.TotalQuestions = dto.TotalQuestions;
         test.PassScore = dto.PassScore;
         test.TimeLimitMinutes = dto.TimeLimitMinutes;
         test.RequiresAccessCode = dto.RequiresAccessCode;
@@ -272,7 +270,7 @@ public class TestController : ControllerBase
             .Select(t => Enum.Parse<ActivityType>(t))
             .ToList();
 
-        var questions = _questionGeneration.GenerateQuestions(test.VocabularySet.Items.ToList(), enabledTypes, test.TotalQuestions);
+        var questions = _questionGeneration.GenerateQuestions(test.VocabularySet.Items.ToList(), enabledTypes);
 
         return Ok(questions);
     }

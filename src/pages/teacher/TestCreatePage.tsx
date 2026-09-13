@@ -30,14 +30,16 @@ export const TestCreatePage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedSetId = searchParams.get('setId')
+  const preselectedClassId = searchParams.get('classId')
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [vocabularySetId, setVocabularySetId] = useState<number | ''>(
     preselectedSetId ? Number(preselectedSetId) : ''
   )
-  const [classId, setClassId] = useState<number | ''>('')
-  const [totalQuestions, setTotalQuestions] = useState(20)
+  const [classId, setClassId] = useState<number | ''>(
+    preselectedClassId ? Number(preselectedClassId) : ''
+  )
   const [passScore, setPassScore] = useState(5.0)
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | ''>(15)
 
@@ -132,7 +134,6 @@ export const TestCreatePage: React.FC = () => {
         vocabularySetId: Number(vocabularySetId),
         classId: classId ? Number(classId) : undefined,
         enabledTypes,
-        totalQuestions,
         passScore,
         timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : undefined
       })
@@ -196,8 +197,8 @@ export const TestCreatePage: React.FC = () => {
                   const s = sets.find(item => item.id === Number(e.target.value))
                   if (s) setTitle(`Bài kiểm tra: ${s.title}`)
                 }}
-                disabled={loadingOptions}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={loadingOptions || !!preselectedSetId}
+                className={`w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${!!preselectedSetId ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
                 required
               >
                 <option value="">-- Chọn bộ từ vựng --</option>
@@ -216,8 +217,8 @@ export const TestCreatePage: React.FC = () => {
               <select
                 value={classId}
                 onChange={e => setClassId(e.target.value ? Number(e.target.value) : '')}
-                disabled={loadingOptions}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                disabled={loadingOptions || !!preselectedClassId}
+                className={`w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${!!preselectedClassId ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
               >
                 <option value="">-- Không gán (Đề tự do) --</option>
                 {classes.map(c => (
@@ -244,15 +245,12 @@ export const TestCreatePage: React.FC = () => {
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">2. Thông số bài thi</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Input
-                label="Số lượng câu hỏi (5 - 50)"
-                type="number"
-                min={5}
-                max={50}
-                value={totalQuestions}
-                onChange={e => setTotalQuestions(Number(e.target.value))}
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Số lượng câu hỏi
+              </label>
+              <div className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-gray-50 text-gray-500">
+                Tự động phân bổ theo bài học
+              </div>
             </div>
 
             <div>

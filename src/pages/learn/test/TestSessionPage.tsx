@@ -5,6 +5,50 @@ import type { CurrentStageDto, ActivityResultDto, StudentAnswerSubmissionDto, Te
 import { StudentActivityRenderer } from '../../../components/learn/test/StudentActivityRenderer'
 import { ActivityResultScreen } from '../../../components/learn/test/ActivityResultScreen'
 
+const TestTimer: React.FC<{ startedAt: string; timeLimitMinutes: number | null }> = ({ startedAt, timeLimitMinutes }) => {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    const start = new Date(startedAt).getTime()
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - start) / 1000))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [startedAt])
+
+  if (!timeLimitMinutes) {
+    return (
+      <div className="text-sm font-medium text-gray-500 flex items-center gap-1.5">
+        <span>⏱️</span>
+        <span>{Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}</span>
+      </div>
+    )
+  }
+
+  const limitSeconds = timeLimitMinutes * 60
+  const isOvertime = elapsed > limitSeconds
+
+  if (isOvertime) {
+    const over = elapsed - limitSeconds
+    return (
+      <div className="text-sm font-bold text-red-600 flex items-center gap-1.5 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+        <span>⚠️</span>
+        <span>Quá thời gian +{Math.floor(over / 60).toString().padStart(2, '0')}:{(over % 60).toString().padStart(2, '0')}</span>
+      </div>
+    )
+  }
+
+  const remaining = limitSeconds - elapsed
+  const isWarning = remaining < 60 // last minute warning
+
+  return (
+    <div className={`text-sm font-bold flex items-center gap-1.5 px-3 py-1 rounded-full ${isWarning ? 'text-orange-600 bg-orange-50 border border-orange-200' : 'text-gray-600 bg-gray-50'}`}>
+      <span>⏱️</span>
+      <span>Còn lại {Math.floor(remaining / 60).toString().padStart(2, '0')}:{(remaining % 60).toString().padStart(2, '0')}</span>
+    </div>
+  )
+}
+
 export const TestSessionPage: React.FC = () => {
   const { publicCode, attemptId } = useParams<{ publicCode: string; attemptId: string }>()
   const navigate = useNavigate()
@@ -125,10 +169,17 @@ export const TestSessionPage: React.FC = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
-        <h1 className="font-bold text-green-700">IELTS Thanh Lê Learning</h1>
-        {stage && !activityResult && (
-          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-            Hoạt động {stage.stageIndex + 1} / {stage.totalStages}
+        <h1 className="font-bold text-green-700 hidden sm:block">IELTS Thanh Lê Learning</h1>
+        
+        {stage && (
+          <div className="flex items-center gap-3">
+            {!activityResult && (
+              <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                Hoạt động {stage.stageIndex + 1} / {stage.totalStages}
+              </div>
+            )}
+            
+            <TestTimer startedAt={stage.startedAt} timeLimitMinutes={stage.timeLimitSnapshotMinutes} />
           </div>
         )}
       </header>

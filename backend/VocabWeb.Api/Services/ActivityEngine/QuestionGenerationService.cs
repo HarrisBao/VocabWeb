@@ -15,68 +15,113 @@ public class QuestionGenerationService : IQuestionGenerationService
     {
         return new List<ActivityDefinition>
         {
-            new() { Type = ActivityType.WORD_TO_MEANING, Name = "Chọn Nghĩa", Description = "Hiển thị từ, chọn nghĩa", RequiredInputs = new List<string> { "Word", "Meaning" } },
-            new() { Type = ActivityType.MEANING_TO_WORD, Name = "Chọn Từ", Description = "Hiển thị nghĩa, chọn từ", RequiredInputs = new List<string> { "Word", "Meaning" } },
-            new() { Type = ActivityType.LISTEN_TO_WORD, Name = "Nghe Chọn Từ", Description = "Nghe âm thanh, chọn từ", RequiredInputs = new List<string> { "Word", "Audio" } },
-            new() { Type = ActivityType.LISTEN_TO_MEANING, Name = "Nghe Chọn Nghĩa", Description = "Nghe âm thanh, chọn nghĩa", RequiredInputs = new List<string> { "Meaning", "Audio" } },
-            new() { Type = ActivityType.MEANING_TO_TYPE_WORD, Name = "Gõ Từ", Description = "Hiển thị nghĩa, gõ lại từ", RequiredInputs = new List<string> { "Word", "Meaning" } },
-            new() { Type = ActivityType.LISTEN_TO_TYPE_WORD, Name = "Nghe và Gõ Từ", Description = "Nghe âm thanh, gõ lại từ", RequiredInputs = new List<string> { "Word", "Audio" } },
-            new() { Type = ActivityType.WORD_TO_TYPE_MEANING, Name = "Gõ Nghĩa", Description = "Hiển thị từ, gõ lại nghĩa", RequiredInputs = new List<string> { "Word", "Meaning" } },
-            new() { Type = ActivityType.MISSING_LETTERS, Name = "Điền Chữ Cái", Description = "Điền chữ cái còn thiếu của từ", RequiredInputs = new List<string> { "Word" } },
-            new() { Type = ActivityType.UNSCRAMBLE_WORD, Name = "Xếp Chữ", Description = "Sắp xếp lại các chữ cái bị xáo trộn", RequiredInputs = new List<string> { "Word" } },
-            new() { Type = ActivityType.MATCH_WORD_MEANING, Name = "Ghép Từ và Nghĩa", Description = "Ghép nối từ với nghĩa", RequiredInputs = new List<string> { "Word", "Meaning" } },
-            new() { Type = ActivityType.PRONUNCIATION, Name = "Phát Âm", Description = "Luyện phát âm", RequiredInputs = new List<string> { "Word" } }
+            new() { Type = ActivityType.WORD_TO_MEANING, Name = "Từ → Chọn nghĩa", Description = "Hiển thị từ tiếng Anh, chọn nghĩa tiếng Việt đúng.", RequiredInputs = new List<string> { "Word", "Meaning" } },
+            new() { Type = ActivityType.MEANING_TO_WORD, Name = "Nghĩa → Chọn từ", Description = "Hiển thị nghĩa tiếng Việt, chọn từ tiếng Anh đúng.", RequiredInputs = new List<string> { "Word", "Meaning" } },
+            new() { Type = ActivityType.LISTEN_TO_WORD, Name = "Nghe → Chọn từ", Description = "Nghe phát âm, chọn từ tiếng Anh đúng.", RequiredInputs = new List<string> { "Word", "Audio" } },
+            new() { Type = ActivityType.LISTEN_TO_MEANING, Name = "Nghe → Chọn nghĩa", Description = "Nghe phát âm, chọn nghĩa tiếng Việt đúng.", RequiredInputs = new List<string> { "Meaning", "Audio" } },
+            new() { Type = ActivityType.MEANING_TO_TYPE_WORD, Name = "Nghĩa → Gõ từ", Description = "Hiển thị nghĩa tiếng Việt, gõ từ tiếng Anh tương ứng.", RequiredInputs = new List<string> { "Word", "Meaning" } },
+            new() { Type = ActivityType.LISTEN_TO_TYPE_WORD, Name = "Nghe → Gõ từ", Description = "Nghe phát âm, gõ từ tiếng Anh tương ứng.", RequiredInputs = new List<string> { "Word", "Audio" } },
+            new() { Type = ActivityType.WORD_TO_TYPE_MEANING, Name = "Từ → Gõ nghĩa", Description = "Hiển thị từ tiếng Anh, gõ nghĩa tiếng Việt tương ứng.", RequiredInputs = new List<string> { "Word", "Meaning" } },
+            new() { Type = ActivityType.MISSING_LETTERS, Name = "Điền chữ còn thiếu", Description = "Điền các chữ cái còn thiếu vào từ tiếng Anh.", RequiredInputs = new List<string> { "Word" } },
+            new() { Type = ActivityType.UNSCRAMBLE_WORD, Name = "Sắp xếp chữ cái", Description = "Sắp xếp lại các chữ cái bị xáo trộn thành từ đúng.", RequiredInputs = new List<string> { "Word" } },
+            new() { Type = ActivityType.MATCH_WORD_MEANING, Name = "Ghép thẻ từ & nghĩa", Description = "Nối các thẻ từ tiếng Anh với nghĩa tiếng Việt tương ứng.", RequiredInputs = new List<string> { "Word", "Meaning" } },
+            new() { Type = ActivityType.PRONUNCIATION, Name = "Phát âm", Description = "Nghe và phát âm lại từ vựng.", RequiredInputs = new List<string> { "Word" } }
         };
     }
 
-    public List<GeneratedQuestion> GenerateQuestions(List<VocabularyItem> vocabularyItems, List<ActivityType> requestedActivityTypes, int totalQuestions)
+    public List<GeneratedQuestion> GenerateQuestions(List<VocabularyItem> vocabularyItems, List<ActivityType> requestedActivityTypes)
     {
         var questions = new List<GeneratedQuestion>();
-        if (vocabularyItems == null || !vocabularyItems.Any() || requestedActivityTypes == null || !requestedActivityTypes.Any() || totalQuestions <= 0)
+        if (vocabularyItems == null || vocabularyItems.Count == 0 || requestedActivityTypes == null || requestedActivityTypes.Count == 0)
         {
             return questions;
         }
 
-        int previousTargetId = -1;
+        int totalWords = vocabularyItems.Count;
+        bool isSingleActivity = requestedActivityTypes.Count == 1;
 
-        for (int i = 0; i < totalQuestions; i++)
+        // Global Coverage Planner
+        var usageCounts = vocabularyItems.ToDictionary(v => v.Id, v => 0);
+
+        foreach (var activityType in requestedActivityTypes)
         {
-            var activityType = requestedActivityTypes[Rng.Next(requestedActivityTypes.Count)];
+            int targetSize = GetTargetSizeForActivity(activityType, totalWords, isSingleActivity);
+            var selectedItems = new List<VocabularyItem>();
+            var availableItems = new List<VocabularyItem>(vocabularyItems);
 
-            // Random target, ensuring it's not the exact same as the previous one if possible
-            var validTargets = vocabularyItems.Where(v => v.Id != previousTargetId).ToList();
-            if (!validTargets.Any()) validTargets = vocabularyItems; // Fallback if only 1 item exists
-
-            var target = validTargets[Rng.Next(validTargets.Count)];
-
-            var question = GenerateSingleQuestion(target, activityType, vocabularyItems);
-
-            // Question Quality Rule: if question generation failed (e.g., not enough valid distractors), skip and try to regenerate?
-            // To simplify for this phase, if it returns null, we just continue (or we could retry). Let's retry a few times.
-            int retries = 0;
-            while (question == null && retries < 3)
+            // Loop until we reach target size or run out of valid candidates
+            while (selectedItems.Count < targetSize && availableItems.Count > 0)
             {
-                target = vocabularyItems[Rng.Next(vocabularyItems.Count)];
-                question = GenerateSingleQuestion(target, activityType, vocabularyItems);
-                retries++;
+                // Order by lowest usage count first, then random
+                var candidate = availableItems
+                    .OrderBy(v => usageCounts[v.Id])
+                    .ThenBy(v => Rng.Next())
+                    .First();
+
+                availableItems.Remove(candidate);
+
+                var question = GenerateSingleQuestion(candidate, activityType, vocabularyItems);
+                if (question != null)
+                {
+                    question.QuestionId = Guid.NewGuid().ToString();
+                    questions.Add(question);
+                    selectedItems.Add(candidate);
+                    usageCounts[candidate.Id]++;
+                }
             }
+        }
 
-            if (question != null)
+        // Check if full coverage is achieved. If not, forcefully insert unused words into random activities.
+        var unusedWords = vocabularyItems.Where(v => usageCounts[v.Id] == 0).ToList();
+        foreach (var unused in unusedWords)
+        {
+            // Try to assign it to a random activity that hasn't already used it (if possible)
+            var shuffledActivities = requestedActivityTypes.OrderBy(a => Rng.Next()).ToList();
+            bool assigned = false;
+
+            foreach (var activityType in shuffledActivities)
             {
-                question.QuestionId = Guid.NewGuid().ToString();
-                questions.Add(question);
-                previousTargetId = target.Id;
-            }
-            else
-            {
-                // If we couldn't generate a valid question even after retries, we might want to decrement i 
-                // to try another activity type, or just break if impossible.
-                // Let's decrement i to try again (up to a limit to avoid infinite loops).
-                // Actually, if we just skip, we might not reach totalQuestions, but Question Quality > Quantity.
+                // Check if this activity already generated a question for this word
+                bool alreadyInActivity = questions.Any(q => q.Type == activityType && q.TargetVocabularyItemId == unused.Id);
+                if (!alreadyInActivity)
+                {
+                    var question = GenerateSingleQuestion(unused, activityType, vocabularyItems);
+                    if (question != null)
+                    {
+                        question.QuestionId = Guid.NewGuid().ToString();
+                        questions.Add(question);
+                        usageCounts[unused.Id]++;
+                        assigned = true;
+                        break;
+                    }
+                }
             }
         }
 
         return questions;
+    }
+
+    private int GetTargetSizeForActivity(ActivityType type, int totalWords, bool isSingleActivity)
+    {
+        if (isSingleActivity) return totalWords;
+        if (totalWords < 15) return totalWords;
+
+        // Default approximate system targets
+        return type switch
+        {
+            ActivityType.WORD_TO_MEANING => 20,
+            ActivityType.MEANING_TO_WORD => 20,
+            ActivityType.LISTEN_TO_WORD => 20,
+            ActivityType.LISTEN_TO_MEANING => 20,
+            ActivityType.MEANING_TO_TYPE_WORD => 18,
+            ActivityType.LISTEN_TO_TYPE_WORD => 18,
+            ActivityType.WORD_TO_TYPE_MEANING => 18,
+            ActivityType.MISSING_LETTERS => 18,
+            ActivityType.UNSCRAMBLE_WORD => 18,
+            ActivityType.MATCH_WORD_MEANING => 15,
+            ActivityType.PRONUNCIATION => 15,
+            _ => 15
+        };
     }
 
     private GeneratedQuestion? GenerateSingleQuestion(VocabularyItem target, ActivityType type, List<VocabularyItem> allItems)
@@ -93,7 +138,7 @@ public class QuestionGenerationService : IQuestionGenerationService
             case ActivityType.WORD_TO_MEANING:
                 q.QuestionPrompt = target.Word;
                 q.Options = GenerateOptions(target, allItems, item => item.Meaning, true);
-                if (q.Options.Count < 2) return null; // Question Quality Rule: Needs at least 1 correct + 1 distractor
+                if (q.Options.Count < 2) return null;
                 break;
 
             case ActivityType.MEANING_TO_WORD:
@@ -138,8 +183,6 @@ public class QuestionGenerationService : IQuestionGenerationService
                 break;
 
             case ActivityType.MATCH_WORD_MEANING:
-                // Not a standard single choice, maybe return options as pairs?
-                // For simplicity, we won't fully implement the complex drag-drop payload here, just a basic structure.
                 break;
 
             case ActivityType.PRONUNCIATION:
@@ -155,9 +198,7 @@ public class QuestionGenerationService : IQuestionGenerationService
     {
         if (string.IsNullOrWhiteSpace(input)) return string.Empty;
         var normalized = input.Trim().ToLowerInvariant();
-        // Remove common punctuation: . , ! ? ; :
         normalized = Regex.Replace(normalized, @"[.,!?;:]", "");
-        // Collapse multiple spaces
         normalized = Regex.Replace(normalized, @"\s+", " ");
         return normalized;
     }
@@ -170,31 +211,23 @@ public class QuestionGenerationService : IQuestionGenerationService
         };
 
         var targetNormalizedMeaning = NormalizeString(target.Meaning);
-
-        // Filter valid distractors
         var validDistractors = allItems.Where(item => item.Id != target.Id).ToList();
 
         if (isMeaningOptions)
         {
-            // If the options are meanings, we must NOT include any meaning that normalizes to the same as the target's meaning.
             validDistractors = validDistractors
                 .Where(item => NormalizeString(item.Meaning) != targetNormalizedMeaning)
                 .ToList();
         }
         else
         {
-            // If the options are words (Meaning -> Word), we must NOT include words that have the same meaning as the target.
-            // Example: target is "rapid" (meaning: nhanh). Distractor cannot be "quick" (meaning: nhanh).
             validDistractors = validDistractors
                 .Where(item => NormalizeString(item.Meaning) != targetNormalizedMeaning)
                 .ToList();
         }
 
-        // Deduplicate distractors based on the text they will show
         var distinctDistractors = new List<VocabularyItem>();
         var seenTexts = new HashSet<string> { NormalizeString(textSelector(target)) };
-
-        // Randomize the valid distractors before selecting
         var shuffledValidDistractors = validDistractors.OrderBy(x => Rng.Next()).ToList();
 
         foreach (var item in shuffledValidDistractors)
@@ -204,7 +237,7 @@ public class QuestionGenerationService : IQuestionGenerationService
             {
                 seenTexts.Add(textNormalized);
                 distinctDistractors.Add(item);
-                if (distinctDistractors.Count == 3) break; // Need 3 distractors for 4 options total
+                if (distinctDistractors.Count == 3) break;
             }
         }
 
@@ -213,7 +246,6 @@ public class QuestionGenerationService : IQuestionGenerationService
             options.Add(new QuestionOption { VocabularyItemId = item.Id, Text = textSelector(item) });
         }
 
-        // Shuffle options
         return options.OrderBy(x => Rng.Next()).ToList();
     }
 
@@ -221,11 +253,10 @@ public class QuestionGenerationService : IQuestionGenerationService
     {
         if (string.IsNullOrWhiteSpace(word) || word.Length <= 2) return "_";
         var chars = word.ToCharArray();
-        // Simple logic: replace ~30-50% of letters with '_'
         int lettersToHide = Math.Max(1, word.Length / 3);
         for (int i = 0; i < lettersToHide; i++)
         {
-            int idx = Rng.Next(1, word.Length - 1); // Avoid hiding first and last letter if possible
+            int idx = Rng.Next(1, word.Length - 1);
             chars[idx] = '_';
         }
         return new string(chars);

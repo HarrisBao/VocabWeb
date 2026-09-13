@@ -12,7 +12,11 @@ public class TestDto
     public int? ClassId { get; set; }
     public string? ClassName { get; set; }
     public List<string> EnabledTypes { get; set; } = new();
+    
+    // We keep TotalQuestions here just in case legacy tests still have it, 
+    // or as a placeholder for frontend, but it's no longer teacher-configurable.
     public int TotalQuestions { get; set; }
+    
     public int? TimeLimitMinutes { get; set; }
     public decimal PassScore { get; set; }
 
@@ -40,9 +44,6 @@ public class CreateTestDto
 
     [Required(ErrorMessage = "Vui lòng chọn ít nhất 1 loại câu hỏi")]
     public List<string> EnabledTypes { get; set; } = new();
-
-    [Range(5, 100, ErrorMessage = "Số câu hỏi từ 5 đến 100 câu")]
-    public int TotalQuestions { get; set; } = 20;
 
     public int? TimeLimitMinutes { get; set; }
 

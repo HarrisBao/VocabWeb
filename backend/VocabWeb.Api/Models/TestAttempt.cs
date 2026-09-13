@@ -13,8 +13,11 @@ public class TestAttempt
     public string? GuestSessionId { get; set; }
     public string? ParticipantDisplayNameSnapshot { get; set; }
 
-    // Snapshot of sequence
+    // Snapshot of sequence and plan
     public string ActivitySequenceSnapshot { get; set; } = string.Empty;
+    public string? ActivityPlanJson { get; set; }
+    public int? TimeLimitSnapshotMinutes { get; set; }
+    
     public int CurrentStageIndex { get; set; } = 0;
 
     public int AttemptNumber { get; set; } = 1;

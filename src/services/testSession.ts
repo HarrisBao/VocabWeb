@@ -20,6 +20,8 @@ export interface CurrentStageDto {
   totalStages: number
   activityType: string
   activityTypeLabel: string
+  timeLimitSnapshotMinutes: number | null
+  startedAt: string
   questions: StudentQuestionDto[]
 }
 

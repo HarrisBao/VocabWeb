@@ -65,6 +65,7 @@ interface TestItem {
   description?: string
   enabledTypes: string[]
   attemptCount: number
+  publicCode: string
 }
 
 export const ClassDetailPage: React.FC = () => {
@@ -440,11 +441,25 @@ export const ClassDetailPage: React.FC = () => {
                       </button>
                     </div>
 
-                    <Link to={`/teacher/vocabulary/${lesson.vocabularySetId}`}>
-                      <Button variant="ghost" size="sm" className="text-xs">
-                        Xem chi tiết
-                      </Button>
-                    </Link>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-blue-600 hover:bg-blue-50"
+                          onClick={() => {
+                            const link = `${window.location.origin}/learn/vocabulary/${lesson.vocabularySetId}?classId=${id}`
+                            navigator.clipboard.writeText(link)
+                            alert('Đã copy link học từ vựng!')
+                          }}
+                        >
+                          📋 Link Học
+                        </Button>
+                        <Link to={`/teacher/vocabulary/${lesson.vocabularySetId}`}>
+                          <Button variant="ghost" size="sm" className="text-xs">
+                            Xem chi tiết
+                          </Button>
+                        </Link>
+                      </div>
                   </div>
                 </Card>
               ))}
@@ -542,6 +557,21 @@ export const ClassDetailPage: React.FC = () => {
                     </div>
                   </div>
                   
+                  <div className="flex items-center gap-2 mb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      fullWidth
+                      className="text-xs text-blue-600 hover:bg-blue-50 border border-blue-100"
+                      onClick={() => {
+                        const link = `${window.location.origin}/test/${test.publicCode}`
+                        navigator.clipboard.writeText(link)
+                        alert('Đã copy link bài kiểm tra!')
+                      }}
+                    >
+                      📋 Copy Link Kiểm Tra
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Link to={`/teacher/tests/${test.id}`} className="flex-1">
                       <Button variant="outline" size="sm" fullWidth>

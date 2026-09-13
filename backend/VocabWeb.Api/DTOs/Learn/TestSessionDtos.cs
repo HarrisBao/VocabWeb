@@ -27,6 +27,8 @@ public class CurrentStageDto
     public int TotalStages { get; set; }
     public string ActivityType { get; set; } = string.Empty;
     public string ActivityTypeLabel { get; set; } = string.Empty;
+    public int? TimeLimitSnapshotMinutes { get; set; }
+    public DateTime StartedAt { get; set; }
     public List<StudentQuestionDto> Questions { get; set; } = new();
 }
 

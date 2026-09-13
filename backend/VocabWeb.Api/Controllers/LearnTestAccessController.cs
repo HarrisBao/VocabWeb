@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Data;
 using VocabWeb.Api.DTOs.Learn;
 using VocabWeb.Api.Models;
+using VocabWeb.Api.Models.ActivityEngine;
+using VocabWeb.Api.Services.ActivityEngine;
 
 namespace VocabWeb.Api.Controllers;
 
@@ -16,11 +18,13 @@ public class LearnTestAccessController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IDataProtector _protector;
+    private readonly IQuestionGenerationService _questionGeneration;
 
-    public LearnTestAccessController(AppDbContext context, IDataProtectionProvider dataProtectionProvider)
+    public LearnTestAccessController(AppDbContext context, IDataProtectionProvider dataProtectionProvider, IQuestionGenerationService questionGeneration)
     {
         _context = context;
         _protector = dataProtectionProvider.CreateProtector("VocabWeb.TestAccessTicket");
+        _questionGeneration = questionGeneration;
     }
 
     [HttpGet("{publicCode}")]
@@ -166,6 +170,8 @@ public class LearnTestAccessController : ControllerBase
 
         var test = await _context.Tests
             .Include(t => t.Attempts)
+            .Include(t => t.VocabularySet)
+                .ThenInclude(vs => vs.Items)
             .FirstOrDefaultAsync(t => t.PublicCode == publicCode && t.Id == ticketData.TestId && !t.IsArchived);
 
         if (test == null)
@@ -190,6 +196,12 @@ public class LearnTestAccessController : ControllerBase
             return BadRequest(new { message = "Bạn đã sử dụng hết số lượt làm bài." });
         }
 
+        var enabledTypes = test.EnabledTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(t => Enum.Parse<ActivityType>(t))
+            .ToList();
+
+        var generatedQuestions = _questionGeneration.GenerateQuestions(test.VocabularySet.Items.ToList(), enabledTypes);
+
         // Create new attempt
         var attempt = new TestAttempt
         {
@@ -203,8 +215,10 @@ public class LearnTestAccessController : ControllerBase
             AttemptNumber = attemptsCount + 1,
             Status = "IN_PROGRESS",
             StartedAt = DateTime.UtcNow,
-            TotalQuestions = test.TotalQuestions,
+            TotalQuestions = generatedQuestions.Count,
             ActivitySequenceSnapshot = test.EnabledTypes,
+            ActivityPlanJson = JsonSerializer.Serialize(generatedQuestions),
+            TimeLimitSnapshotMinutes = test.TimeLimitMinutes,
             CurrentStageIndex = 0
         };
 

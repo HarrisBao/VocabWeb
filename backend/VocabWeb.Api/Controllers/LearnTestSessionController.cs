@@ -95,12 +95,19 @@ public class LearnTestSessionController : ControllerBase
             return BadRequest(new { message = "Hoạt động không hợp lệ." });
         }
 
-        // Generate questions using Core Engine
-        var generatedQuestions = _questionGeneration.GenerateQuestions(
-            attempt.Test.VocabularySet.Items.ToList(),
-            new List<ActivityType> { activityType },
-            attempt.TotalQuestions
-        );
+        if (string.IsNullOrEmpty(attempt.ActivityPlanJson))
+        {
+            return BadRequest(new { message = "Lỗi dữ liệu bài làm (không tìm thấy cấu trúc câu hỏi)." });
+        }
+
+        var allQuestions = JsonSerializer.Deserialize<List<GeneratedQuestion>>(attempt.ActivityPlanJson);
+        if (allQuestions == null)
+        {
+            return BadRequest(new { message = "Lỗi dữ liệu bài làm." });
+        }
+
+        // Filter only questions belonging to the current activity stage
+        var generatedQuestions = allQuestions.Where(q => q.Type == activityType).ToList();
 
         // Map to safe DTO without CorrectAnswer
         var questionProtector = _protector.CreateProtector("QuestionTarget");
@@ -130,6 +137,8 @@ public class LearnTestSessionController : ControllerBase
             TotalStages = sequence.Count,
             ActivityType = activityTypeStr,
             ActivityTypeLabel = GetActivityTypeLabel(activityTypeStr),
+            TimeLimitSnapshotMinutes = attempt.TimeLimitSnapshotMinutes,
+            StartedAt = attempt.StartedAt,
             Questions = safeQuestions
         });
     }
