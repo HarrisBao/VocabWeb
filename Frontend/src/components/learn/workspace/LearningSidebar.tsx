@@ -74,11 +74,11 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({ currentMode, o
                   onClick={() => handleSelect(item.id, true)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                     currentMode === item.id 
-                      ? 'bg-green-50 text-green-700 border-l-4 border-green-600' 
-                      : 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent'
+                      ? 'bg-brand-light text-green-700 border-l-4 border-green-600' 
+                      : 'text-gray-600 hover:bg-surface-hover border-l-4 border-transparent'
                   }`}
                 >
-                  <span className={currentMode === item.id ? 'text-green-600' : 'text-gray-400'}>{item.icon}</span>
+                  <span className={currentMode === item.id ? 'text-brand-text' : 'text-gray-400'}>{item.icon}</span>
                   {item.name}
                 </button>
               ))}
@@ -110,12 +110,12 @@ export const LearningSidebar: React.FC<LearningSidebarProps> = ({ currentMode, o
                       !isAvailable 
                         ? 'opacity-50 cursor-not-allowed text-gray-500 border-l-4 border-transparent' 
                         : isActive
-                          ? 'bg-green-50 text-green-700 border-l-4 border-green-600 font-bold'
-                          : 'text-gray-600 hover:bg-gray-50 border-l-4 border-transparent font-medium'
+                          ? 'bg-brand-light text-green-700 border-l-4 border-green-600 font-bold'
+                          : 'text-gray-600 hover:bg-surface-hover border-l-4 border-transparent font-medium'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className={isActive ? 'text-green-600' : 'text-gray-400'}>{group.icon}</span>
+                      <span className={isActive ? 'text-brand-text' : 'text-gray-400'}>{group.icon}</span>
                       <span>{activity.displayName}</span>
                     </div>
                     {!isAvailable && (

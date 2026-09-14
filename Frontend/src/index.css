@@ -7,8 +7,8 @@
      ========================================= */
 
   /* Page Backgrounds */
-  --color-page-teacher: #f4f7f6; /* professional neutral green-gray */
-  --color-page-student: #effaf4; /* lively soft green */
+  --color-page-teacher: #f4f7f6;
+  --color-page-student: #effaf4;
   --color-page-base: #f0f7f4;
 
   /* Surfaces */
@@ -19,26 +19,26 @@
   
   /* Primary Brand Greens */
   --color-brand-dark: #07382e;
-  --color-brand: #0f6250;
-  --color-brand-hover: #127560;
+  --color-brand: #0F5F4A;
+  --color-brand-hover: #1D7A61;
   --color-brand-light: #dcfce7;
   --color-brand-surface: #f0fdf4;
-  --color-brand-text: #0B4A3F;
-  --color-brand-text-secondary: #116B5A;
+  --color-brand-text: #0F5F4A;
+  --color-brand-text-secondary: #1D7A61;
 
   /* Pastel Category Accents */
-  --color-reading-bg: #d1fae5;
-  --color-reading-text: #065f46;
-  --color-listening-bg: #ede9fe;
-  --color-listening-text: #5b21b6;
-  --color-writing-bg: #e0f2fe;
-  --color-writing-text: #0369a1;
-  --color-speaking-bg: #ffedd5;
-  --color-speaking-text: #c2410c;
+  --color-reading-bg: #DDF4EA;
+  --color-reading-text: #1E7A57;
+  --color-listening-bg: #EEE7FB;
+  --color-listening-text: #7C5CC4;
+  --color-writing-bg: #E6F0FB;
+  --color-writing-text: #3B82C4;
+  --color-speaking-bg: #FBEEDC;
+  --color-speaking-text: #C96A2E;
 
   /* Semantic */
-  --color-correct-bg: #d1fae5;
-  --color-correct-text: #065f46;
+  --color-correct-bg: #DDF4EA;
+  --color-correct-text: #1E7A57;
   --color-incorrect-bg: #fee2e2;
   --color-incorrect-text: #b91c1c;
 
