@@ -4,6 +4,7 @@ import { MultipleChoiceActivity } from './MultipleChoiceActivity'
 import { ListeningChoiceActivity } from './ListeningChoiceActivity'
 import { MissingLettersActivity } from './MissingLettersActivity'
 import { PronunciationActivity } from './PronunciationActivity'
+import { MatchWordMeaningActivity } from './MatchWordMeaningActivity'
 
 interface Props {
   stage: CurrentStageDto
@@ -35,8 +36,7 @@ export const StudentActivityRenderer: React.FC<Props> = ({ stage, onComplete, mo
       return <PronunciationActivity questions={questions} activityType={activityType} onComplete={onComplete} />
       
     case 'MATCH_WORD_MEANING':
-      // Simplified: Fallback to Multiple Choice or generic for now
-      return <MultipleChoiceActivity questions={questions} activityType={activityType} onComplete={onComplete} />
+      return <MatchWordMeaningActivity questions={questions} activityType={activityType} onComplete={onComplete} mode={mode} />
       
     default:
       return (
