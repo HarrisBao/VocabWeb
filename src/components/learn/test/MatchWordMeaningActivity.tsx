@@ -24,13 +24,27 @@ const PASTEL_THEMES = [
   'bg-cyan-50 border-cyan-200 text-cyan-900'
 ];
 
+const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
+
 export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityType, onComplete, mode = 'TEST' }) => {
   const [unresolvedIds, setUnresolvedIds] = useState<string[]>(questions.map(q => q.id));
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [firstAttempts, setFirstAttempts] = useState<Record<string, string>>({});
   
   const [totalWrongAttempts, setTotalWrongAttempts] = useState(0);
-  const [roundsPlayed, setRoundsPlayed] = useState(0);
+
+  // Round logic
+  const [initialPlan, setInitialPlan] = useState<string[][]>([]);
+  const [retryPlan, setRetryPlan] = useState<string[][]>([]);
+  const [phase, setPhase] = useState<'INITIAL' | 'RETRY'>('INITIAL');
+  const [phaseRoundIndex, setPhaseRoundIndex] = useState(0);
+  const [overallRetryRound, setOverallRetryRound] = useState(0);
 
   const [roundQuestions, setRoundQuestions] = useState<StudentQuestionDto[]>([]);
   const [meaningPool, setMeaningPool] = useState<MeaningChip[]>([]);
@@ -42,20 +56,23 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
 
   // Initialize first round
   useEffect(() => {
-    if (questions.length > 0 && roundQuestions.length === 0 && !isFinished) {
-      startNextRound(unresolvedIds);
+    if (questions.length > 0 && initialPlan.length === 0 && !isFinished) {
+      const allIds = questions.map(q => q.id);
+      const shuffled = [...allIds].sort(() => Math.random() - 0.5);
+      const chunks = chunkArray(shuffled, 5);
+      setInitialPlan(chunks);
+      startRound(chunks[0], 'INITIAL', 0, 0, allIds);
     }
   }, [questions]);
 
-  const startNextRound = (currentUnresolved: string[]) => {
-    if (currentUnresolved.length === 0) {
-      setIsFinished(true);
-      return;
-    }
-
-    const shuffled = [...currentUnresolved].sort(() => Math.random() - 0.5);
-    const selectedQIds = shuffled.slice(0, 5);
-    const currentQs = selectedQIds.map(id => questions.find(q => q.id === id)!);
+  const startRound = (
+    targetQIds: string[], 
+    currentPhase: 'INITIAL' | 'RETRY', 
+    newIndex: number, 
+    retryCount: number,
+    currentUnresolved: string[]
+  ) => {
+    const currentQs = targetQIds.map(id => questions.find(q => q.id === id)!);
 
     const correctMeanings: MeaningChip[] = currentQs.map((q, i) => ({
       id: q.id,
@@ -63,7 +80,8 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
       theme: PASTEL_THEMES[i % PASTEL_THEMES.length]
     }));
 
-    const availableDistractors = currentUnresolved.filter(id => !selectedQIds.includes(id));
+    // Distractors come from current unresolved pool but NOT in current targets
+    const availableDistractors = currentUnresolved.filter(id => !targetQIds.includes(id));
     const shuffledDistractors = [...availableDistractors].sort(() => Math.random() - 0.5);
     const needed = Math.max(0, 10 - correctMeanings.length);
     const selectedDistractorIds = shuffledDistractors.slice(0, needed);
@@ -85,6 +103,9 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
     setAssignments({});
     setIsSubmitted(false);
     setSelectedMeaningId(null);
+    setPhase(currentPhase);
+    setPhaseRoundIndex(newIndex);
+    setOverallRetryRound(retryCount);
   };
 
   const handleAssign = (questionId: string, meaningId: string) => {
@@ -115,7 +136,6 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
     if (isSubmitted) return;
     
     setIsSubmitted(true);
-    setRoundsPlayed(prev => prev + 1);
 
     const newCompleted = new Set(completedIds);
     let newWrong = totalWrongAttempts;
@@ -145,7 +165,39 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
   const handleNextRound = () => {
     const remaining = unresolvedIds.filter(id => !completedIds.has(id));
     setUnresolvedIds(remaining);
-    startNextRound(remaining);
+    
+    const nextIndex = phaseRoundIndex + 1;
+    
+    if (phase === 'INITIAL') {
+      if (nextIndex < initialPlan.length) {
+        startRound(initialPlan[nextIndex], 'INITIAL', nextIndex, 0, remaining);
+      } else {
+        // Initial plan is over. Any unresolved?
+        if (remaining.length === 0) {
+          setIsFinished(true);
+        } else {
+          const shuffled = [...remaining].sort(() => Math.random() - 0.5);
+          const newRetryPlan = chunkArray(shuffled, 5);
+          setRetryPlan(newRetryPlan);
+          startRound(newRetryPlan[0], 'RETRY', 0, 1, remaining);
+        }
+      }
+    } else {
+      // In RETRY phase
+      if (nextIndex < retryPlan.length) {
+        startRound(retryPlan[nextIndex], 'RETRY', nextIndex, overallRetryRound + 1, remaining);
+      } else {
+        // Retry plan is over. Any unresolved?
+        if (remaining.length === 0) {
+          setIsFinished(true);
+        } else {
+          const shuffled = [...remaining].sort(() => Math.random() - 0.5);
+          const newRetryPlan = chunkArray(shuffled, 5);
+          setRetryPlan(newRetryPlan);
+          startRound(newRetryPlan[0], 'RETRY', 0, overallRetryRound + 1, remaining);
+        }
+      }
+    }
   };
 
   const handleFinish = () => {
@@ -171,7 +223,7 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
           </div>
           <div className="flex justify-between mb-3">
             <span className="text-gray-600 font-medium">Số lượt đã chơi:</span>
-            <span className="font-bold text-gray-900">{roundsPlayed}</span>
+            <span className="font-bold text-gray-900">{initialPlan.length + overallRetryRound}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 font-medium">Tổng số lỗi sai:</span>
@@ -202,15 +254,24 @@ export const MatchWordMeaningActivity: React.FC<Props> = ({ questions, activityT
   const allAssigned = roundQuestions.every(q => assignments[q.id]);
   const assignedMeaningIds = Object.values(assignments);
 
+  const roundIndicatorText = phase === 'INITIAL' 
+    ? `Lượt ${phaseRoundIndex + 1} / ${initialPlan.length}`
+    : `Lượt ôn lại ${overallRetryRound}`;
+
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center animate-in fade-in duration-300 py-4">
       
       {/* Progress & Header */}
       <div className="w-full mb-6 px-2">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
-            Tiến độ: {completedIds.size} / {questions.length} từ
-          </span>
+          <div className="flex gap-4 items-center">
+            <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+              Tiến độ: {completedIds.size} / {questions.length} từ
+            </span>
+            <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100 uppercase tracking-wide">
+              {roundIndicatorText}
+            </span>
+          </div>
           <span className="text-sm font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-md">
             Lỗi sai: {totalWrongAttempts}
           </span>
