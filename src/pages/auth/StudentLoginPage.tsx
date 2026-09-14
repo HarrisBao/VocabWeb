@@ -31,7 +31,7 @@ export const StudentLoginPage: React.FC = () => {
     // TODO: Connect to ASP.NET Core Web API — POST /api/auth/student/login
     await new Promise(r => setTimeout(r, 1200))
     setLoading(false)
-    navigate('/')
+    navigate('/student')
   }
 
   return (

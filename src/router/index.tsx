@@ -19,6 +19,12 @@ import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 import { ClassPage } from '../pages/learn/ClassPage'
 import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
 
+// Student System Shell
+import { StudentLayout } from '../components/layout/StudentLayout'
+import { StudentHomePage } from '../pages/student/StudentHomePage'
+import { StudentReadingPage } from '../pages/student/StudentReadingPage'
+import { StudentComingSoonPage } from '../pages/student/StudentComingSoonPage'
+
 // Test Access
 import { TestAccessPage } from '../pages/learn/test/TestAccessPage'
 import { TestIntroPage } from '../pages/learn/test/TestIntroPage'
@@ -79,6 +85,13 @@ export const AppRouter = () => {
           {/* Student Auth */}
           <Route path="/student/login" element={<StudentLoginPage />} />
           <Route path="/student/register" element={<StudentRegisterPage />} />
+
+          {/* Student System Shell */}
+          <Route path="/student" element={<StudentLayout />}>
+            <Route index element={<StudentHomePage />} />
+            <Route path="reading" element={<StudentReadingPage />} />
+            <Route path=":skillId" element={<StudentComingSoonPage />} />
+          </Route>
 
           {/* Forgot Password */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

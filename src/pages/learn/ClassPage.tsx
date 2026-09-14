@@ -35,6 +35,18 @@ export const ClassPage: React.FC = () => {
         setLoading(true);
         const data = await api.get<StudentClassDto>(`/learn/classes/${slug}`);
         setClassData(data);
+        
+        // Save to recent classes for Student Home / Reading Page
+        try {
+          const recentKey = 'student_recent_classes';
+          const existing = JSON.parse(localStorage.getItem(recentKey) || '[]');
+          const updated = existing.filter((c: any) => c.slug !== slug);
+          updated.unshift({ slug, name: data.name, code: data.code, timestamp: Date.now() });
+          localStorage.setItem(recentKey, JSON.stringify(updated.slice(0, 5)));
+        } catch (e) {
+          // Ignore local storage errors
+        }
+        
       } catch (err: any) {
         setError(err.message || 'Lỗi tải thông tin lớp học.');
       } finally {
