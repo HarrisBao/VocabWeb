@@ -214,7 +214,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<ClassSessionTest>()
             .HasOne(cst => cst.ClassSession)
-            .WithMany()
+            .WithMany(cs => cs.Tests)
             .HasForeignKey(cst => cst.ClassSessionId)
             .OnDelete(DeleteBehavior.Cascade);
 
