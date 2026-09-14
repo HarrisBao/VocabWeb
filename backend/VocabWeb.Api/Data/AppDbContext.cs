@@ -24,6 +24,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ClassEnrollment> ClassEnrollments => Set<ClassEnrollment>();
     public DbSet<ClassStaffAssignment> ClassStaffAssignments => Set<ClassStaffAssignment>();
     public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
+    public DbSet<ClassSessionTest> ClassSessionTests => Set<ClassSessionTest>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -209,6 +210,22 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<AttendanceRecord>()
             .HasIndex(ar => new { ar.ClassSessionId, ar.ClassEnrollmentId })
+            .IsUnique();
+
+        builder.Entity<ClassSessionTest>()
+            .HasOne(cst => cst.ClassSession)
+            .WithMany()
+            .HasForeignKey(cst => cst.ClassSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClassSessionTest>()
+            .HasOne(cst => cst.Test)
+            .WithMany()
+            .HasForeignKey(cst => cst.TestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClassSessionTest>()
+            .HasIndex(cst => new { cst.ClassSessionId, cst.TestId })
             .IsUnique();
 
         // TestAttempt - new ClassEnrollment relationship

@@ -1,14 +1,33 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { SKILLS_LIST } from '../../config/skills';
 
 export const StudentHomePage: React.FC = () => {
+  const { classSlug } = useParams<{ classSlug?: string }>();
+  const basePath = classSlug ? /class//portal : '/student';
+
+  let profileName = 'Học viên ✌️';
+  let className = '';
+  if (classSlug) {
+    const stored = localStorage.getItem('student_profile');
+    if (stored) {
+      try {
+        const p = JSON.parse(stored);
+        profileName = p.fullName;
+        className = Lớp ;
+      } catch {}
+    }
+  }
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
       {/* Header */}
       <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Xin chào, Học viên 👋</h1>
-        <p className="text-gray-500">Chào mừng bạn đến với hệ thống học tập IELTS Thanh Lê.</p>
+        <h1 className="text-3xl font-black text-gray-900 mb-2">Xin chào, {profileName}</h1>
+        {className ? (
+          <p className="text-gray-500">{className}</p>
+        ) : (
+          <p className="text-gray-500">Chào mừng bạn đến với hệ thống học tập IELTS Thanh Lê.</p>
+        )}
       </div>
 
       {/* Skills Grid */}
@@ -23,7 +42,7 @@ export const StudentHomePage: React.FC = () => {
             return (
               <Link 
                 key={skill.id}
-                to={skill.route}
+                to={`${basePath}/${skill.id}`}
                 className={`p-6 rounded-2xl border-2 transition-all block relative overflow-hidden group ${
                   isActive 
                     ? 'border-gray-200 bg-white hover:border-green-400 hover:shadow-md' 

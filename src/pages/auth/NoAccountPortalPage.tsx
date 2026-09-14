@@ -40,7 +40,7 @@ export const NoAccountPortalPage: React.FC = () => {
         filtered.unshift(newClass)
         localStorage.setItem('student_recent_classes', JSON.stringify(filtered.slice(0, 5)))
 
-        navigate('/student/reading')
+        navigate(`/class/${classSlug}/portal`)
       } else {
         const errData = await res.json()
         setError(errData.message || 'Không tìm thấy lớp hoặc số điện thoại không hợp lệ.')

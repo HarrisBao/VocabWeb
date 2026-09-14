@@ -20,6 +20,13 @@ public class ClassController : ControllerBase
         _db = db;
     }
 
+        private async Task<bool> HasAccessToClass(int classId)
+    {
+        var teacherId = GetTeacherId();
+        if (string.IsNullOrEmpty(teacherId)) return false;
+        return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
+    }
+
     private string? GetTeacherId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 
@@ -30,7 +37,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var list = await _db.Classes
-            .Where(c => c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
             .Include(c => c.Lessons)
             .Include(c => c.Members)
             .OrderByDescending(c => c.CreatedAt)
@@ -58,7 +65,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
             .Include(c => c.Lessons)
                 .ThenInclude(l => l.VocabularySet)
                     .ThenInclude(vs => vs.Items)
@@ -165,7 +172,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -190,7 +197,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -209,7 +216,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -305,6 +312,7 @@ public class ClassController : ControllerBase
     [HttpGet("{id}/enrollments")]
     public async Task<IActionResult> GetEnrollments(int id)
     {
+        if (!await HasAccessToClass(id)) return Forbid();
         var enrollments = await _db.ClassEnrollments
             .Include(ce => ce.StudentProfile)
             .Where(ce => ce.ClassId == id)
@@ -324,6 +332,7 @@ public class ClassController : ControllerBase
     [HttpPost("{id}/students/no-account")]
     public async Task<IActionResult> AddNoAccountStudent(int id, [FromBody] NoAccountStudentDto dto)
     {
+        if (!await HasAccessToClass(id)) return Forbid();
         var cls = await _db.Classes.FindAsync(id);
         if (cls == null) return NotFound("Class not found");
 
@@ -381,11 +390,43 @@ public class ClassController : ControllerBase
     [HttpGet("{id}/sessions")]
     public async Task<IActionResult> GetSessions(int id)
     {
+        if (!await HasAccessToClass(id)) return Forbid();
         var sessions = await _db.ClassSessions
             .Include(cs => cs.AttendanceRecords)
+            .Include(cs => cs.Tests).ThenInclude(cst => cst.Test)
             .Where(cs => cs.ClassId == id)
             .OrderByDescending(cs => cs.SessionDate)
-            .Select(cs => new ClassSessionDto
+            .ToListAsync();
+            
+        var dtos = new List<ClassSessionDto>();
+        foreach (var cs in sessions)
+        {
+            var eligibleEnrollmentIds = await _db.ClassEnrollments
+                .Where(ce => ce.ClassId == id && ce.JoinedAt.Date <= cs.SessionDate.Date)
+                .Select(ce => ce.Id)
+                .ToListAsync();
+
+            var activities = new List<SessionActivityStatsDto>();
+            foreach (var cst in cs.Tests)
+            {
+                var completedEnrollmentIds = await _db.TestAttempts
+                    .Where(ta => ta.TestId == cst.TestId && ta.Status == "SUBMITTED" && ta.ClassEnrollmentId != null && eligibleEnrollmentIds.Contains(ta.ClassEnrollmentId.Value))
+                    .Select(ta => (int)ta.ClassEnrollmentId!)
+                    .Distinct()
+                    .ToListAsync();
+                    
+                activities.Add(new SessionActivityStatsDto
+                {
+                    TestId = cst.TestId,
+                    Title = cst.Test.Title,
+                    TotalStudents = eligibleEnrollmentIds.Count,
+                    CompletedCount = completedEnrollmentIds.Count,
+                    NotCompletedCount = eligibleEnrollmentIds.Count - completedEnrollmentIds.Count,
+                    CompletedEnrollmentIds = completedEnrollmentIds
+                });
+            }
+
+            dtos.Add(new ClassSessionDto
             {
                 Id = cs.Id,
                 ClassId = cs.ClassId,
@@ -396,17 +437,18 @@ public class ClassController : ControllerBase
                     Id = ar.Id,
                     ClassEnrollmentId = ar.ClassEnrollmentId,
                     Status = ar.Status
-                }).ToList()
-            })
-            .ToListAsync();
+                }).ToList(),
+                Activities = activities
+            });
+        }
             
-        // We can attach completion stats here if needed, but keeping it simple for now or load them on demand.
-        return Ok(sessions);
+        return Ok(dtos);
     }
 
     [HttpPost("{id}/sessions")]
     public async Task<IActionResult> CreateSession(int id, [FromBody] ClassSessionCreateDto dto)
     {
+        if (!await HasAccessToClass(id)) return Forbid();
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var session = new ClassSession
         {
@@ -418,6 +460,18 @@ public class ClassController : ControllerBase
         };
         _db.ClassSessions.Add(session);
         await _db.SaveChangesAsync();
+
+        if (dto.TestId.HasValue)
+        {
+            var cst = new ClassSessionTest
+            {
+                ClassSessionId = session.Id,
+                TestId = dto.TestId.Value,
+                AssignedAt = DateTime.UtcNow
+            };
+            _db.ClassSessionTests.Add(cst);
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new ClassSessionDto
         {
@@ -431,6 +485,7 @@ public class ClassController : ControllerBase
     [HttpPut("{id}/sessions/{sessionId}/attendance")]
     public async Task<IActionResult> UpdateAttendance(int id, int sessionId, [FromBody] AttendanceUpdateDto dto)
     {
+        if (!await HasAccessToClass(id)) return Forbid();
         var session = await _db.ClassSessions.FirstOrDefaultAsync(cs => cs.Id == sessionId && cs.ClassId == id);
         if (session == null) return NotFound();
 

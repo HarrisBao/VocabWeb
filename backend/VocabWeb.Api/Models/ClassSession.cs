@@ -16,4 +16,5 @@ public class ClassSession
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<AttendanceRecord> AttendanceRecords { get; set; } = new List<AttendanceRecord>();
+    public ICollection<ClassSessionTest> Tests { get; set; } = new List<ClassSessionTest>();
 }

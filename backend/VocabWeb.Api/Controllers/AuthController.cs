@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -375,6 +375,10 @@ public class AuthController : ControllerBase
 
         if (profile == null)
             return Unauthorized(new { message = "Không tìm thấy học sinh phù hợp trong lớp này." });
+
+        // CRITICAL PHONE-LOGIN SAFETY RULE: Phone login is only for NO-ACCOUNT students.
+        if (profile.UserId != null)
+            return BadRequest(new { message = "Học sinh này đã có tài khoản. Vui lòng đăng nhập bằng email/Google." });
 
         // Verify class enrollment
         var enrollment = await _db.ClassEnrollments

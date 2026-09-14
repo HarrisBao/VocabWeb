@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 
@@ -86,14 +86,21 @@ export const AppRouter = () => {
           {/* Student Auth */}
           <Route path="/student/login" element={<StudentLoginPage />} />
           <Route path="/student/register" element={<StudentRegisterPage />} />
-            <Route path="/class/:classSlug/portal" element={<NoAccountPortalPage />} />
+            <Route path="/class/:classSlug/portal/login" element={<NoAccountPortalPage />} />
 
-          {/* Student System Shell */}
-          <Route path="/student" element={<StudentLayout />}>
-            <Route index element={<StudentHomePage />} />
-            <Route path="reading" element={<StudentReadingPage />} />
-            <Route path=":skillId" element={<StudentComingSoonPage />} />
-          </Route>
+            {/* Student System Shell for No-Account Students */}
+            <Route path="/class/:classSlug/portal" element={<StudentLayout />}>
+              <Route index element={<StudentHomePage />} />
+              <Route path="reading" element={<StudentReadingPage />} />
+              <Route path=":skillId" element={<StudentComingSoonPage />} />
+            </Route>
+
+            {/* Student System Shell for Account Students */}
+            <Route path="/student" element={<StudentLayout />}>
+              <Route index element={<StudentHomePage />} />
+              <Route path="reading" element={<StudentReadingPage />} />
+              <Route path=":skillId" element={<StudentComingSoonPage />} />
+            </Route>
 
           {/* Forgot Password */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

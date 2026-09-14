@@ -60,6 +60,30 @@ interface ClassDetails {
 
 type TabType = 'lessons' | 'members' | 'results' | 'settings' | 'attendance'
 
+interface ClassSession {
+  id: number
+  classId: number
+  sessionDate: string
+  title?: string
+  attendanceRecords: AttendanceRecord[]
+  activities: SessionActivityStats[]
+}
+
+interface AttendanceRecord {
+  id: number
+  classEnrollmentId: number
+  status: string
+}
+
+interface SessionActivityStats {
+  testId: number
+  title: string
+  totalStudents: number
+  completedCount: number
+  notCompletedCount: number
+  completedEnrollmentIds: number[]
+}
+
 interface TestItem {
   id: number
   title: string
@@ -96,11 +120,17 @@ export const ClassDetailPage: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState(false)
 
   const [classTests, setClassTests] = useState<TestItem[]>([])
+  const [classSessions, setClassSessions] = useState<ClassSession[]>([])
+  const [isCreatingSession, setIsCreatingSession] = useState(false)
+  const [newSessionDate, setNewSessionDate] = useState('')
+  const [newSessionTitle, setNewSessionTitle] = useState('')
+  const [newSessionTestId, setNewSessionTestId] = useState<number | ''>('')
   const [togglingVisibilityId, setTogglingVisibilityId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchClassDetails()
     fetchClassTests()
+    fetchClassSessions()
   }, [id])
 
   const fetchClassTests = async () => {
@@ -109,6 +139,59 @@ export const ClassDetailPage: React.FC = () => {
       setClassTests(data)
     } catch {
       // Ignore
+    }
+  }
+
+  const fetchClassSessions = async () => {
+    try {
+      const data = await api.get<ClassSession[]>(`/teacher/class/${id}/sessions`)
+      setClassSessions(data)
+    } catch {}
+  }
+
+  const handleCreateSession = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newSessionDate) return
+    setIsCreatingSession(true)
+    try {
+      await api.post(`/teacher/class/${id}/sessions`, {
+        sessionDate: newSessionDate,
+        title: newSessionTitle,
+        testId: newSessionTestId ? Number(newSessionTestId) : null
+      })
+      setMessage({ type: 'success', text: 'Tạo buổi học thành công!' })
+      setNewSessionDate('')
+      setNewSessionTitle('')
+      setNewSessionTestId('')
+      fetchClassSessions()
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Tạo buổi học thất bại.' })
+    } finally {
+      setIsCreatingSession(false)
+    }
+  }
+
+  const handleUpdateAttendance = async (sessionId: number, enrollmentId: number, status: string) => {
+    try {
+      await api.put(`/teacher/class/${id}/sessions/${sessionId}/attendance`, {
+        classEnrollmentId: enrollmentId,
+        status: status
+      })
+      
+      // Optimistic update
+      setClassSessions(prev => prev.map(s => {
+        if (s.id !== sessionId) return s
+        const records = [...s.attendanceRecords]
+        const idx = records.findIndex(r => r.classEnrollmentId === enrollmentId)
+        if (idx >= 0) {
+          records[idx].status = status
+        } else {
+          records.push({ id: 0, classEnrollmentId: enrollmentId, status })
+        }
+        return { ...s, attendanceRecords: records }
+      }))
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Cập nhật điểm danh thất bại.' })
     }
   }
 
@@ -576,18 +659,104 @@ export const ClassDetailPage: React.FC = () => {
 
       {/* TAB ATTENDANCE */}
       {activeTab === 'attendance' && (
-        <Card className="p-6">
-          <div className="mb-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Điểm danh</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Quản lý điểm danh theo từng buổi học.</p>
-          </div>
-          <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-xl">
-            <p className="text-sm text-gray-500 mb-2">Tính năng tạo và xem điểm danh đang được phát triển.</p>
-            <p className="text-xs text-gray-400 max-w-md mx-auto">
-              Sắp tới bạn có thể tạo buổi học, chọn Trạng thái (Có mặt, Vắng, Học online) và xem thống kê bài tập ở đây.
-            </p>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="mb-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Tạo buổi học mới</h2>
+            </div>
+            <form onSubmit={handleCreateSession} className="flex flex-col sm:flex-row gap-3">
+              <Input type="date" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)} required />
+              <Input placeholder="Tiêu đề (VD: Lesson 1)" value={newSessionTitle} onChange={e => setNewSessionTitle(e.target.value)} />
+              <select 
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={newSessionTestId} 
+                onChange={e => setNewSessionTestId(e.target.value)}
+              >
+                <option value="">-- Không giao bài tập --</option>
+                {classTests.map(t => (
+                  <option key={t.id} value={t.id}>{t.title}</option>
+                ))}
+              </select>
+              <Button type="submit" loading={isCreatingSession}>Tạo</Button>
+            </form>
+          </Card>
+
+          {classSessions.map(session => (
+            <Card key={session.id} className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">{session.title || 'Buổi học'}</h3>
+                  <p className="text-sm text-gray-500">{new Date(session.sessionDate).toLocaleDateString('vi-VN')}</p>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-2 text-sm text-gray-500 font-bold">Học sinh</th>
+                      <th className="py-2 text-sm text-gray-500 font-bold">Điểm danh</th>
+                      <th className="py-2 text-sm text-gray-500 font-bold text-right">Bài tập Đã làm</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {cls?.members.map(member => {
+                      const record = session.attendanceRecords.find(r => r.classEnrollmentId === member.id)
+                      const status = record?.status || ''
+                      
+                      return (
+                        <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="py-3">
+                            <div className="font-bold text-gray-900">{member.fullName}</div>
+                            <div className="text-xs text-gray-500">{member.phone || 'Chưa có SĐT'}</div>
+                          </td>
+                          <td className="py-3">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleUpdateAttendance(session.id, member.id, 'PRESENT')}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'PRESENT' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Có mặt
+                              </button>
+                              <button
+                                onClick={() => handleUpdateAttendance(session.id, member.id, 'ABSENT')}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ABSENT' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Vắng
+                              </button>
+                              <button
+                                onClick={() => handleUpdateAttendance(session.id, member.id, 'ONLINE')}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ONLINE' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Học online
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-3 text-right">
+                            {session.activities.length === 0 && <span className="text-xs text-gray-400">Không có</span>}
+                            {session.activities.map(act => {
+                              const isCompleted = act.completedEnrollmentIds.includes(member.id);
+                              return (
+                                <div key={act.testId} className="text-xs flex flex-col items-end gap-1 mb-2">
+                                  <span className="font-medium text-gray-700">{act.title}</span>
+                                  {isCompleted ? (
+                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Đã làm</span>
+                                  ) : (
+                                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Chưa làm</span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
 
       {/* TAB 3: BÀI KIỂM TRA */}

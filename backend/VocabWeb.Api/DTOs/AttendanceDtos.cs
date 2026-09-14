@@ -26,6 +26,7 @@ public class SessionActivityStatsDto
     public int TotalStudents { get; set; }
     public int CompletedCount { get; set; }
     public int NotCompletedCount { get; set; }
+    public List<int> CompletedEnrollmentIds { get; set; } = new();
 }
 
 public class ClassEnrollmentDto
