@@ -101,13 +101,30 @@ export const VocabularyDetailPage: React.FC = () => {
     if (!isNew && id) {
       setGeneratingIpa(true)
       try {
-        const res = await api.post<{ totalMissingFound: number; generatedCount: number; updatedItems: VocabularyItem[] }>(
+        const res = await api.post<{ totalMissingFound: number; generatedCount: number; unresolvedCount: number; updatedItems: VocabularyItem[] }>(
           `/teacher/vocabulary-sets/${id}/generate-ipa`
         )
-        setMessage({
-          type: 'success',
-          text: `Đã tự động tạo IPA cho ${res.generatedCount} từ còn thiếu (giữ nguyên các IPA đã có).`
-        })
+        if (res.totalMissingFound === 0) {
+          setMessage({
+            type: 'success', // Could be info, but system only has success/error right now
+            text: 'Không có từ nào còn thiếu phiên âm.'
+          })
+        } else if (res.generatedCount === 0) {
+          setMessage({
+            type: 'error',
+            text: 'Chưa tạo được phiên âm cho các từ còn thiếu.'
+          })
+        } else if (res.unresolvedCount === 0) {
+          setMessage({
+            type: 'success',
+            text: `Đã tạo phiên âm cho ${res.generatedCount} từ.`
+          })
+        } else {
+          setMessage({
+            type: 'success',
+            text: `Đã tạo phiên âm cho ${res.generatedCount}/${res.totalMissingFound} từ.`
+          })
+        }
         fetchSetDetails()
       } catch (err: any) {
         setMessage({ type: 'error', text: err.message || 'Không thể tạo IPA tự động.' })

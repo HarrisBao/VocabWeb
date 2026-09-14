@@ -55,5 +55,6 @@ public class GenerateIpaResultDto
 {
     public int TotalMissingFound { get; set; }
     public int GeneratedCount { get; set; }
+    public int UnresolvedCount { get; set; }
     public List<VocabularyItemDto> UpdatedItems { get; set; } = new();
 }
