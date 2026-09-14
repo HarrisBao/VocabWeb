@@ -16,6 +16,16 @@ interface VocabularyFlashcardViewProps {
   items: VocabularyReviewItemDto[];
 }
 
+const flashcardThemes = [
+  { key: "blue", front: "bg-[#EFF6FF]", back: "bg-[#DBEAFE]", border: "border-[#BFDBFE]" },
+  { key: "purple", front: "bg-[#F5F3FF]", back: "bg-[#EDE9FE]", border: "border-[#DDD6FE]" },
+  { key: "yellow", front: "bg-[#FFFBEB]", back: "bg-[#FEF3C7]", border: "border-[#FDE68A]" },
+  { key: "pink", front: "bg-[#FDF2F8]", back: "bg-[#FCE7F3]", border: "border-[#FBCFE8]" },
+  { key: "cyan", front: "bg-[#ECFEFF]", back: "bg-[#CFFAFE]", border: "border-[#A5F3FC]" },
+  { key: "orange", front: "bg-[#FFF7ED]", back: "bg-[#FFEDD5]", border: "border-[#FED7AA]" },
+  { key: "green", front: "bg-[#F0FDF4]", back: "bg-[#DCFCE7]", border: "border-[#BBF7D0]" }
+];
+
 export const VocabularyFlashcardView: React.FC<VocabularyFlashcardViewProps> = ({ items }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isRandom, setIsRandom] = useState(false);
@@ -70,6 +80,7 @@ export const VocabularyFlashcardView: React.FC<VocabularyFlashcardViewProps> = (
 
   const currentItem = items[activeIndex];
   const progressPercent = ((activeIndex + 1) / items.length) * 100;
+  const theme = flashcardThemes[currentItem.id % flashcardThemes.length];
 
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -90,43 +101,47 @@ export const VocabularyFlashcardView: React.FC<VocabularyFlashcardViewProps> = (
         <div className="h-full bg-green-500 transition-all duration-300 ease-out" style={{ width: `${progressPercent}%` }}></div>
       </div>
 
-      <div className="w-full relative h-[360px] sm:h-[400px] perspective-1000">
+      <div className="w-full relative h-[360px] sm:h-[400px] [perspective:1000px]">
         <div 
+          tabIndex={0}
           onClick={() => setIsFlipped(!isFlipped)}
-          className={`w-full h-full cursor-pointer relative preserve-3d transition-transform duration-500 ${isFlipped ? 'rotate-y-180' : ''}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsFlipped(!isFlipped);
+            }
+          }}
+          aria-label={`Flashcard ${currentItem.word}. Nhấn Enter để xem ${isFlipped ? 'từ' : 'nghĩa'}.`}
+          className={`w-full h-full cursor-pointer relative [transform-style:preserve-3d] transition-transform duration-[350ms] focus:outline-none focus-visible:ring-4 focus-visible:ring-green-200 rounded-3xl ${isFlipped ? '[transform:rotateY(180deg)]' : ''} hover:shadow-lg active:scale-[0.99]`}
         >
           {/* Front */}
-          <div className="absolute inset-0 backface-hidden bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center p-8 hover:shadow-md transition-shadow">
-            <span className="text-4xl sm:text-5xl font-bold text-gray-900 text-center mb-4">{currentItem.word}</span>
+          <div className={`absolute inset-0 [backface-visibility:hidden] ${theme.front} ${theme.border} border-2 rounded-3xl shadow-sm flex flex-col items-center justify-center p-8 transition-shadow`}>
+            <span className="text-[32px] sm:text-[42px] font-extrabold text-[#111827] text-center mb-4">{currentItem.word}</span>
             {currentItem.ipa && (
-              <span className="text-lg text-gray-500 font-medium mb-6">{currentItem.ipa.startsWith('/') ? currentItem.ipa : `/${currentItem.ipa}/`}</span>
+              <span className="text-[18px] sm:text-[22px] text-[#475569] font-medium mb-8">
+                {currentItem.ipa.startsWith('/') ? currentItem.ipa : `/${currentItem.ipa}/`}
+              </span>
             )}
             <button
               onClick={(e) => { e.stopPropagation(); playWord(currentItem.word); }}
-              className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center hover:bg-green-100 transition-colors"
+              tabIndex={0}
+              aria-label="Phát âm"
+              className="w-14 h-14 bg-white/70 text-gray-800 rounded-full flex items-center justify-center hover:bg-white shadow-sm transition-colors mb-6 text-xl"
             >
               🔊
             </button>
-            <div className="absolute bottom-6 text-gray-300 text-sm">Chạm để lật</div>
+            <div className="absolute bottom-6 text-[#475569]/70 text-sm font-medium">Chạm để lật</div>
           </div>
 
           {/* Back */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center p-8 hover:shadow-md transition-shadow">
-            {currentItem.partOfSpeech && (
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold mb-4">
-                {currentItem.partOfSpeech}
-              </span>
+          <div className={`absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] ${theme.back} ${theme.border} border-2 rounded-3xl shadow-sm flex flex-col items-center justify-center p-8 transition-shadow`}>
+            {currentItem.meaning ? (
+              <span className="text-[28px] sm:text-[36px] font-bold text-[#111827] text-center">{currentItem.meaning}</span>
+            ) : (
+              <span className="text-[28px] sm:text-[36px] font-bold text-gray-400 text-center italic">Chưa có nghĩa</span>
             )}
-            <span className="text-3xl sm:text-4xl font-bold text-green-700 text-center mb-4">{currentItem.meaning}</span>
-            {currentItem.exampleSentence && (
-              <p className="text-gray-600 text-center text-lg italic mt-4 px-4">"{currentItem.exampleSentence}"</p>
-            )}
-            {currentItem.note && (
-              <p className="text-orange-600 bg-orange-50 px-4 py-2 rounded-lg text-sm font-medium mt-6 text-center">
-                Lưu ý: {currentItem.note}
-              </p>
-            )}
-            <div className="absolute bottom-6 text-gray-300 text-sm">Chạm để lật lại</div>
+            
+            <div className="absolute bottom-6 text-[#475569]/70 text-sm font-medium">Chạm để quay lại</div>
           </div>
         </div>
       </div>
