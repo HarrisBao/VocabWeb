@@ -36,22 +36,39 @@ public class IpaService : IIpaService
             if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
             {
                 var entry = root[0];
-                if (entry.TryGetProperty("phonetic", out var phoneticProp) && phoneticProp.ValueKind == JsonValueKind.String)
-                {
-                    var ipa = phoneticProp.GetString();
-                    if (!string.IsNullOrEmpty(ipa)) return ipa;
-                }
-
+                string? fallbackIpa = null;
+                
                 if (entry.TryGetProperty("phonetics", out var phoneticsProp) && phoneticsProp.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var p in phoneticsProp.EnumerateArray())
                     {
+                        string? currentText = null;
                         if (p.TryGetProperty("text", out var textProp) && textProp.ValueKind == JsonValueKind.String)
                         {
-                            var ipa = textProp.GetString();
-                            if (!string.IsNullOrEmpty(ipa)) return ipa;
+                            currentText = textProp.GetString();
+                        }
+                        
+                        if (string.IsNullOrEmpty(currentText)) continue;
+                        
+                        fallbackIpa ??= currentText;
+                        
+                        if (p.TryGetProperty("audio", out var audioProp) && audioProp.ValueKind == JsonValueKind.String)
+                        {
+                            var audioUrl = audioProp.GetString() ?? "";
+                            if (audioUrl.Contains("-uk.mp3", StringComparison.OrdinalIgnoreCase))
+                            {
+                                return currentText;
+                            }
                         }
                     }
+                }
+                
+                if (!string.IsNullOrEmpty(fallbackIpa)) return fallbackIpa;
+
+                if (entry.TryGetProperty("phonetic", out var phoneticProp) && phoneticProp.ValueKind == JsonValueKind.String)
+                {
+                    var ipa = phoneticProp.GetString();
+                    if (!string.IsNullOrEmpty(ipa)) return ipa;
                 }
             }
         }

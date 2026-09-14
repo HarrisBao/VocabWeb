@@ -115,19 +115,9 @@ export const VocabularyDetailPage: React.FC = () => {
         setGeneratingIpa(false)
       }
     } else {
-      // Local approximation for new unsaved set
-      let generated = 0
-      const updated = form.items.map(item => {
-        if (!item.ipa && item.word.trim()) {
-          generated++
-          return { ...item, ipa: `/${item.word.trim().toLowerCase()}/` }
-        }
-        return item
-      })
-      setForm(prev => ({ ...prev, items: updated }))
       setMessage({
-        type: 'success',
-        text: `Đã điền phiên âm IPA mẫu cho ${generated} từ còn thiếu.`
+        type: 'error',
+        text: 'Vui lòng lưu bộ từ vựng trước khi tạo IPA.'
       })
     }
   }

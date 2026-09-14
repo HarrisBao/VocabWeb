@@ -99,7 +99,7 @@ export const VocabularyFlashcardView: React.FC<VocabularyFlashcardViewProps> = (
           <div className="absolute inset-0 backface-hidden bg-white border border-gray-100 rounded-3xl shadow-sm flex flex-col items-center justify-center p-8 hover:shadow-md transition-shadow">
             <span className="text-4xl sm:text-5xl font-bold text-gray-900 text-center mb-4">{currentItem.word}</span>
             {currentItem.ipa && (
-              <span className="text-lg text-gray-500 font-medium mb-6">/{currentItem.ipa}/</span>
+              <span className="text-lg text-gray-500 font-medium mb-6">{currentItem.ipa.startsWith('/') ? currentItem.ipa : `/${currentItem.ipa}/`}</span>
             )}
             <button
               onClick={(e) => { e.stopPropagation(); playWord(currentItem.word); }}
