@@ -11,11 +11,17 @@ class ApiService {
   private refreshSubscribers: ((token: string) => void)[] = []
 
   private getAccessToken(): string | null {
+    // Priority to teacher token if both exist (though unlikely in same profile)
     return localStorage.getItem('teacher_access_token') || localStorage.getItem('student_access_token')
   }
 
   private getRefreshToken(): string | null {
-    return localStorage.getItem('teacher_refresh_token')
+    // If we have a teacher access token, try its refresh token
+    if (localStorage.getItem('teacher_access_token')) {
+      return localStorage.getItem('teacher_refresh_token')
+    }
+    // Otherwise try student refresh token
+    return localStorage.getItem('student_refresh_token')
   }
 
   public setTokens(accessToken: string, refreshToken: string) {
@@ -23,11 +29,17 @@ class ApiService {
     localStorage.setItem('teacher_refresh_token', refreshToken)
   }
 
+  public setStudentTokens(accessToken: string, refreshToken: string) {
+    localStorage.setItem('student_access_token', accessToken)
+    if (refreshToken) localStorage.setItem('student_refresh_token', refreshToken)
+  }
+
   public clearTokens() {
     localStorage.removeItem('teacher_access_token')
     localStorage.removeItem('teacher_refresh_token')
     localStorage.removeItem('teacher_user_profile')
     localStorage.removeItem('student_access_token')
+    localStorage.removeItem('student_refresh_token')
     localStorage.removeItem('student_profile')
     // Remove other potential cached entries
     localStorage.removeItem('recentClassSlug')
@@ -82,22 +94,32 @@ class ApiService {
 
             if (refreshRes.ok) {
               const data = await refreshRes.json()
-              this.setTokens(data.accessToken, data.refreshToken)
-              if (data.user) {
-                localStorage.setItem('teacher_user_profile', JSON.stringify(data.user))
+              const isTeacher = !!localStorage.getItem('teacher_access_token')
+              if (isTeacher) {
+                this.setTokens(data.accessToken, data.refreshToken)
+                if (data.user) {
+                  localStorage.setItem('teacher_user_profile', JSON.stringify(data.user))
+                }
+              } else {
+                this.setStudentTokens(data.accessToken, data.refreshToken)
+                if (data.user) {
+                  localStorage.setItem('student_profile', JSON.stringify(data.user))
+                }
               }
               this.isRefreshing = false
               this.onTokenRefreshed(data.accessToken)
             } else {
               this.isRefreshing = false
+              const isTeacher = !!localStorage.getItem('teacher_access_token')
               this.clearTokens()
-              window.location.href = '/teacher/login'
+              window.location.href = isTeacher ? '/teacher/login' : '/student/login'
               throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
             }
           } catch (err) {
             this.isRefreshing = false
+            const isTeacher = !!localStorage.getItem('teacher_access_token')
             this.clearTokens()
-            window.location.href = '/teacher/login'
+            window.location.href = isTeacher ? '/teacher/login' : '/student/login'
             throw err
           }
         }

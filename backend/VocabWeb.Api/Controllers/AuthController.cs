@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
         var existing = await _userManager.FindByEmailAsync(normalizedEmail);
         if (existing != null)
         {
-            return BadRequest(new { message = "Email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng. Vui lÃ²ng Ä‘Äƒng nháº­p hoáº·c dÃ¹ng email khÃ¡c." });
+            return BadRequest(new { message = "Email nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c sÃ¡Â»Â­ dÃ¡Â»Â¥ng. Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p hoÃ¡ÂºÂ·c dÃƒÂ¹ng email khÃƒÂ¡c." });
         }
 
         var user = new ApplicationUser
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
         {
             var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-            return BadRequest(new { message = "ÄÄƒng kÃ½ khÃ´ng thÃ nh cÃ´ng: " + errors });
+            return BadRequest(new { message = "Ã„ÂÃ„Æ’ng kÃƒÂ½ khÃƒÂ´ng thÃƒÂ nh cÃƒÂ´ng: " + errors });
         }
 
         // Hard-code role Teacher
@@ -111,20 +111,20 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByEmailAsync(normalizedEmail);
         if (user == null || !user.IsActive)
         {
-            return Unauthorized(new { message = "Email hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c." });
+            return Unauthorized(new { message = "Email hoÃ¡ÂºÂ·c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u khÃƒÂ´ng chÃƒÂ­nh xÃƒÂ¡c." });
         }
 
         var passCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
         if (!passCheck.Succeeded)
         {
-            return Unauthorized(new { message = "Email hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c." });
+            return Unauthorized(new { message = "Email hoÃ¡ÂºÂ·c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u khÃƒÂ´ng chÃƒÂ­nh xÃƒÂ¡c." });
         }
 
         // Verify user is Teacher
         var isTeacher = await _userManager.IsInRoleAsync(user, "Teacher");
         if (!isTeacher)
         {
-            return StatusCode(403, new { message = "TÃ i khoáº£n cá»§a báº¡n khÃ´ng cÃ³ quyá»n giÃ¡o viÃªn." });
+            return StatusCode(403, new { message = "TÃƒÂ i khoÃ¡ÂºÂ£n cÃ¡Â»Â§a bÃ¡ÂºÂ¡n khÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân giÃƒÂ¡o viÃƒÂªn." });
         }
 
         user.LastLoginAt = DateTime.UtcNow;
@@ -168,7 +168,7 @@ public class AuthController : ControllerBase
 
         if (!authResult.Success || authResult.User == null)
         {
-            return BadRequest(new { message = authResult.ErrorMessage ?? "ÄÄƒng nháº­p Google tháº¥t báº¡i." });
+            return BadRequest(new { message = authResult.ErrorMessage ?? "Ã„ÂÃ„Æ’ng nhÃ¡ÂºÂ­p Google thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i." });
         }
 
         var user = authResult.User;
@@ -205,13 +205,13 @@ public class AuthController : ControllerBase
 
         if (existingToken == null || !existingToken.IsActive)
         {
-            return Unauthorized(new { message = "PhiÃªn lÃ m viá»‡c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i." });
+            return Unauthorized(new { message = "PhiÃƒÂªn lÃƒÂ m viÃ¡Â»â€¡c Ã„â€˜ÃƒÂ£ hÃ¡ÂºÂ¿t hÃ¡ÂºÂ¡n. Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p lÃ¡ÂºÂ¡i." });
         }
 
         var user = existingToken.User;
         if (user == null || !user.IsActive)
         {
-            return Unauthorized(new { message = "TÃ i khoáº£n khÃ´ng tá»“n táº¡i hoáº·c Ä‘Ã£ bá»‹ khÃ³a." });
+            return Unauthorized(new { message = "TÃƒÂ i khoÃ¡ÂºÂ£n khÃƒÂ´ng tÃ¡Â»â€œn tÃ¡ÂºÂ¡i hoÃ¡ÂºÂ·c Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ khÃƒÂ³a." });
         }
 
         // Revoke old token and issue new token (Rotation)
@@ -259,7 +259,7 @@ public class AuthController : ControllerBase
             }
         }
 
-        return Ok(new { message = "ÄÄƒng xuáº¥t thÃ nh cÃ´ng." });
+        return Ok(new { message = "Ã„ÂÃ„Æ’ng xuÃ¡ÂºÂ¥t thÃƒÂ nh cÃƒÂ´ng." });
     }
 
     [Authorize]
@@ -272,7 +272,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
+        if (user == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng." });
 
         var roles = await _userManager.GetRolesAsync(user);
 
@@ -300,7 +300,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
+        if (user == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng." });
 
         user.FullName = dto.FullName.Trim();
         user.Specialization = dto.Specialization?.Trim();
@@ -335,16 +335,16 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
+        if (user == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng." });
 
         var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
         if (!result.Succeeded)
         {
             var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-            return BadRequest(new { message = "Äá»•i máº­t kháº©u tháº¥t báº¡i: " + errors });
+            return BadRequest(new { message = "Ã„ÂÃ¡Â»â€¢i mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i: " + errors });
         }
 
-        return Ok(new { message = "Äá»•i máº­t kháº©u thÃ nh cÃ´ng." });
+        return Ok(new { message = "Ã„ÂÃ¡Â»â€¢i mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u thÃƒÂ nh cÃƒÂ´ng." });
     }
     [HttpPost("student/phone-login")]
     [AllowAnonymous]
@@ -367,25 +367,25 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(c => !c.IsArchived && (c.Code.ToLower() == dto.ClassSlug.ToLower() || c.FixedLinkToken == dto.ClassSlug));
 
         if (cls == null)
-            return NotFound(new { message = "Không tìm thấy lớp học." });
+            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
 
         // Find student profile by phone
         var profile = await _db.StudentProfiles
             .FirstOrDefaultAsync(sp => sp.NormalizedPhone == normalizedPhone);
 
         if (profile == null)
-            return Unauthorized(new { message = "Không tìm thấy học sinh phù hợp trong lớp này." });
+            return Unauthorized(new { message = "KhÃ´ng tÃ¬m tháº¥y há»c sinh phÃ¹ há»£p trong lá»›p nÃ y." });
 
         // CRITICAL PHONE-LOGIN SAFETY RULE: Phone login is only for NO-ACCOUNT students.
         if (profile.UserId != null)
-            return BadRequest(new { message = "Học sinh này đã có tài khoản. Vui lòng đăng nhập bằng email/Google." });
+            return BadRequest(new { message = "Há»c sinh nÃ y Ä‘Ã£ cÃ³ tÃ i khoáº£n. Vui lÃ²ng Ä‘Äƒng nháº­p báº±ng email/Google." });
 
         // Verify class enrollment
         var enrollment = await _db.ClassEnrollments
             .FirstOrDefaultAsync(ce => ce.ClassId == cls.Id && ce.StudentProfileId == profile.Id);
 
         if (enrollment == null)
-            return Unauthorized(new { message = "Không tìm thấy học sinh phù hợp trong lớp này." });
+            return Unauthorized(new { message = "KhÃ´ng tÃ¬m tháº¥y há»c sinh phÃ¹ há»£p trong lá»›p nÃ y." });
 
         // Generate token
         var accessToken = _tokenService.GenerateNoAccountStudentToken(profile, enrollment);
@@ -401,6 +401,63 @@ public class AuthController : ControllerBase
                 IdentityMode = "NO_ACCOUNT",
                 ClassId = cls.Id,
                 ClassEnrollmentId = enrollment.Id
+            }
+        });
+    }
+    [HttpPost("student/login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StudentLogin([FromBody] StudentLoginDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var user = await _userManager.FindByEmailAsync(normalizedEmail);
+        if (user == null || !user.IsActive)
+            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+
+        var passCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        if (!passCheck.Succeeded)
+            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+
+        var isStudent = await _userManager.IsInRoleAsync(user, "Student");
+        if (!isStudent)
+            return StatusCode(403, new { message = "Tài khoản của bạn không có quyền học viên." });
+
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        var profile = await _db.StudentProfiles.FirstOrDefaultAsync(sp => sp.UserId == user.Id);
+        if (profile == null)
+        {
+            profile = new StudentProfile
+            {
+                FullName = user.FullName,
+                UserId = user.Id
+            };
+            _db.StudentProfiles.Add(profile);
+            await _db.SaveChangesAsync();
+        }
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var accessToken = _tokenService.GenerateAccessToken(user, "Student");
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ip);
+
+        _db.RefreshTokens.Add(refreshToken);
+        await _db.SaveChangesAsync();
+
+        return Ok(new TokenResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken.Token,
+            ExpiresAt = DateTime.UtcNow.AddHours(2),
+            User = new UserProfileDto
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                FullName = user.FullName,
+                Role = "Student",
+                CreatedAt = user.CreatedAt
             }
         });
     }

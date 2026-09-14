@@ -34,6 +34,18 @@ public class TeacherLoginDto
     public bool RememberMe { get; set; }
 }
 
+public class StudentLoginDto
+{
+    [Required(ErrorMessage = "Email không được để trống")]
+    [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mật khẩu không được để trống")]
+    public string Password { get; set; } = string.Empty;
+
+    public bool RememberMe { get; set; }
+}
+
 public class GoogleLoginDto
 {
     [Required(ErrorMessage = "Token Google không được để trống")]

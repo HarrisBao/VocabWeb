@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { api } from '../../services/api'
 import type { LoginFormData, FormErrors } from '../../types/auth'
 
 export const StudentLoginPage: React.FC = () => {
@@ -16,6 +17,8 @@ export const StudentLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
   const validate = (): boolean => {
     const errs: FormErrors = {}
     if (!form.email) errs.email = 'Email hoặc tên đăng nhập không được để trống'
@@ -28,10 +31,23 @@ export const StudentLoginPage: React.FC = () => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    // TODO: Connect to ASP.NET Core Web API — POST /api/auth/student/login
-    await new Promise(r => setTimeout(r, 1200))
-    setLoading(false)
-    navigate('/student')
+    setErrorMessage(null)
+    try {
+      const res = await api.post('/auth/student/login', { 
+        email: form.email, 
+        password: form.password,
+        rememberMe: form.rememberMe
+      }, { requiresAuth: false })
+      
+      api.setStudentTokens(res.accessToken, res.refreshToken)
+      localStorage.setItem('student_profile', JSON.stringify(res.user))
+      
+      navigate('/student')
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -40,6 +56,14 @@ export const StudentLoginPage: React.FC = () => {
       subtitle="Đăng nhập để tiếp tục hành trình chinh phục IELTS của bạn."
       role="student"
     >
+      {errorMessage && (
+        <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1">{errorMessage}</div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <Input
           label="Email"
