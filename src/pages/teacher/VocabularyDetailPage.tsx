@@ -40,9 +40,10 @@ export const VocabularyDetailPage: React.FC = () => {
   })
 
   const [loading, setLoading] = useState(!isNew)
+  const [notFound, setNotFound] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [generatingIpa, setGeneratingIpa] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [generatingIpa, setGeneratingIpa] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
@@ -54,13 +55,18 @@ export const VocabularyDetailPage: React.FC = () => {
   const fetchSetDetails = async () => {
     setLoading(true)
     try {
-      const data = await api.get<VocabularySetData>(`/teacher/vocabulary/${id}`)
+      const data = await api.get<VocabularySetData>(`/teacher/vocabulary-sets/${id}`)
       setForm({
         ...data,
         items: data.items.length > 0 ? data.items : [{ word: '', meaning: '', ipa: '', example: '', orderIndex: 0 }]
       })
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Không thể tải chi tiết bộ từ vựng.' })
+      console.error(err)
+      if (err.message && (err.message.includes('404') || err.message.toLowerCase().includes("không tìm thấy") || err.message.toLowerCase().includes("khong tim thay"))) {
+        setNotFound(true)
+      } else {
+        setMessage({ type: 'error', text: err.message || 'Không thể tải chi tiết bộ từ vựng.' })
+      }
     } finally {
       setLoading(false)
     }
@@ -96,7 +102,7 @@ export const VocabularyDetailPage: React.FC = () => {
       setGeneratingIpa(true)
       try {
         const res = await api.post<{ totalMissingFound: number; generatedCount: number; updatedItems: VocabularyItem[] }>(
-          `/teacher/vocabulary/${id}/generate-ipa`
+          `/teacher/vocabulary-sets/${id}/generate-ipa`
         )
         setMessage({
           type: 'success',
@@ -136,7 +142,7 @@ export const VocabularyDetailPage: React.FC = () => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const result = await api.post('/teacher/vocabulary/import', formData)
+      const result = await api.post('/teacher/vocabulary-sets/import', formData)
 
       if (result.items && result.items.length > 0) {
         // Filter out empty rows from current items
@@ -194,11 +200,11 @@ export const VocabularyDetailPage: React.FC = () => {
       }
 
       if (isNew) {
-        const created = await api.post<VocabularySetData>('/teacher/vocabulary', payload)
+        const created = await api.post<VocabularySetData>('/teacher/vocabulary-sets', payload)
         setMessage({ type: 'success', text: 'Tạo bộ từ vựng thành công!' })
         navigate(`/teacher/vocabulary/${created.id}`)
       } else {
-        await api.put(`/teacher/vocabulary/${id}`, payload)
+        await api.put(`/teacher/vocabulary-sets/${id}`, payload)
         setMessage({ type: 'success', text: 'Đã lưu thay đổi bộ từ vựng!' })
         fetchSetDetails()
       }
@@ -213,6 +219,16 @@ export const VocabularyDetailPage: React.FC = () => {
     return (
       <div className="py-24 flex justify-center">
         <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <div className="p-8 text-center max-w-md mx-auto mt-12 bg-red-50 rounded-2xl border border-red-100">
+        <h2 className="text-xl font-bold text-red-600 mb-3">404 Not Found</h2>
+        <p className="text-red-800 text-sm mb-6">Bộ từ vựng không tồn tại hoặc bạn không có quyền truy cập.</p>
+        <Button onClick={() => navigate('/teacher/vocabulary')}>Quay lại danh sách</Button>
       </div>
     )
   }

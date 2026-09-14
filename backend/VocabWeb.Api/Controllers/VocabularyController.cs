@@ -10,7 +10,7 @@ using VocabWeb.Api.Services;
 namespace VocabWeb.Api.Controllers;
 
 [ApiController]
-[Route("api/teacher/[controller]")]
+[Route("api/teacher/vocabulary-sets")]
 [Authorize(Roles = "Teacher")]
 public class VocabularyController : ControllerBase
 {

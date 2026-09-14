@@ -34,7 +34,7 @@ export const VocabularyListPage: React.FC = () => {
       if (search.trim()) params.append('search', search.trim())
       if (level !== 'all') params.append('level', level)
 
-      const res = await api.get<VocabularySetItem[]>(`/teacher/vocabulary?${params.toString()}`)
+      const res = await api.get<VocabularySetItem[]>(`/teacher/vocabulary-sets?${params.toString()}`)
       setSets(res)
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Không thể tải danh sách bộ từ vựng.' })
@@ -51,7 +51,7 @@ export const VocabularyListPage: React.FC = () => {
   const handleDuplicate = async (id: number) => {
     setActionLoading(id)
     try {
-      await api.post(`/teacher/vocabulary/${id}/duplicate`)
+      await api.post(`/teacher/vocabulary-sets/${id}/duplicate`)
       setMessage({ type: 'success', text: 'Nhân bản bộ từ vựng thành công!' })
       fetchSets()
     } catch (err: any) {
@@ -66,7 +66,7 @@ export const VocabularyListPage: React.FC = () => {
 
     setActionLoading(id)
     try {
-      await api.delete(`/teacher/vocabulary/${id}`)
+      await api.delete(`/teacher/vocabulary-sets/${id}`)
       setMessage({ type: 'success', text: 'Đã xóa bộ từ vựng.' })
       setSets(sets.filter(s => s.id !== id))
     } catch (err: any) {

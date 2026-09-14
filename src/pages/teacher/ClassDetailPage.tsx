@@ -125,7 +125,7 @@ export const ClassDetailPage: React.FC = () => {
   const openAddLessonModal = async () => {
     setIsAddLessonModalOpen(true)
     try {
-      const sets = await api.get<AvailableVocabSet[]>('/teacher/vocabulary')
+      const sets = await api.get<AvailableVocabSet[]>('/teacher/vocabulary-sets')
       setAvailableSets(sets)
       if (sets.length > 0) {
         setSelectedSetId(sets[0].id)

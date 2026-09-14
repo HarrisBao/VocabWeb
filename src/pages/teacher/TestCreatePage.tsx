@@ -52,7 +52,7 @@ export const TestCreatePage: React.FC = () => {
     setLoadingOptions(true)
     try {
       const [setsData, classesData] = await Promise.all([
-        api.get<SelectOption[]>('/teacher/vocabulary'),
+        api.get<SelectOption[]>('/teacher/vocabulary-sets'),
         api.get<SelectOption[]>('/teacher/class')
       ])
       setSets(setsData)
