@@ -5,6 +5,6 @@ namespace VocabWeb.Api.Services;
 
 public interface IIpaService
 {
-    string? GenerateIpaForWord(string word);
-    GenerateIpaResultDto GenerateMissingIpa(List<VocabularyItem> items);
+    Task<string?> GenerateIpaForWordAsync(string word);
+    Task<GenerateIpaResultDto> GenerateMissingIpaAsync(List<VocabularyItem> items);
 }

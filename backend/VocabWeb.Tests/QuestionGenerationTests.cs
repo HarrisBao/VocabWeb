@@ -42,8 +42,8 @@ public class QuestionGenerationTests
         var types = new List<ActivityType> { ActivityType.MEANING_TO_WORD };
 
         // Act
-        // Generating 10 questions to ensure we hit 'rapid' or 'quick'
-        var questions = _service.GenerateQuestions(items, types, 10);
+        // Generating questions to ensure we hit 'rapid' or 'quick'
+        var questions = _service.GenerateQuestions(items, types);
 
         // Assert
         foreach (var q in questions)
@@ -78,7 +78,7 @@ public class QuestionGenerationTests
         var types = new List<ActivityType> { ActivityType.WORD_TO_MEANING };
 
         // Act
-        var questions = _service.GenerateQuestions(items, types, 10);
+        var questions = _service.GenerateQuestions(items, types);
 
         // Assert
         foreach (var q in questions)

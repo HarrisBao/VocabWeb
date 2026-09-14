@@ -63,6 +63,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IIpaService, IpaService>();
 builder.Services.AddScoped<IQuestionEngineService, QuestionEngineService>();
 builder.Services.AddScoped<IQuestionGenerationService, QuestionGenerationService>();

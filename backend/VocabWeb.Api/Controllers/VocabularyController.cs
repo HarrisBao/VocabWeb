@@ -296,7 +296,7 @@ public class VocabularyController : ControllerBase
         if (set == null) return NotFound(new { message = "Không tìm thấy bộ từ vựng." });
 
         // Rule: Only generate for missing IPA, never overwrite existing
-        var result = _ipaService.GenerateMissingIpa(set.Items.ToList());
+        var result = await _ipaService.GenerateMissingIpaAsync(set.Items.ToList());
 
         if (result.GeneratedCount > 0)
         {
