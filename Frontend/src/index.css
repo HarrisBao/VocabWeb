@@ -3,35 +3,51 @@
 
 @theme {
   /* =========================================
-     IELTS Thanh Lê — Green + White Design System
+     IELTS Thanh Lê - Brand Design System
      ========================================= */
 
-  /* Primary Green Palette */
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-200: #bbf7d0;
-  --color-primary-300: #86efac;
-  --color-primary-400: #4ade80;
-  --color-primary-500: #22c55e;
-  --color-primary-600: #16a34a;
-  --color-primary-700: #15803d;
-  --color-primary-800: #166534;
-  --color-primary-900: #14532d;
-  --color-primary-950: #052e16;
+  /* Page Backgrounds */
+  --color-page-teacher: #f4f7f6; /* professional neutral green-gray */
+  --color-page-student: #effaf4; /* lively soft green */
+  --color-page-base: #f0f7f4;
 
-  /* Semantic tokens */
-  --color-brand: #16a34a;
-  --color-brand-hover: #15803d;
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-soft: #f4fbf7;
+  --color-surface-hover: #eaf5ef;
+  --color-surface-muted: #f8faf9;
+  
+  /* Primary Brand Greens */
+  --color-brand-dark: #07382e;
+  --color-brand: #0f6250;
+  --color-brand-hover: #127560;
   --color-brand-light: #dcfce7;
   --color-brand-surface: #f0fdf4;
-  --color-brand-text: #14532d;
-  --color-brand-text-secondary: #166534;
+  --color-brand-text: #0B4A3F;
+  --color-brand-text-secondary: #116B5A;
+
+  /* Pastel Category Accents */
+  --color-reading-bg: #d1fae5;
+  --color-reading-text: #065f46;
+  --color-listening-bg: #ede9fe;
+  --color-listening-text: #5b21b6;
+  --color-writing-bg: #e0f2fe;
+  --color-writing-text: #0369a1;
+  --color-speaking-bg: #ffedd5;
+  --color-speaking-text: #c2410c;
+
+  /* Semantic */
+  --color-correct-bg: #d1fae5;
+  --color-correct-text: #065f46;
+  --color-incorrect-bg: #fee2e2;
+  --color-incorrect-text: #b91c1c;
 
   /* Typography */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   /* Border radius */
   --radius-brand: 0.75rem;
+  --radius-card: 1rem;
 }
 
 /* Base reset & typography */
@@ -41,7 +57,7 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #ffffff;
+  background-color: var(--color-page-bg);
   color: #111827;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

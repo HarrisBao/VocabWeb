@@ -376,14 +376,14 @@ export const ClassDetailPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link to="/teacher/classes">
-            <button className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50">
+            <button className="p-2 rounded-xl bg-surface border border-surface-hover text-gray-600 hover:bg-surface-muted">
               ←
             </button>
           </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black text-gray-900">{cls.name}</h1>
-              <span className="font-mono text-xs font-bold bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
+              <span className="font-mono text-xs font-bold bg-brand-light text-brand-text border border-green-200 px-2 py-0.5 rounded">
                 {cls.code}
               </span>
             </div>
@@ -394,7 +394,7 @@ export const ClassDetailPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopyLink}
-            className="px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 shadow-2xs transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl border border-surface-hover bg-surface hover:bg-surface-muted text-xs font-bold text-gray-700 shadow-2xs transition-colors flex items-center gap-1.5"
           >
             <span>{copiedLink ? '✓ Đã copy link' : '📋 Copy link cố định'}</span>
           </button>
@@ -421,7 +421,7 @@ export const ClassDetailPage: React.FC = () => {
       )}
 
       {/* 4 Tabs: [Bài học] [Thành viên] [Kết quả] [Cài đặt] */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-surface-hover">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('lessons')}
@@ -433,7 +433,7 @@ export const ClassDetailPage: React.FC = () => {
             ].join(' ')}
           >
             <span>📚 Bài học</span>
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+            <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
               {cls.lessons.length}
             </span>
           </button>
@@ -448,7 +448,7 @@ export const ClassDetailPage: React.FC = () => {
             ].join(' ')}
           >
             <span>👥 Thành viên</span>
-            <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+            <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
               {cls.members.length}
             </span>
           </button>
@@ -497,7 +497,7 @@ export const ClassDetailPage: React.FC = () => {
           {cls.lessons.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {cls.lessons.map((lesson) => (
-                <Card key={lesson.id} className="p-5 flex flex-col justify-between border border-gray-200">
+                <Card key={lesson.id} className="p-5 flex flex-col justify-between border border-surface-hover">
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <Badge variant="blue">{lesson.level}</Badge>
@@ -513,8 +513,8 @@ export const ClassDetailPage: React.FC = () => {
                           className={[
                             'flex items-center gap-1 px-2 py-0.5 rounded font-bold text-xs transition-colors border',
                             lesson.isHidden
-                              ? 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                              : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+                              ? 'bg-surface-hover text-gray-600 border-surface-hover hover:bg-gray-200'
+                              : 'bg-brand-light text-brand-text border-green-200 hover:bg-green-100',
                             togglingVisibilityId === lesson.id ? 'opacity-70 cursor-wait' : 'cursor-pointer'
                           ].join(' ')}
                           title={lesson.isHidden ? 'Hiện bài này cho học sinh' : 'Ẩn bài này khỏi học sinh'}
@@ -547,13 +547,13 @@ export const ClassDetailPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-surface-hover flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleTogglePin(lesson.id)}
                         className={[
                           'p-1.5 rounded-lg text-xs font-semibold border transition-colors',
-                          lesson.isPinned ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-500 hover:bg-gray-100 border-gray-200'
+                          lesson.isPinned ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-500 hover:bg-surface-hover border-surface-hover'
                         ].join(' ')}
                         title={lesson.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
                       >
@@ -562,7 +562,7 @@ export const ClassDetailPage: React.FC = () => {
 
                       <button
                         onClick={() => handleRemoveLesson(lesson.id, lesson.vocabularySetTitle)}
-                        className="p-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-gray-200 transition-colors"
+                        className="p-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-surface-hover transition-colors"
                         title="Gỡ khỏi lớp"
                       >
                         🗑️
@@ -593,7 +593,7 @@ export const ClassDetailPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 p-8">
+            <div className="text-center py-16 bg-surface rounded-2xl border border-surface-hover p-8">
               <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-xl mb-3">
                 📚
               </div>
@@ -641,14 +641,14 @@ export const ClassDetailPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-xl">
+            <div className="text-center py-12 border-2 border-dashed border-surface-hover rounded-xl">
               <p className="text-sm text-gray-500 mb-2">Chưa có học sinh nào tham gia lớp này</p>
               <p className="text-xs text-gray-400 max-w-md mx-auto mb-4">
                 Bạn chỉ cần gửi link cố định của lớp cho học viên. Khi học viên truy cập, họ sẽ thấy đầy đủ danh mục bài học.
               </p>
               <button
                 onClick={handleCopyLink}
-                className="px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
+                className="px-4 py-2 bg-brand-light text-brand-text border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
               >
                 {copiedLink ? '✓ Đã copy link cố định' : '📋 Copy link cố định gửi học viên'}
               </button>
@@ -668,7 +668,7 @@ export const ClassDetailPage: React.FC = () => {
               <Input type="date" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)} required />
               <Input placeholder="Tiêu đề (VD: Lesson 1)" value={newSessionTitle} onChange={e => setNewSessionTitle(e.target.value)} />
               <select 
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={newSessionTestId} 
                 onChange={e => setNewSessionTestId(e.target.value)}
               >
@@ -693,7 +693,7 @@ export const ClassDetailPage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-surface-hover">
                       <th className="py-2 text-sm text-gray-500 font-bold">Học sinh</th>
                       <th className="py-2 text-sm text-gray-500 font-bold">Điểm danh</th>
                       <th className="py-2 text-sm text-gray-500 font-bold text-right">Bài tập Đã làm</th>
@@ -705,7 +705,7 @@ export const ClassDetailPage: React.FC = () => {
                       const status = record?.status || ''
                       
                       return (
-                        <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={member.id} className="hover:bg-surface-muted transition-colors">
                           <td className="py-3">
                             <div className="font-bold text-gray-900">{member.fullName}</div>
                             <div className="text-xs text-gray-500">{member.phone || 'Chưa có SĐT'}</div>
@@ -714,19 +714,19 @@ export const ClassDetailPage: React.FC = () => {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'PRESENT')}
-                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'PRESENT' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'PRESENT' ? 'bg-brand-light text-brand-text border border-brand-light' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
                                 Có mặt
                               </button>
                               <button
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'ABSENT')}
-                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ABSENT' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ABSENT' ? 'bg-incorrect-bg text-incorrect-text border border-incorrect-bg' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
                                 Vắng
                               </button>
                               <button
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'ONLINE')}
-                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ONLINE' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ONLINE' ? 'bg-writing-bg text-writing-text border border-writing-bg' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
                                 Học online
                               </button>
@@ -742,7 +742,7 @@ export const ClassDetailPage: React.FC = () => {
                                   {isCompleted ? (
                                     <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Đã làm</span>
                                   ) : (
-                                    <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Chưa làm</span>
+                                    <span className="bg-surface-hover text-gray-500 px-2 py-0.5 rounded">Chưa làm</span>
                                   )}
                                 </div>
                               )
@@ -775,13 +775,13 @@ export const ClassDetailPage: React.FC = () => {
           {classTests.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {classTests.map((test) => (
-                <Card key={test.id} className="p-5 flex flex-col justify-between border border-gray-200">
+                <Card key={test.id} className="p-5 flex flex-col justify-between border border-surface-hover">
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1 leading-tight line-clamp-2">
                       {test.title}
                     </h3>
                     <p className="text-xs text-gray-500 mb-3 line-clamp-1">{test.description}</p>
-                    <div className="space-y-1.5 text-xs text-gray-600 mb-4 border-y border-gray-100 py-3">
+                    <div className="space-y-1.5 text-xs text-gray-600 mb-4 border-y border-surface-hover py-3">
                       <div className="flex justify-between">
                         <span>Số hoạt động:</span>
                         <span className="font-bold">{test.enabledTypes.length}</span>
@@ -824,7 +824,7 @@ export const ClassDetailPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-xl bg-white">
+            <div className="text-center py-16 border-2 border-dashed border-surface-hover rounded-xl bg-surface">
               <div className="text-3xl mb-3">📝</div>
               <p className="text-sm font-bold text-gray-700 mb-1">Lớp chưa có bài kiểm tra</p>
               <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
@@ -864,14 +864,14 @@ export const ClassDetailPage: React.FC = () => {
               />
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="p-3 bg-surface-muted rounded-xl border border-surface-hover">
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Link truy cập cố định</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   readOnly
                   value={`${window.location.origin}${cls.fixedLinkUrl}`}
-                  className="flex-1 px-3 py-1.5 text-xs font-mono bg-white border border-gray-200 rounded-lg text-gray-700"
+                  className="flex-1 px-3 py-1.5 text-xs font-mono bg-surface border border-surface-hover rounded-lg text-gray-700"
                 />
                 <button
                   type="button"
@@ -895,7 +895,7 @@ export const ClassDetailPage: React.FC = () => {
       {/* Add Lesson Modal */}
       {isAddLessonModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-100">
+          <div className="bg-surface rounded-2xl p-6 max-w-md w-full shadow-2xl border border-surface-hover">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Gán Bài học vào lớp</h3>
             <form onSubmit={handleAddLessonSubmit} className="space-y-4">
               <div>
@@ -906,7 +906,7 @@ export const ClassDetailPage: React.FC = () => {
                   <select
                     value={selectedSetId}
                     onChange={e => setSelectedSetId(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-surface focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     {availableSets.map(s => (
                       <option key={s.id} value={s.id}>

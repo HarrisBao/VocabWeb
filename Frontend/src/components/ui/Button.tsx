@@ -13,13 +13,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-sm hover:shadow-md',
+    'bg-brand hover:bg-brand-hover active:bg-brand-dark text-white shadow-sm hover:shadow-md',
   secondary:
-    'bg-green-100 hover:bg-green-200 active:bg-green-300 text-green-800',
+    'bg-brand-light hover:bg-surface-hover active:bg-brand-light text-brand-text',
   outline:
-    'border-2 border-green-600 text-green-700 hover:bg-green-50 active:bg-green-100',
+    'border-2 border-brand text-brand-text hover:bg-surface-hover active:bg-brand-light',
   ghost:
-    'text-green-700 hover:bg-green-50 active:bg-green-100',
+    'text-brand-text hover:bg-surface-hover active:bg-brand-light',
   danger:
     'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-sm',
 }
@@ -46,7 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
       className={[
         'inline-flex items-center justify-center gap-2 font-semibold',
         'transition-all duration-200 ease-in-out',
-        'focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
+        'focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         variantClasses[variant],
         sizeClasses[size],

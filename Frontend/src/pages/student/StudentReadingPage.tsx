@@ -76,10 +76,10 @@ export const StudentReadingPage: React.FC = () => {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-brand-light border-t-brand rounded-full animate-spin"></div>
           </div>
         ) : classesData.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-gray-200 text-center">
+          <div className="bg-surface p-8 rounded-2xl border border-surface-hover text-center">
             <div className="text-4xl mb-4">📚</div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có bài từ vựng nào</h3>
             <p className="text-gray-500 max-w-sm mx-auto">
@@ -89,8 +89,8 @@ export const StudentReadingPage: React.FC = () => {
         ) : (
           <div className="space-y-8">
             {classesData.map(cls => (
-              <div key={cls.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <div key={cls.id} className="bg-surface rounded-2xl border border-surface-hover shadow-sm overflow-hidden">
+                <div className="bg-surface-muted px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                   <h3 className="font-bold text-gray-900">Lớp: {cls.name}</h3>
                   <Link to={`/class/${cls.code}`} className="text-sm text-green-600 font-bold hover:underline">
                     Xem lớp
@@ -103,7 +103,7 @@ export const StudentReadingPage: React.FC = () => {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {cls.lessons.map(lesson => (
-                        <div key={lesson.vocabularySetId} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-green-300 hover:shadow-sm transition-all">
+                        <div key={lesson.vocabularySetId} className="flex items-center justify-between p-4 rounded-xl border border-surface-hover hover:border-brand hover:shadow-sm transition-all">
                           <div>
                             <h4 className="font-bold text-gray-900 mb-1">{lesson.title}</h4>
                             <div className="text-xs text-gray-500 font-medium">
@@ -112,7 +112,7 @@ export const StudentReadingPage: React.FC = () => {
                           </div>
                           <Link 
                             to={`/learn/vocabulary/${lesson.vocabularySetId}?classId=${cls.id}`}
-                            className="px-4 py-2 bg-green-50 text-green-700 font-bold rounded-lg text-sm hover:bg-green-100 transition-colors"
+                            className="px-4 py-2 bg-brand-light text-brand-text font-bold rounded-lg text-sm hover:bg-surface-hover transition-colors"
                           >
                             Ôn từ
                           </Link>
@@ -133,7 +133,7 @@ export const StudentReadingPage: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-1">BÀI TẬP READING</h2>
           <p className="text-gray-500">Các bài tập đọc hiểu (Coming Soon).</p>
         </div>
-        <div className="bg-gray-50 p-8 rounded-2xl border border-gray-200 border-dashed text-center">
+        <div className="bg-surface-muted p-8 rounded-2xl border border-gray-200 border-dashed text-center">
           <p className="text-gray-500 font-medium">Chưa có bài tập Reading được giao.</p>
         </div>
       </section>

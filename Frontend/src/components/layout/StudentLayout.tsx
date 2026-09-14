@@ -21,12 +21,12 @@ export const StudentLayout: React.FC = () => {
   }, [classSlug]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-page-student flex flex-col">
       {/* Top Navigation */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+      <header className="bg-surface border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to={basePath} className="font-black text-xl text-green-600 tracking-tight">
+            <Link to={basePath} className="font-black text-xl text-brand tracking-tight">
               IELTS Thanh Lê
             </Link>
             
@@ -36,8 +36,8 @@ export const StudentLayout: React.FC = () => {
                 to={basePath}
                 className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
                   location.pathname === basePath 
-                    ? 'bg-green-50 text-green-700' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-brand-light text-brand' 
+                    : 'text-gray-600 hover:bg-surface-hover'
                 }`}
               >
                 Trang chủ
@@ -48,8 +48,8 @@ export const StudentLayout: React.FC = () => {
                   to={`${basePath}/${skill.id}`}
                   className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
                     location.pathname.startsWith(`${basePath}/${skill.id}`)
-                      ? 'bg-green-50 text-green-700'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-brand-light text-brand'
+                      : 'text-gray-600 hover:bg-surface-hover'
                   }`}
                 >
                   {skill.label}
@@ -71,7 +71,7 @@ export const StudentLayout: React.FC = () => {
                 Đổi học sinh
               </button>
             )}
-            <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 rounded-full bg-brand-light text-brand-text flex items-center justify-center font-bold text-sm">
               {profileName}
             </div>
           </div>
@@ -84,12 +84,12 @@ export const StudentLayout: React.FC = () => {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe z-30">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-200 pb-safe z-30">
         <div className="flex items-center justify-around h-16 px-2">
           <Link
             to={basePath}
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-              location.pathname === basePath ? 'text-green-600' : 'text-gray-500 hover:text-gray-900'
+              location.pathname === basePath ? 'text-brand' : 'text-gray-500 hover:text-gray-900'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +102,7 @@ export const StudentLayout: React.FC = () => {
               key={skill.id}
               to={`${basePath}/${skill.id}`}
               className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                location.pathname.startsWith(`${basePath}/${skill.id}`) ? 'text-green-600' : 'text-gray-500 hover:text-gray-900'
+                location.pathname.startsWith(`${basePath}/${skill.id}`) ? 'text-brand' : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               <div className="text-[11px] font-black">{skill.label.charAt(0)}</div>

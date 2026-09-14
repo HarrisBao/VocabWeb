@@ -67,7 +67,7 @@ export const TeacherLayout: React.FC = () => {
     : 'GV'
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-page-teacher flex">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
         <div
@@ -85,12 +85,12 @@ export const TeacherLayout: React.FC = () => {
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
-          <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-9 h-9 bg-brand rounded-xl flex items-center justify-center shadow-sm">
             <span className="text-white font-black text-sm">ITL</span>
           </div>
           <div>
             <div className="font-bold text-gray-900 text-sm leading-tight">IELTS Thanh Lê</div>
-            <div className="text-xs text-green-700 font-semibold">Cổng Giáo Viên</div>
+            <div className="text-xs text-brand-text font-semibold">Cổng Giáo Viên</div>
           </div>
         </div>
 
@@ -108,8 +108,8 @@ export const TeacherLayout: React.FC = () => {
                 className={[
                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-green-50 text-green-800 font-semibold shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-surface-hover text-brand font-bold border-r-4 border-brand rounded-r-none font-semibold shadow-sm'
+                    : 'text-gray-600 hover:bg-surface-soft hover:text-brand-text'
                 ].join(' ')}
               >
                 <span className={isActive ? 'text-green-600' : 'text-gray-400'}>{item.icon}</span>
@@ -121,7 +121,7 @@ export const TeacherLayout: React.FC = () => {
 
         {/* User Card in Sidebar Bottom */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-gray-50">
+          <div className="flex items-center gap-3 p-2 rounded-xl bg-page-teacher">
             {user?.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -129,7 +129,7 @@ export const TeacherLayout: React.FC = () => {
                 className="w-10 h-10 rounded-full object-cover border border-green-200"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-xs">
+              <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold text-xs">
                 {userInitials}
               </div>
             )}
@@ -155,7 +155,7 @@ export const TeacherLayout: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="text-xs sm:text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+            <span className="text-xs sm:text-sm font-semibold text-brand-text bg-green-50 px-3 py-1 rounded-full border border-green-100">
               🎓 Không gian Giáo viên
             </span>
           </div>
@@ -163,7 +163,7 @@ export const TeacherLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="text-xs sm:text-sm text-gray-600 hover:text-green-700 font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+              className="text-xs sm:text-sm text-gray-600 hover:text-brand-text font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
               target="_blank"
               rel="noopener noreferrer"
             >
