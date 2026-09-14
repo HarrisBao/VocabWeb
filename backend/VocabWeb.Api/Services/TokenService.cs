@@ -46,6 +46,38 @@ public class TokenService : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    public string GenerateNoAccountStudentToken(StudentProfile profile, ClassEnrollment enrollment)
+    {
+        var jwtSettings = _configuration.GetSection("Jwt");
+        var secretKey = _configuration["JWT_KEY"] ?? jwtSettings["Key"]
+            ?? "IeltsThanhLeLearning_SecretKey_For_Jwt_Token_Validation_2026_Minimum256Bits!";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, profile.Id.ToString()),
+            new(JwtRegisteredClaimNames.Name, profile.FullName),
+            new(ClaimTypes.Role, "Student"),
+            new("IdentityMode", "NO_ACCOUNT"),
+            new("ClassEnrollmentId", enrollment.Id.ToString()),
+            new("ClassId", enrollment.ClassId.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var expiryMinutes = double.TryParse(jwtSettings["ExpiryMinutes"], out var mins) ? mins : 1440; // 24 hours for student session
+
+        var token = new JwtSecurityToken(
+            issuer: jwtSettings["Issuer"] ?? "IeltsThanhLeVocabWeb",
+            audience: jwtSettings["Audience"] ?? "IeltsThanhLeVocabWeb",
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     public RefreshToken GenerateRefreshToken(string userId, string? ipAddress)
     {
         var randomBytes = new byte[64];

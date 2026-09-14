@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
         var existing = await _userManager.FindByEmailAsync(normalizedEmail);
         if (existing != null)
         {
-            return BadRequest(new { message = "Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác." });
+            return BadRequest(new { message = "Email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng. Vui lÃ²ng Ä‘Äƒng nháº­p hoáº·c dÃ¹ng email khÃ¡c." });
         }
 
         var user = new ApplicationUser
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
         {
             var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-            return BadRequest(new { message = "Đăng ký không thành công: " + errors });
+            return BadRequest(new { message = "ÄÄƒng kÃ½ khÃ´ng thÃ nh cÃ´ng: " + errors });
         }
 
         // Hard-code role Teacher
@@ -111,20 +111,20 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByEmailAsync(normalizedEmail);
         if (user == null || !user.IsActive)
         {
-            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+            return Unauthorized(new { message = "Email hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c." });
         }
 
         var passCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
         if (!passCheck.Succeeded)
         {
-            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+            return Unauthorized(new { message = "Email hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c." });
         }
 
         // Verify user is Teacher
         var isTeacher = await _userManager.IsInRoleAsync(user, "Teacher");
         if (!isTeacher)
         {
-            return StatusCode(403, new { message = "Tài khoản của bạn không có quyền giáo viên." });
+            return StatusCode(403, new { message = "TÃ i khoáº£n cá»§a báº¡n khÃ´ng cÃ³ quyá»n giÃ¡o viÃªn." });
         }
 
         user.LastLoginAt = DateTime.UtcNow;
@@ -168,7 +168,7 @@ public class AuthController : ControllerBase
 
         if (!authResult.Success || authResult.User == null)
         {
-            return BadRequest(new { message = authResult.ErrorMessage ?? "Đăng nhập Google thất bại." });
+            return BadRequest(new { message = authResult.ErrorMessage ?? "ÄÄƒng nháº­p Google tháº¥t báº¡i." });
         }
 
         var user = authResult.User;
@@ -205,13 +205,13 @@ public class AuthController : ControllerBase
 
         if (existingToken == null || !existingToken.IsActive)
         {
-            return Unauthorized(new { message = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại." });
+            return Unauthorized(new { message = "PhiÃªn lÃ m viá»‡c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i." });
         }
 
         var user = existingToken.User;
         if (user == null || !user.IsActive)
         {
-            return Unauthorized(new { message = "Tài khoản không tồn tại hoặc đã bị khóa." });
+            return Unauthorized(new { message = "TÃ i khoáº£n khÃ´ng tá»“n táº¡i hoáº·c Ä‘Ã£ bá»‹ khÃ³a." });
         }
 
         // Revoke old token and issue new token (Rotation)
@@ -259,7 +259,7 @@ public class AuthController : ControllerBase
             }
         }
 
-        return Ok(new { message = "Đăng xuất thành công." });
+        return Ok(new { message = "ÄÄƒng xuáº¥t thÃ nh cÃ´ng." });
     }
 
     [Authorize]
@@ -272,7 +272,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng." });
+        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
 
         var roles = await _userManager.GetRolesAsync(user);
 
@@ -300,7 +300,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng." });
+        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
 
         user.FullName = dto.FullName.Trim();
         user.Specialization = dto.Specialization?.Trim();
@@ -335,15 +335,69 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng." });
+        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng." });
 
         var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
         if (!result.Succeeded)
         {
             var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-            return BadRequest(new { message = "Đổi mật khẩu thất bại: " + errors });
+            return BadRequest(new { message = "Äá»•i máº­t kháº©u tháº¥t báº¡i: " + errors });
         }
 
-        return Ok(new { message = "Đổi mật khẩu thành công." });
+        return Ok(new { message = "Äá»•i máº­t kháº©u thÃ nh cÃ´ng." });
+    }
+    [HttpPost("student/phone-login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StudentPhoneLogin([FromBody] PhoneLoginDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var normalizedPhone = dto.Phone.Trim().Replace(" ", "").Replace("-", "");
+        if (!normalizedPhone.StartsWith("+"))
+        {
+            if (normalizedPhone.StartsWith("0"))
+                normalizedPhone = "+84" + normalizedPhone.Substring(1);
+            else
+                normalizedPhone = "+" + normalizedPhone;
+        }
+
+        // Find class
+        var cls = await _db.Classes
+            .FirstOrDefaultAsync(c => !c.IsArchived && (c.Code.ToLower() == dto.ClassSlug.ToLower() || c.FixedLinkToken == dto.ClassSlug));
+
+        if (cls == null)
+            return NotFound(new { message = "Không tìm thấy lớp học." });
+
+        // Find student profile by phone
+        var profile = await _db.StudentProfiles
+            .FirstOrDefaultAsync(sp => sp.NormalizedPhone == normalizedPhone);
+
+        if (profile == null)
+            return Unauthorized(new { message = "Không tìm thấy học sinh phù hợp trong lớp này." });
+
+        // Verify class enrollment
+        var enrollment = await _db.ClassEnrollments
+            .FirstOrDefaultAsync(ce => ce.ClassId == cls.Id && ce.StudentProfileId == profile.Id);
+
+        if (enrollment == null)
+            return Unauthorized(new { message = "Không tìm thấy học sinh phù hợp trong lớp này." });
+
+        // Generate token
+        var accessToken = _tokenService.GenerateNoAccountStudentToken(profile, enrollment);
+
+        return Ok(new
+        {
+            AccessToken = accessToken,
+            User = new
+            {
+                Id = profile.Id.ToString(),
+                FullName = profile.FullName,
+                Role = "Student",
+                IdentityMode = "NO_ACCOUNT",
+                ClassId = cls.Id,
+                ClassEnrollmentId = enrollment.Id
+            }
+        });
     }
 }

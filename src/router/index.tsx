@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 
@@ -10,6 +10,7 @@ import { TeacherLoginPage } from '../pages/auth/TeacherLoginPage'
 import { TeacherRegisterPage } from '../pages/auth/TeacherRegisterPage'
 import { StudentLoginPage } from '../pages/auth/StudentLoginPage'
 import { StudentRegisterPage } from '../pages/auth/StudentRegisterPage'
+import { NoAccountPortalPage } from '../pages/auth/NoAccountPortalPage'
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 
 // Lessons
@@ -54,7 +55,7 @@ const TeacherRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium text-sm">Đang xác thực thông tin...</p>
+          <p className="text-gray-500 font-medium text-sm">Äang xÃ¡c thá»±c thÃ´ng tin...</p>
         </div>
       </div>
     )
@@ -85,6 +86,7 @@ export const AppRouter = () => {
           {/* Student Auth */}
           <Route path="/student/login" element={<StudentLoginPage />} />
           <Route path="/student/register" element={<StudentRegisterPage />} />
+            <Route path="/class/:classSlug/portal" element={<NoAccountPortalPage />} />
 
           {/* Student System Shell */}
           <Route path="/student" element={<StudentLayout />}>
@@ -129,3 +131,4 @@ export const AppRouter = () => {
     </BrowserRouter>
   )
 }
+

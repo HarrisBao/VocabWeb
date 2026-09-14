@@ -36,7 +36,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test == null)
         {
-            return NotFound(new { message = "Không tìm thấy bài kiểm tra hoặc bài đã bị đóng." });
+            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i kiá»ƒm tra hoáº·c bÃ i Ä‘Ã£ bá»‹ Ä‘Ã³ng." });
         }
 
         return Ok(new PublicTestMetadataDto
@@ -63,29 +63,32 @@ public class LearnTestAccessController : ControllerBase
             .FirstOrDefaultAsync(t => t.PublicCode == publicCode && !t.IsArchived);
 
         if (test == null)
-            return NotFound(new { message = "Không tìm thấy bài kiểm tra." });
+            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i kiá»ƒm tra." });
 
         if (test.StartDate.HasValue && DateTime.UtcNow < test.StartDate.Value)
-            return BadRequest(new { message = "Bài kiểm tra chưa bắt đầu." });
+            return BadRequest(new { message = "BÃ i kiá»ƒm tra chÆ°a báº¯t Ä‘áº§u." });
 
         if (test.Deadline.HasValue && DateTime.UtcNow > test.Deadline.Value)
-            return BadRequest(new { message = "Bài kiểm tra đã kết thúc." });
+            return BadRequest(new { message = "BÃ i kiá»ƒm tra Ä‘Ã£ káº¿t thÃºc." });
 
         // Verify Identity
         bool isLoggedIn = User.Identity?.IsAuthenticated ?? false;
         string? studentId = null;
+        int? classEnrollmentId = null;
         string? participantName;
 
         if (isLoggedIn)
         {
             studentId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            participantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh";
+            var enrollmentClaim = User.FindFirst("ClassEnrollmentId")?.Value;
+            if (int.TryParse(enrollmentClaim, out int ceId)) classEnrollmentId = ceId;
+            participantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Há»c sinh";
         }
         else
         {
             if (string.IsNullOrWhiteSpace(dto.GuestDisplayName) || string.IsNullOrWhiteSpace(dto.GuestSessionId))
             {
-                return BadRequest(new { message = "Vui lòng nhập tên của bạn để làm bài." });
+                return BadRequest(new { message = "Vui lÃ²ng nháº­p tÃªn cá»§a báº¡n Ä‘á»ƒ lÃ m bÃ i." });
             }
             participantName = dto.GuestDisplayName.Trim();
         }
@@ -95,7 +98,7 @@ public class LearnTestAccessController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(dto.AccessCode))
             {
-                return BadRequest(new { message = "Mã vào bài chưa đúng." }); // Keep message vague
+                return BadRequest(new { message = "MÃ£ vÃ o bÃ i chÆ°a Ä‘Ãºng." }); // Keep message vague
             }
 
             var hasher = new PasswordHasher<Test>();
@@ -103,13 +106,17 @@ public class LearnTestAccessController : ControllerBase
 
             if (result != PasswordVerificationResult.Success)
             {
-                return BadRequest(new { message = "Mã vào bài chưa đúng." });
+                return BadRequest(new { message = "MÃ£ vÃ o bÃ i chÆ°a Ä‘Ãºng." });
             }
         }
 
         // Calculate attempts
         int attemptsCount = 0;
-        if (isLoggedIn)
+        if (classEnrollmentId.HasValue)
+        {
+            attemptsCount = test.Attempts.Count(a => a.ClassEnrollmentId == classEnrollmentId.Value);
+        }
+        else if (isLoggedIn)
         {
             attemptsCount = test.Attempts.Count(a => a.StudentId == studentId);
         }
@@ -120,7 +127,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test.MaxAttempts.HasValue && attemptsCount >= test.MaxAttempts.Value)
         {
-            return BadRequest(new { message = "Bạn đã sử dụng hết số lượt làm bài." });
+            return BadRequest(new { message = "Báº¡n Ä‘Ã£ sá»­ dá»¥ng háº¿t sá»‘ lÆ°á»£t lÃ m bÃ i." });
         }
 
         // Issue Access Ticket
@@ -128,6 +135,7 @@ public class LearnTestAccessController : ControllerBase
         {
             TestId = test.Id,
             StudentId = studentId,
+            ClassEnrollmentId = classEnrollmentId,
             GuestSessionId = isLoggedIn ? null : dto.GuestSessionId,
             GuestDisplayName = isLoggedIn ? null : participantName,
             Expiry = DateTime.UtcNow.AddHours(2)
@@ -150,7 +158,7 @@ public class LearnTestAccessController : ControllerBase
     public async Task<ActionResult<StartAttemptResponseDto>> StartAttempt(string publicCode, [FromHeader(Name = "X-Access-Ticket")] string ticket)
     {
         if (string.IsNullOrEmpty(ticket))
-            return Unauthorized(new { message = "Thiếu thông tin xác thực phiên làm bài." });
+            return Unauthorized(new { message = "Thiáº¿u thÃ´ng tin xÃ¡c thá»±c phiÃªn lÃ m bÃ i." });
 
         AccessTicketData? ticketData;
         try
@@ -160,12 +168,12 @@ public class LearnTestAccessController : ControllerBase
         }
         catch
         {
-            return Unauthorized(new { message = "Phiên làm bài không hợp lệ hoặc đã hết hạn." });
+            return Unauthorized(new { message = "PhiÃªn lÃ m bÃ i khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n." });
         }
 
         if (ticketData == null || ticketData.Expiry < DateTime.UtcNow)
         {
-            return Unauthorized(new { message = "Phiên làm bài đã hết hạn. Vui lòng đăng nhập lại." });
+            return Unauthorized(new { message = "PhiÃªn lÃ m bÃ i Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i." });
         }
 
         var test = await _context.Tests
@@ -175,14 +183,18 @@ public class LearnTestAccessController : ControllerBase
             .FirstOrDefaultAsync(t => t.PublicCode == publicCode && t.Id == ticketData.TestId && !t.IsArchived);
 
         if (test == null)
-            return NotFound(new { message = "Bài kiểm tra không hợp lệ." });
+            return NotFound(new { message = "BÃ i kiá»ƒm tra khÃ´ng há»£p lá»‡." });
 
         if (test.Deadline.HasValue && DateTime.UtcNow > test.Deadline.Value)
-            return BadRequest(new { message = "Bài kiểm tra đã kết thúc." });
+            return BadRequest(new { message = "BÃ i kiá»ƒm tra Ä‘Ã£ káº¿t thÃºc." });
 
         // Calculate attempts again to prevent race condition
         int attemptsCount = 0;
-        if (!string.IsNullOrEmpty(ticketData.StudentId))
+        if (ticketData.ClassEnrollmentId.HasValue)
+        {
+            attemptsCount = test.Attempts.Count(a => a.ClassEnrollmentId == ticketData.ClassEnrollmentId.Value);
+        }
+        else if (!string.IsNullOrEmpty(ticketData.StudentId))
         {
             attemptsCount = test.Attempts.Count(a => a.StudentId == ticketData.StudentId);
         }
@@ -193,7 +205,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test.MaxAttempts.HasValue && attemptsCount >= test.MaxAttempts.Value)
         {
-            return BadRequest(new { message = "Bạn đã sử dụng hết số lượt làm bài." });
+            return BadRequest(new { message = "Báº¡n Ä‘Ã£ sá»­ dá»¥ng háº¿t sá»‘ lÆ°á»£t lÃ m bÃ i." });
         }
 
         var enabledTypes = test.EnabledTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -207,10 +219,11 @@ public class LearnTestAccessController : ControllerBase
         {
             TestId = test.Id,
             StudentId = string.IsNullOrEmpty(ticketData.StudentId) ? null : ticketData.StudentId,
+            ClassEnrollmentId = ticketData.ClassEnrollmentId,
             GuestSessionId = ticketData.GuestSessionId,
             GuestDisplayName = ticketData.GuestDisplayName,
             ParticipantDisplayNameSnapshot = !string.IsNullOrEmpty(ticketData.StudentId)
-                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh")
+                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Há»c sinh")
                 : ticketData.GuestDisplayName,
             AttemptNumber = attemptsCount + 1,
             Status = "IN_PROGRESS",
@@ -250,8 +263,10 @@ public class LearnTestAccessController : ControllerBase
     {
         public int TestId { get; set; }
         public string? StudentId { get; set; }
+        public int? ClassEnrollmentId { get; set; }
         public string? GuestSessionId { get; set; }
         public string? GuestDisplayName { get; set; }
         public DateTime Expiry { get; set; }
     }
 }
+

@@ -11,7 +11,7 @@ class ApiService {
   private refreshSubscribers: ((token: string) => void)[] = []
 
   private getAccessToken(): string | null {
-    return localStorage.getItem('teacher_access_token')
+    return localStorage.getItem('teacher_access_token') || localStorage.getItem('student_access_token')
   }
 
   private getRefreshToken(): string | null {

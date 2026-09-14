@@ -101,7 +101,7 @@ using (var scope = app.Services.CreateScope())
         context.Database.Migrate();
 
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        string[] roles = { "Teacher", "Student", "Admin" };
+        string[] roles = { "Teacher", "TA", "Student", "Admin" };
         foreach (var role in roles)
         {
             if (!roleManager.RoleExistsAsync(role).GetAwaiter().GetResult())

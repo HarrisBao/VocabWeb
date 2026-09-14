@@ -14,9 +14,10 @@ interface AvailableVocabSet {
 
 interface ClassMember {
   id: number
-  studentId: string
+  studentProfileId: number
   fullName: string
-  email: string
+  phone: string | null
+  userId: string | null
   joinedAt: string
 }
 
@@ -57,7 +58,7 @@ interface ClassDetails {
   attempts: TestAttempt[]
 }
 
-type TabType = 'lessons' | 'members' | 'results' | 'settings'
+type TabType = 'lessons' | 'members' | 'results' | 'settings' | 'attendance'
 
 interface TestItem {
   id: number
@@ -74,6 +75,10 @@ export const ClassDetailPage: React.FC = () => {
   const [cls, setCls] = useState<ClassDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const [newStudentName, setNewStudentName] = useState('')
+  const [newStudentPhone, setNewStudentPhone] = useState('')
+  const [isAddingStudent, setIsAddingStudent] = useState(false)
 
   // Add lesson modal
   const [isAddLessonModalOpen, setIsAddLessonModalOpen] = useState(false)
@@ -227,6 +232,34 @@ export const ClassDetailPage: React.FC = () => {
     }
   }
 
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newStudentName.trim() || !newStudentPhone.trim()) return
+    setIsAddingStudent(true)
+    try {
+      const res = await api.post(`/teacher/class/${id}/students/no-account`, {
+        fullName: newStudentName,
+        phone: newStudentPhone
+      })
+      if (res.id && cls) {
+        setCls({
+          ...cls,
+          memberCount: cls.memberCount + 1,
+          members: [...cls.members, res]
+        })
+        setNewStudentName('')
+        setNewStudentPhone('')
+        setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
+      } else {
+        setMessage({ type: 'error', text: 'Có lỗi xảy ra khi thêm học sinh.' })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Lỗi mạng khi thêm học sinh.' })
+    } finally {
+      setIsAddingStudent(false)
+    }
+  }
+
   const handleCopyLink = () => {
     if (!cls) return
     const full = `${window.location.origin}${cls.fixedLinkUrl}`
@@ -338,15 +371,27 @@ export const ClassDetailPage: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setActiveTab('attendance')}
+            className={[
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              activeTab === 'attendance'
+                ? 'border-green-600 text-green-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            ].join(' ')}
+          >
+            <span>📝 Điểm danh</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('results')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'results'
                 ? 'border-green-600 text-green-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            📝 Bài kiểm tra
+            <span>🏆 Bài kiểm tra</span>
           </button>
 
           <button
@@ -485,9 +530,15 @@ export const ClassDetailPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Danh sách học sinh</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Lớp học hoạt động bình thường kể cả khi chưa có danh sách học sinh.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Thêm học sinh không cần tài khoản bằng số điện thoại.</p>
             </div>
           </div>
+          
+          <form onSubmit={handleAddStudent} className="flex flex-col sm:flex-row gap-2 mb-6">
+            <Input placeholder="Tên học sinh" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} required />
+            <Input placeholder="Số điện thoại" value={newStudentPhone} onChange={e => setNewStudentPhone(e.target.value)} required />
+            <Button type="submit" loading={isAddingStudent}>Thêm học sinh</Button>
+          </form>
 
           {cls.members.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -499,7 +550,7 @@ export const ClassDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-900">{m.fullName}</p>
-                      <p className="text-xs text-gray-500">{m.email}</p>
+                      <p className="text-xs text-gray-500">{m.phone || 'Chưa có SDT'}</p>
                     </div>
                   </div>
                   <span className="text-xs text-gray-400">Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}</span>
@@ -520,6 +571,22 @@ export const ClassDetailPage: React.FC = () => {
               </button>
             </div>
           )}
+        </Card>
+      )}
+
+      {/* TAB ATTENDANCE */}
+      {activeTab === 'attendance' && (
+        <Card className="p-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Điểm danh</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Quản lý điểm danh theo từng buổi học.</p>
+          </div>
+          <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-xl">
+            <p className="text-sm text-gray-500 mb-2">Tính năng tạo và xem điểm danh đang được phát triển.</p>
+            <p className="text-xs text-gray-400 max-w-md mx-auto">
+              Sắp tới bạn có thể tạo buổi học, chọn Trạng thái (Có mặt, Vắng, Học online) và xem thống kê bài tập ở đây.
+            </p>
+          </div>
         </Card>
       )}
 

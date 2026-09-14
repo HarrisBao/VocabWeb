@@ -50,9 +50,9 @@ public class AssignLessonDto
 public class ClassMemberDto
 {
     public int Id { get; set; }
-    public string StudentId { get; set; } = string.Empty;
-    public string StudentName { get; set; } = string.Empty;
-    public string StudentEmail { get; set; } = string.Empty;
-    public string? AvatarUrl { get; set; }
+    public int StudentProfileId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string? UserId { get; set; }
     public DateTime JoinedAt { get; set; }
 }

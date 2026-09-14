@@ -9,6 +9,9 @@ public class TestAttempt
     public string? StudentId { get; set; }
     public ApplicationUser? Student { get; set; }
 
+    public int? ClassEnrollmentId { get; set; }
+    public ClassEnrollment? ClassEnrollment { get; set; }
+
     public string? GuestDisplayName { get; set; }
     public string? GuestSessionId { get; set; }
     public string? ParticipantDisplayNameSnapshot { get; set; }

@@ -20,6 +20,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<TestAttempt> TestAttempts => Set<TestAttempt>();
     public DbSet<AttemptAnswer> AttemptAnswers => Set<AttemptAnswer>();
 
+    public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
+    public DbSet<ClassEnrollment> ClassEnrollments => Set<ClassEnrollment>();
+    public DbSet<ClassStaffAssignment> ClassStaffAssignments => Set<ClassStaffAssignment>();
+    public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -122,5 +128,94 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Class>()
             .HasIndex(c => c.Code)
             .IsUnique();
+
+        // StudentProfile
+        builder.Entity<StudentProfile>()
+            .HasIndex(sp => sp.NormalizedPhone)
+            .IsUnique()
+            .HasFilter("[NormalizedPhone] IS NOT NULL");
+            
+        builder.Entity<StudentProfile>()
+            .HasOne(sp => sp.User)
+            .WithMany()
+            .HasForeignKey(sp => sp.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // ClassEnrollment
+        builder.Entity<ClassEnrollment>()
+            .HasOne(ce => ce.Class)
+            .WithMany() // We can add an Enrollments collection to Class if needed, omitting for now
+            .HasForeignKey(ce => ce.ClassId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClassEnrollment>()
+            .HasOne(ce => ce.StudentProfile)
+            .WithMany(sp => sp.Enrollments)
+            .HasForeignKey(ce => ce.StudentProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ClassEnrollment>()
+            .HasIndex(ce => new { ce.ClassId, ce.StudentProfileId })
+            .IsUnique();
+
+        // ClassStaffAssignment
+        builder.Entity<ClassStaffAssignment>()
+            .HasOne(csa => csa.Class)
+            .WithMany()
+            .HasForeignKey(csa => csa.ClassId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClassStaffAssignment>()
+            .HasOne(csa => csa.User)
+            .WithMany()
+            .HasForeignKey(csa => csa.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ClassStaffAssignment>()
+            .HasIndex(csa => new { csa.ClassId, csa.UserId })
+            .IsUnique();
+
+        // ClassSession
+        builder.Entity<ClassSession>()
+            .HasOne(cs => cs.Class)
+            .WithMany()
+            .HasForeignKey(cs => cs.ClassId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ClassSession>()
+            .HasOne(cs => cs.CreatedBy)
+            .WithMany()
+            .HasForeignKey(cs => cs.CreatedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // AttendanceRecord
+        builder.Entity<AttendanceRecord>()
+            .HasOne(ar => ar.ClassSession)
+            .WithMany(cs => cs.AttendanceRecords)
+            .HasForeignKey(ar => ar.ClassSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<AttendanceRecord>()
+            .HasOne(ar => ar.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(ar => ar.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<AttendanceRecord>()
+            .HasOne(ar => ar.UpdatedBy)
+            .WithMany()
+            .HasForeignKey(ar => ar.UpdatedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<AttendanceRecord>()
+            .HasIndex(ar => new { ar.ClassSessionId, ar.ClassEnrollmentId })
+            .IsUnique();
+
+        // TestAttempt - new ClassEnrollment relationship
+        builder.Entity<TestAttempt>()
+            .HasOne(ta => ta.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(ta => ta.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
