@@ -4,6 +4,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      UseAppHost=false: prevents MSBuild from generating a native VocabWeb.Api.exe wrapper.
+      The app is invoked as 'dotnet VocabWeb.Api.dll' instead.
+      DLLs are not exclusively file-locked on Windows while running, so dotnet build
+      can overwrite VocabWeb.Api.dll freely without MSB3027 / MSB3021 copy errors.
+    -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
