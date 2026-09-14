@@ -1,12 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import { SKILLS_LIST } from '../../config/skills';
+import { api } from '../../services/api';
 
 export const StudentLayout: React.FC = () => {
   const location = useLocation();
   const { classSlug } = useParams<{ classSlug?: string }>();
   const basePath = classSlug ? `/class/${classSlug}/portal` : `/student`;
   const [profileName, setProfileName] = useState<string>('HV');
+
+  useEffect(() => {
+    const token = localStorage.getItem('student_access_token');
+    if (!token) {
+      if (classSlug) {
+        window.location.href = `/class/${classSlug}/portal/login`;
+      } else {
+        window.location.href = '/student/login';
+      }
+    }
+  }, [classSlug]);
+
 
   useEffect(() => {
     if (classSlug) {
@@ -59,16 +72,36 @@ export const StudentLayout: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            {classSlug && (
+            {classSlug ? (
+              <>
+                <button
+                  onClick={() => {
+                    api.clearTokens();
+                    window.location.href = `/class/${classSlug}/portal/login`;
+                  }}
+                  className="text-sm font-bold text-gray-500 hover:text-gray-900"
+                >
+                  Đổi học sinh
+                </button>
+                <button
+                  onClick={() => {
+                    api.clearTokens();
+                    window.location.href = '/';
+                  }}
+                  className="text-sm font-bold text-red-500 hover:text-red-700"
+                >
+                  Thoát
+                </button>
+              </>
+            ) : (
               <button
                 onClick={() => {
-                  localStorage.removeItem('student_access_token');
-                  localStorage.removeItem('student_profile');
-                  window.location.href = `/class/${classSlug}/portal`;
+                  api.clearTokens();
+                  window.location.href = '/';
                 }}
-                className="text-sm font-bold text-gray-500 hover:text-gray-900"
+                className="text-sm font-bold text-red-500 hover:text-red-700"
               >
-                Đổi học sinh
+                Đăng xuất
               </button>
             )}
             <div className="w-8 h-8 rounded-full bg-brand-light text-brand-text flex items-center justify-center font-bold text-sm">

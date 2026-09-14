@@ -27,6 +27,10 @@ class ApiService {
     localStorage.removeItem('teacher_access_token')
     localStorage.removeItem('teacher_refresh_token')
     localStorage.removeItem('teacher_user_profile')
+    localStorage.removeItem('student_access_token')
+    localStorage.removeItem('student_profile')
+    // Remove other potential cached entries
+    localStorage.removeItem('recentClassSlug')
   }
 
   private onTokenRefreshed(token: string) {

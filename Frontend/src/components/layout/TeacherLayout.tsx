@@ -59,7 +59,7 @@ export const TeacherLayout: React.FC = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate('/teacher/login')
+    navigate('/')
   }
 
   const userInitials = user?.fullName
