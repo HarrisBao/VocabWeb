@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
 import { api } from '../../services/api'
 
@@ -17,6 +17,8 @@ interface Props {
 export function NotificationBell({ classSlug }: Props) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export function NotificationBell({ classSlug }: Props) {
 
   useEffect(() => {
     const fetchNotifications = async () => {
+      setIsLoading(true)
+      setIsError(false)
       try {
         const url = classSlug 
           ? `/learn/classes/${classSlug}/notifications`
@@ -40,6 +44,9 @@ export function NotificationBell({ classSlug }: Props) {
         setNotifications(data)
       } catch (err) {
         console.error("Failed to load notifications", err)
+        setIsError(true)
+      } finally {
+        setIsLoading(false)
       }
     }
     fetchNotifications()
@@ -47,17 +54,21 @@ export function NotificationBell({ classSlug }: Props) {
 
   const handleMarkRead = async (id: number) => {
     try {
+      // Optimistic update
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
       const url = classSlug
         ? `/learn/notifications/${id}/read`
         : `/notification/${id}/read`
       await api.put(url)
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
     } catch (err) {
       console.error("Failed to mark read", err)
+      // Revert on failure
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: false } : n))
     }
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length
+  const displayCount = unreadCount > 99 ? '99+' : unreadCount.toString()
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -67,24 +78,35 @@ export function NotificationBell({ classSlug }: Props) {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full border-2 border-white">
+            {displayCount}
+          </span>
         )}
       </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-900">THÃ”NG BÃO</h3>
-            {unreadCount > 0 && <span className="text-xs font-medium text-brand">{unreadCount} má»›i</span>}
+            <h3 className="text-sm font-bold text-gray-900">Thông báo</h3>
+            {unreadCount > 0 && <span className="text-xs font-medium text-brand">{unreadCount} mới</span>}
           </div>
           
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length > 0 ? (
+            {isLoading ? (
+              <div className="p-8 flex flex-col items-center justify-center text-gray-400">
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-brand rounded-full animate-spin mb-2"></div>
+                <p className="text-sm">Đang tải...</p>
+              </div>
+            ) : isError ? (
+              <div className="p-8 text-center text-red-500 text-sm">
+                Không thể tải thông báo. Vui lòng thử lại sau.
+              </div>
+            ) : notifications.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {notifications.map(n => (
                   <div 
                     key={n.id} 
-                    className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!n.isRead ? 'bg-brand-light/20' : 'bg-white'}`}
+                    className={`p-4 transition-colors cursor-pointer ${!n.isRead ? 'bg-brand-light/20 hover:bg-brand-light/30' : 'bg-white hover:bg-gray-50'}`}
                     onClick={() => {
                       if (!n.isRead) handleMarkRead(n.id)
                     }}
@@ -99,8 +121,9 @@ export function NotificationBell({ classSlug }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500 text-sm">
-                Báº¡n khÃ´ng cÃ³ thÃ´ng bÃ¡o nÃ o.
+              <div className="p-8 flex flex-col items-center justify-center text-gray-400 text-sm">
+                <Bell className="w-8 h-8 text-gray-200 mb-2" />
+                Bạn chưa có thông báo.
               </div>
             )}
           </div>
@@ -109,4 +132,3 @@ export function NotificationBell({ classSlug }: Props) {
     </div>
   )
 }
-

@@ -6,7 +6,7 @@ export const StudentHomePage: React.FC = () => {
   const { classSlug } = useParams<{ classSlug?: string }>();
   const basePath = classSlug ? `/class/${classSlug}/portal` : '/student';
 
-  let profileName = 'Học viên ✌️';
+  let profileName = 'Học viên';
   let className = '';
   if (classSlug) {
     const stored = localStorage.getItem('student_profile');
@@ -17,7 +17,16 @@ export const StudentHomePage: React.FC = () => {
         className = `Lớp ${p.className || classSlug}`;
       } catch {}
     }
+  } else {
+    const stored = localStorage.getItem('student_profile');
+    if (stored) {
+      try {
+        const p = JSON.parse(stored);
+        profileName = p.fullName;
+      } catch {}
+    }
   }
+  
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
       {/* Header */}
@@ -42,11 +51,11 @@ export const StudentHomePage: React.FC = () => {
             return (
               <Link 
                 key={skill.id}
-                to={`${basePath}/${skill.id}`}
+                to={isActive ? `${basePath}/${skill.id}` : '#'}
                 className={`p-6 rounded-2xl border-2 transition-all block relative overflow-hidden group ${
                   isActive 
                     ? 'border-brand-light bg-surface hover:border-brand hover:shadow-md' 
-                    : 'border-surface-hover bg-surface-muted hover:bg-gray-50 opacity-80'
+                    : 'border-surface-hover bg-surface-muted hover:bg-gray-50 opacity-80 cursor-default'
                 }`}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl mb-4 ${skill.accentClass}`}>
@@ -76,3 +85,4 @@ export const StudentHomePage: React.FC = () => {
     </div>
   );
 };
+
