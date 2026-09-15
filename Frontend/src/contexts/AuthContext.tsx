@@ -16,8 +16,8 @@ interface AuthContextType {
   user: UserProfile | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  loginWithGoogle: (idToken: string) => Promise<void>
+  login: (email: string, password: string) => Promise<UserProfile>
+  loginWithGoogle: (idToken: string) => Promise<UserProfile>
   registerTeacher: (data: TeacherRegisterFormData) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (data: { fullName: string; specialization?: string; avatarUrl?: string }) => Promise<void>
@@ -60,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     api.setTokens(res.accessToken, res.refreshToken)
     setUser(res.user)
     localStorage.setItem('teacher_user_profile', JSON.stringify(res.user))
+    return res.user
   }
 
   const loginWithGoogle = async (idToken: string) => {
@@ -67,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     api.setTokens(res.accessToken, res.refreshToken)
     setUser(res.user)
     localStorage.setItem('teacher_user_profile', JSON.stringify(res.user))
+    return res.user
   }
 
   const registerTeacher = async (data: TeacherRegisterFormData) => {

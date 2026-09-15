@@ -44,6 +44,11 @@ import { TestDetailPage } from '../pages/teacher/TestDetailPage'
 import { ClassTestResultsPage } from '../pages/teacher/ClassTestResultsPage'
 import { ProfilePage } from '../pages/teacher/ProfilePage'
 
+// TA System
+import { TaLayout } from '../components/layout/TaLayout'
+import { TaDashboardPage } from '../pages/ta/TaDashboardPage'
+import { TaClassDetailPage } from '../pages/ta/TaClassDetailPage'
+
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
 
@@ -66,6 +71,27 @@ const TeacherRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
   }
 
   return children ? <>{children}</> : <TeacherLayout />
+}
+
+const TaRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium text-sm">Đang xác thực thông tin...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || user?.role !== 'TA') {
+    return <Navigate to="/teacher/login" replace />
+  }
+
+  return children ? <>{children}</> : <TaLayout />
 }
 
 export const AppRouter = () => {
@@ -128,6 +154,15 @@ export const AppRouter = () => {
             <Route path="tests/:id" element={<TestDetailPage />} />
             <Route path="tests/:id/results" element={<ClassTestResultsPage />} />
             <Route path="results" element={<Navigate to="/teacher/classes" replace />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
+
+          {/* TA Protected Area */}
+          <Route path="/ta" element={<TaRoute />}>
+            <Route index element={<Navigate to="/ta/dashboard" replace />} />
+            <Route path="dashboard" element={<TaDashboardPage />} />
+            <Route path="classes" element={<TaDashboardPage />} />
+            <Route path="classes/:id" element={<TaClassDetailPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 

@@ -4,7 +4,6 @@ import { api } from '../../services/api'
 import { Card, Badge } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import { TaUser } from '../../types'
 
 interface AvailableVocabSet {
   id: number
@@ -59,7 +58,7 @@ interface ClassDetails {
   attempts: TestAttempt[]
 }
 
-type TabType = 'lessons' | 'members' | 'tas' | 'results' | 'settings' | 'attendance'
+type TabType = 'lessons' | 'members' | 'results' | 'attendance'
 
 interface ClassSession {
   id: number
@@ -94,7 +93,7 @@ interface TestItem {
   publicCode: string
 }
 
-export const ClassDetailPage: React.FC = () => {
+export const TaClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('lessons')
   const [cls, setCls] = useState<ClassDetails | null>(null)
@@ -104,11 +103,6 @@ export const ClassDetailPage: React.FC = () => {
   const [newStudentName, setNewStudentName] = useState('')
   const [newStudentPhone, setNewStudentPhone] = useState('')
   const [isAddingStudent, setIsAddingStudent] = useState(false)
-
-  // TA logic
-  const [tas, setTas] = useState<TaUser[]>([])
-  const [newTaEmail, setNewTaEmail] = useState('')
-  const [isAddingTa, setIsAddingTa] = useState(false)
 
   // Add lesson modal
   const [isAddLessonModalOpen, setIsAddLessonModalOpen] = useState(false)
@@ -137,7 +131,6 @@ export const ClassDetailPage: React.FC = () => {
     fetchClassDetails()
     fetchClassTests()
     fetchClassSessions()
-    fetchTas()
   }, [id])
 
   const fetchClassTests = async () => {
@@ -350,42 +343,6 @@ export const ClassDetailPage: React.FC = () => {
     }
   }
 
-  const fetchTas = async () => {
-    try {
-      const data = await api.get<TaUser[]>(`/teacher/class/${id}/tas`)
-      setTas(data)
-    } catch {
-      // Ignore
-    }
-  }
-
-  const handleAddTa = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTaEmail.trim()) return
-    setIsAddingTa(true)
-    try {
-      await api.post(`/teacher/class/${id}/tas`, { email: newTaEmail })
-      setMessage({ type: 'success', text: 'Đã thêm Trợ giảng thành công!' })
-      setNewTaEmail('')
-      fetchTas()
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Thêm Trợ giảng thất bại.' })
-    } finally {
-      setIsAddingTa(false)
-    }
-  }
-
-  const handleRemoveTa = async (userId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn gỡ Trợ giảng này khỏi lớp?')) return
-    try {
-      await api.delete(`/teacher/class/${id}/tas/${userId}`)
-      setMessage({ type: 'success', text: 'Đã gỡ Trợ giảng khỏi lớp.' })
-      fetchTas()
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Gỡ Trợ giảng thất bại.' })
-    }
-  }
-
   const handleCopyLink = () => {
     if (!cls) return
     const full = `${window.location.origin}${cls.fixedLinkUrl}`
@@ -442,11 +399,7 @@ export const ClassDetailPage: React.FC = () => {
             <span>{copiedLink ? '✓ Đã copy link' : '📋 Copy link cố định'}</span>
           </button>
 
-          {activeTab === 'lessons' && (
-            <Button size="sm" onClick={openAddLessonModal} className="font-bold">
-              + Gán bài học vào lớp
-            </Button>
-          )}
+
         </div>
       </div>
 
@@ -497,18 +450,6 @@ export const ClassDetailPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('tas')}
-            className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
-              activeTab === 'tas'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            ].join(' ')}
-          >
-            <span>👨‍🏫 Trợ giảng</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('attendance')}
             className={[
               'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
@@ -532,17 +473,6 @@ export const ClassDetailPage: React.FC = () => {
             <span>🏆 Bài kiểm tra</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors',
-              activeTab === 'settings'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            ].join(' ')}
-          >
-            ⚙️ Cài đặt
-          </button>
         </nav>
       </div>
 
@@ -814,66 +744,6 @@ export const ClassDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB TA */}
-      {activeTab === 'tas' && (
-        <Card className="p-6 max-w-3xl">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Danh sách Trợ giảng</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Thêm Trợ giảng (TA) để hỗ trợ quản lý lớp học và điểm danh.</p>
-            </div>
-          </div>
-          
-          <form onSubmit={handleAddTa} className="flex flex-col sm:flex-row gap-2 mb-6">
-            <Input 
-              placeholder="Email của Trợ giảng" 
-              type="email"
-              value={newTaEmail} 
-              onChange={e => setNewTaEmail(e.target.value)} 
-              required 
-            />
-            <Button type="submit" loading={isAddingTa}>Thêm Trợ giảng</Button>
-          </form>
-
-          {tas.length > 0 ? (
-            <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">
-              {tas.map((ta) => (
-                <div key={ta.userId} className="p-4 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    {ta.avatarUrl ? (
-                      <img src={ta.avatarUrl} alt={ta.fullName} className="w-10 h-10 rounded-full object-cover border border-green-200" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold text-sm">
-                        {ta.fullName.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">{ta.fullName}</p>
-                      <p className="text-xs text-gray-500">{ta.email}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 font-medium px-3 py-1.5 h-auto"
-                    onClick={() => handleRemoveTa(ta.userId)}
-                  >
-                    Gỡ
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
-              <p className="text-sm font-medium text-gray-600 mb-1">Chưa có Trợ giảng nào</p>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                Nhập email của người dùng có quyền TA để thêm vào lớp học này.
-              </p>
-            </div>
-          )}
-        </Card>
-      )}
-
       {/* TAB 3: BÀI KIỂM TRA */}
       {activeTab === 'results' && (
         <div className="space-y-4">
@@ -950,122 +820,9 @@ export const ClassDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: CÀI ĐẶT */}
-      {activeTab === 'settings' && (
-        <Card className="p-6 max-w-2xl">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">Cài đặt thông tin lớp học</h2>
-          <form onSubmit={handleSaveSettings} className="space-y-4">
-            <Input
-              label="Tên lớp học"
-              value={editName}
-              onChange={e => setEditName(e.target.value)}
-              required
-            />
 
-            <Input
-              label="Mã lớp"
-              value={editCode}
-              onChange={e => setEditCode(e.target.value)}
-              required
-            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mô tả lớp học</label>
-              <textarea
-                value={editDesc}
-                onChange={e => setEditDesc(e.target.value)}
-                rows={3}
-                className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
 
-            <div className="p-3 bg-surface-muted rounded-xl border border-surface-hover">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Link truy cập cố định</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}${cls.fixedLinkUrl}`}
-                  className="flex-1 px-3 py-1.5 text-xs font-mono bg-surface border border-surface-hover rounded-lg text-gray-700"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="px-3 py-1.5 text-xs font-bold bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  {copiedLink ? '✓ Đã copy' : 'Copy'}
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-3">
-              <Button type="submit" size="sm" loading={savingSettings}>
-                Lưu thay đổi cài đặt
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      {/* Add Lesson Modal */}
-      {isAddLessonModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-surface rounded-2xl p-6 max-w-md w-full shadow-2xl border border-surface-hover">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Gán Bài học vào lớp</h3>
-            <form onSubmit={handleAddLessonSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Chọn Bộ từ vựng nguồn *
-                </label>
-                {availableSets.length > 0 ? (
-                  <select
-                    value={selectedSetId}
-                    onChange={e => setSelectedSetId(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl bg-surface focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    {availableSets.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.title} ({s.wordCount} từ - {s.level})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-xs text-gray-500">
-                    Bạn chưa có bộ từ vựng nào.{' '}
-                    <Link to="/teacher/vocabulary/new" className="text-green-600 font-bold underline">
-                      Tạo bộ từ mới ngay
-                    </Link>
-                  </p>
-                )}
-              </div>
-
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={isPinnedChecked}
-                  onChange={e => setIsPinnedChecked(e.target.checked)}
-                  className="w-4 h-4 rounded text-green-600 focus:ring-green-500"
-                />
-                <span className="text-sm text-gray-700">Ghim bài học này lên đầu danh sách</span>
-              </label>
-
-              <div className="flex items-center justify-end gap-3 pt-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsAddLessonModalOpen(false)}
-                >
-                  Hủy
-                </Button>
-                <Button type="submit" size="sm" loading={addingLesson} disabled={availableSets.length === 0}>
-                  Thêm vào lớp
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

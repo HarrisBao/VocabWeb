@@ -107,7 +107,7 @@ public class GoogleAuthService : IGoogleAuthService
             }
 
             // Ensure Teacher role is assigned
-            if (!await _userManager.IsInRoleAsync(user, "Teacher"))
+            if (!await _userManager.IsInRoleAsync(user, "Teacher") && !await _userManager.IsInRoleAsync(user, "TA"))
             {
                 await _userManager.AddToRoleAsync(user, "Teacher");
             }

@@ -20,10 +20,16 @@ public class ClassController : ControllerBase
         _db = db;
     }
 
-        private async Task<bool> HasAccessToClass(int classId)
+        private async Task<bool> HasAccessToClass(int classId, bool requireOwnership = false)
     {
         var teacherId = GetTeacherId();
         if (string.IsNullOrEmpty(teacherId)) return false;
+        
+        if (requireOwnership) 
+        {
+            return await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == teacherId);
+        }
+
         return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
     }
 
@@ -172,7 +178,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
+            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -197,7 +203,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
+            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -216,7 +222,7 @@ public class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
+            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
@@ -514,5 +520,71 @@ public class ClassController : ControllerBase
 
         await _db.SaveChangesAsync();
         return Ok();
+    }
+    [HttpGet("{id}/tas")]
+    public async Task<IActionResult> GetTas(int id)
+    {
+        if (!await HasAccessToClass(id, true)) return Forbid(); // Require ownership
+        
+        var tas = await _db.ClassStaffAssignments
+            .Include(csa => csa.User)
+            .Where(csa => csa.ClassId == id && csa.StaffRole == "TA")
+            .Select(csa => new TaUserDto
+            {
+                UserId = csa.UserId,
+                FullName = csa.User.FullName,
+                Email = csa.User.Email ?? "",
+                AvatarUrl = csa.User.AvatarUrl
+            })
+            .ToListAsync();
+            
+        return Ok(tas);
+    }
+
+    [HttpPost("{id}/tas")]
+    public async Task<IActionResult> AssignTa(int id, [FromBody] AssignTaDto dto)
+    {
+        if (!await HasAccessToClass(id, true)) return Forbid(); // Require ownership
+        
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        
+        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng với email này." });
+        
+        // Ensure user is TA
+        var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
+        var isTa = await userManager.IsInRoleAsync(user, "TA");
+        if (!isTa) return BadRequest(new { message = "Người dùng này không có quyền Trợ giảng (TA)." });
+
+        var alreadyAssigned = await _db.ClassStaffAssignments
+            .AnyAsync(csa => csa.ClassId == id && csa.UserId == user.Id && csa.StaffRole == "TA");
+            
+        if (alreadyAssigned) return BadRequest(new { message = "Trợ giảng này đã được gán vào lớp." });
+
+        _db.ClassStaffAssignments.Add(new ClassStaffAssignment
+        {
+            ClassId = id,
+            UserId = user.Id,
+            StaffRole = "TA"
+        });
+        
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Đã gán trợ giảng thành công." });
+    }
+
+    [HttpDelete("{id}/tas/{userId}")]
+    public async Task<IActionResult> RemoveTa(int id, string userId)
+    {
+        if (!await HasAccessToClass(id, true)) return Forbid(); // Require ownership
+        
+        var assignment = await _db.ClassStaffAssignments
+            .FirstOrDefaultAsync(csa => csa.ClassId == id && csa.UserId == userId && csa.StaffRole == "TA");
+            
+        if (assignment == null) return NotFound(new { message = "Không tìm thấy trợ giảng này trong lớp." });
+        
+        _db.ClassStaffAssignments.Remove(assignment);
+        await _db.SaveChangesAsync();
+        
+        return Ok(new { message = "Đã gỡ trợ giảng khỏi lớp." });
     }
 }

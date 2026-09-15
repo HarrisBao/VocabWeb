@@ -120,18 +120,21 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Email hoÃ¡ÂºÂ·c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u khÃƒÂ´ng chÃƒÂ­nh xÃƒÂ¡c." });
         }
 
-        // Verify user is Teacher
+        // Verify user is Teacher or TA
         var isTeacher = await _userManager.IsInRoleAsync(user, "Teacher");
-        if (!isTeacher)
+        var isTA = await _userManager.IsInRoleAsync(user, "TA");
+        
+        if (!isTeacher && !isTA)
         {
-            return StatusCode(403, new { message = "TÃƒÂ i khoÃ¡ÂºÂ£n cÃ¡Â»Â§a bÃ¡ÂºÂ¡n khÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân giÃƒÂ¡o viÃƒÂªn." });
+            return StatusCode(403, new { message = "Tài khoản của bạn không có quyền truy cập trang quản lý." });
         }
+        var roleToAssign = isTeacher ? "Teacher" : "TA";
 
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var accessToken = _tokenService.GenerateAccessToken(user, "Teacher");
+        var accessToken = _tokenService.GenerateAccessToken(user, roleToAssign);
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ip);
 
         _db.RefreshTokens.Add(refreshToken);
@@ -149,7 +152,7 @@ public class AuthController : ControllerBase
                 FullName = user.FullName,
                 AvatarUrl = user.AvatarUrl,
                 Specialization = user.Specialization,
-                Role = "Teacher",
+                Role = roleToAssign,
                 CreatedAt = user.CreatedAt
             }
         });
@@ -172,7 +175,12 @@ public class AuthController : ControllerBase
         }
 
         var user = authResult.User;
-        var accessToken = _tokenService.GenerateAccessToken(user, "Teacher");
+        
+        var isTeacher = await _userManager.IsInRoleAsync(user, "Teacher");
+        var isTA = await _userManager.IsInRoleAsync(user, "TA");
+        var roleToAssign = isTeacher ? "Teacher" : (isTA ? "TA" : "Teacher"); // fallback to Teacher for newly registered via Google
+
+        var accessToken = _tokenService.GenerateAccessToken(user, roleToAssign);
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ip);
 
         _db.RefreshTokens.Add(refreshToken);
@@ -190,7 +198,7 @@ public class AuthController : ControllerBase
                 FullName = user.FullName,
                 AvatarUrl = user.AvatarUrl,
                 Specialization = user.Specialization,
-                Role = "Teacher",
+                Role = roleToAssign,
                 CreatedAt = user.CreatedAt
             }
         });

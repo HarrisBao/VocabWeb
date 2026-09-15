@@ -102,8 +102,12 @@ export const TeacherLoginPage: React.FC = () => {
     setGoogleLoading(true)
     setErrorMessage(null)
     try {
-      await loginWithGoogle(response.credential)
-      navigate('/teacher/dashboard')
+      const user = await loginWithGoogle(response.credential)
+      if (user.role === 'TA') {
+        navigate('/ta/dashboard')
+      } else {
+        navigate('/teacher/dashboard')
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.')
     } finally {
@@ -141,8 +145,12 @@ export const TeacherLoginPage: React.FC = () => {
     setLoading(true)
     setErrorMessage(null)
     try {
-      await login(form.email, form.password)
-      navigate('/teacher/dashboard')
+      const user = await login(form.email, form.password)
+      if (user.role === 'TA') {
+        navigate('/ta/dashboard')
+      } else {
+        navigate('/teacher/dashboard')
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.')
     } finally {

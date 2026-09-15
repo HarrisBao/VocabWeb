@@ -56,3 +56,17 @@ public class ClassMemberDto
     public string? UserId { get; set; }
     public DateTime JoinedAt { get; set; }
 }
+public class AssignTaDto
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class TaUserDto
+{
+    public string UserId { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? AvatarUrl { get; set; }
+}
