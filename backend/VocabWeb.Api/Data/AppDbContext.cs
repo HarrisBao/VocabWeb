@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Models;
 
@@ -22,6 +22,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
     public DbSet<ClassEnrollment> ClassEnrollments => Set<ClassEnrollment>();
+    public DbSet<ClassEnrollmentPeriod> ClassEnrollmentPeriods => Set<ClassEnrollmentPeriod>();
     public DbSet<ClassStaffAssignment> ClassStaffAssignments => Set<ClassStaffAssignment>();
     public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
     public DbSet<ClassSessionTest> ClassSessionTests => Set<ClassSessionTest>();
@@ -143,6 +144,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(sp => sp.UserId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // ClassEnrollmentPeriod
+        builder.Entity<ClassEnrollmentPeriod>()
+            .HasOne(cep => cep.ClassEnrollment)
+            .WithMany(ce => ce.Periods)
+            .HasForeignKey(cep => cep.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // ClassEnrollment
         builder.Entity<ClassEnrollment>()
             .HasOne(ce => ce.Class)
@@ -255,3 +263,4 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.SetNull);
     }
 }
+

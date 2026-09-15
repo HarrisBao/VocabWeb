@@ -1,4 +1,4 @@
-namespace VocabWeb.Api.Models;
+﻿namespace VocabWeb.Api.Models;
 
 public class ClassEnrollment
 {
@@ -14,4 +14,7 @@ public class ClassEnrollment
     
     public bool IsActive { get; set; } = true;
     public DateTime? LeftAt { get; set; }
+
+    public ICollection<ClassEnrollmentPeriod> Periods { get; set; } = new List<ClassEnrollmentPeriod>();
 }
+

@@ -348,18 +348,26 @@ public class ClassController : ControllerBase
         if (normalizedPhoneQuery.StartsWith("0"))
             normalizedPhoneQuery = "+84" + normalizedPhoneQuery.Substring(1);
 
-        var students = await _db.StudentProfiles
+                var students = await _db.StudentProfiles
             .Where(sp => sp.FullName.ToLower().Contains(q) || (sp.NormalizedPhone != null && sp.NormalizedPhone.Contains(normalizedPhoneQuery)))
             .Take(10)
             .Select(sp => new 
             {
                 sp.Id,
                 sp.FullName,
-                Phone = sp.NormalizedPhone
+                Phone = sp.NormalizedPhone,
+                Enrollment = sp.Enrollments.FirstOrDefault(ce => ce.ClassId == id)
             })
             .ToListAsync();
 
-        return Ok(students);
+        var results = students.Select(s => new {
+            s.Id,
+            s.FullName,
+            s.Phone,
+            MembershipStatus = s.Enrollment == null ? "NOT_ENROLLED" : (s.Enrollment.IsActive ? "ACTIVE" : "INACTIVE")
+        });
+
+        return Ok(results);
     }
 
     [HttpPost("{id}/enrollments/{studentProfileId}")]
@@ -381,6 +389,7 @@ public class ClassController : ControllerBase
 
         var actorId = GetTeacherId(); // Could be Teacher or TA
 
+                var now = DateTime.UtcNow;
         if (enrollment != null)
         {
             // Reactivate
@@ -393,11 +402,19 @@ public class ClassController : ControllerBase
             {
                 ClassId = id,
                 StudentProfileId = studentProfileId,
-                JoinedAt = DateTime.UtcNow,
+                JoinedAt = now,
                 IsActive = true
             };
             _db.ClassEnrollments.Add(enrollment);
         }
+        
+        // Add new enrollment period
+        _db.ClassEnrollmentPeriods.Add(new ClassEnrollmentPeriod
+        {
+            ClassEnrollment = enrollment,
+            StartedAt = now,
+            EndedAt = null
+        });
 
         // Add Notification
         var actor = await _db.Users.FindAsync(actorId);
@@ -431,9 +448,20 @@ public class ClassController : ControllerBase
         var enrollment = await _db.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == id && ce.StudentProfileId == studentProfileId);
         if (enrollment == null || !enrollment.IsActive) return NotFound("Enrollment not found");
 
+                var now = DateTime.UtcNow;
         enrollment.IsActive = false;
-        enrollment.LeftAt = DateTime.UtcNow;
+        enrollment.LeftAt = now;
         
+        var openPeriod = await _db.ClassEnrollmentPeriods
+            .Where(p => p.ClassEnrollmentId == enrollment.Id && p.EndedAt == null)
+            .OrderByDescending(p => p.StartedAt)
+            .FirstOrDefaultAsync();
+            
+        if (openPeriod != null)
+        {
+            openPeriod.EndedAt = now;
+        }
+
         await _db.SaveChangesAsync();
         return Ok(new { message = "Đã xóa học sinh khỏi lớp." });
     }
@@ -489,9 +517,12 @@ public class ClassController : ControllerBase
         var dtos = new List<ClassSessionDto>();
         foreach (var cs in sessions)
         {
-            var eligibleEnrollmentIds = await _db.ClassEnrollments
-                .Where(ce => ce.ClassId == id && ce.JoinedAt.Date <= cs.SessionDate.Date && (ce.LeftAt == null || ce.LeftAt.Value.Date >= cs.SessionDate.Date))
-                .Select(ce => ce.Id)
+                        var eligibleEnrollmentIds = await _db.ClassEnrollmentPeriods
+                .Where(p => p.ClassEnrollment.ClassId == id && 
+                            p.StartedAt.Date <= cs.SessionDate.Date && 
+                            (p.EndedAt == null || p.EndedAt.Value.Date >= cs.SessionDate.Date))
+                .Select(p => p.ClassEnrollmentId)
+                .Distinct()
                 .ToListAsync();
 
             var activities = new List<SessionActivityStatsDto>();
@@ -670,6 +701,10 @@ public class ClassController : ControllerBase
         return Ok(new { message = "ÄÃ£ gá»¡ trá»£ giáº£ng khá»i lá»›p." });
     }
 }
+
+
+
+
 
 
 

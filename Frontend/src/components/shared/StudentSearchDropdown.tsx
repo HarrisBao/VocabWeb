@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { api } from '../../services/api'
 import { Button } from '../ui/Button'
@@ -8,6 +8,7 @@ interface SearchResult {
   id: number
   fullName: string
   phone: string | null
+  membershipStatus?: 'NOT_ENROLLED' | 'ACTIVE' | 'INACTIVE'
 }
 
 interface Props {
@@ -96,13 +97,21 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
                 <button
                   key={r.id}
                   onClick={() => {
+                    if (r.membershipStatus === 'ACTIVE') return
                     setIsOpen(false)
                     onSelect(r.id)
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-50 flex flex-col items-start transition-colors"
+                  className={`w-full text-left px-4 py-2 flex flex-col items-start transition-colors ${r.membershipStatus === 'ACTIVE' ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-gray-50'}`}
+                  disabled={r.membershipStatus === 'ACTIVE'}
                 >
-                  <span className="font-medium text-gray-900">{r.fullName}</span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-medium text-gray-900">{r.fullName}</span>
+                    {r.membershipStatus === 'ACTIVE' && <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded uppercase tracking-wider">Đã có trong lớp</span>}
+                    {r.membershipStatus === 'INACTIVE' && <span className="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wider">Đã rời lớp</span>}
+                  </div>
                   {r.phone && <span className="text-xs text-gray-500">{r.phone}</span>}
+                  {r.membershipStatus === 'INACTIVE' && <span className="text-xs text-brand mt-1 font-semibold">Thêm lại vào lớp</span>}
+                  {(!r.membershipStatus || r.membershipStatus === 'NOT_ENROLLED') && <span className="text-xs text-brand mt-1 font-semibold">Thêm vào lớp</span>}
                 </button>
               ))}
             </div>
@@ -149,4 +158,5 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
     </div>
   )
 }
+
 

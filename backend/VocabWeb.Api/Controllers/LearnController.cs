@@ -250,7 +250,7 @@ public class LearnController : ControllerBase
         });
     }
 
-    [HttpGet("classes/{slug}/notifications")]
+        [HttpGet("classes/{slug}/notifications")]
     public async Task<IActionResult> GetClassNotifications(string slug)
     {
         var studentProfileIdStr = User.FindFirst("StudentProfileId")?.Value;
@@ -259,12 +259,17 @@ public class LearnController : ControllerBase
             return Unauthorized();
         }
 
+        var enrollmentClaim = User.FindFirst("ClassEnrollmentId")?.Value;
+        int? claimEnrollmentId = null;
+        if (int.TryParse(enrollmentClaim, out int ceId)) claimEnrollmentId = ceId;
+
         var cls = await _context.Classes.FirstOrDefaultAsync(c => c.FixedLinkToken == slug && !c.IsArchived);
         if (cls == null) return NotFound("Class not found");
 
-        // Verify active enrollment
         var enrollment = await _context.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == cls.Id && ce.StudentProfileId == profileId && ce.IsActive);
         if (enrollment == null) return Forbid();
+
+        if (claimEnrollmentId.HasValue && claimEnrollmentId.Value != enrollment.Id) return Forbid();
 
         var notifications = await _context.StudentNotifications
             .Where(n => n.StudentProfileId == profileId && n.ClassId == cls.Id)
@@ -283,7 +288,7 @@ public class LearnController : ControllerBase
         return Ok(notifications);
     }
 
-    [HttpPut("notifications/{id}/read")]
+        [HttpPut("notifications/{id}/read")]
     public async Task<IActionResult> MarkNotificationRead(int id)
     {
         var studentProfileIdStr = User.FindFirst("StudentProfileId")?.Value;
@@ -292,8 +297,18 @@ public class LearnController : ControllerBase
             return Unauthorized();
         }
 
+        var enrollmentClaim = User.FindFirst("ClassEnrollmentId")?.Value;
+        int? claimEnrollmentId = null;
+        if (int.TryParse(enrollmentClaim, out int ceId)) claimEnrollmentId = ceId;
+
         var notification = await _context.StudentNotifications.FirstOrDefaultAsync(n => n.Id == id && n.StudentProfileId == profileId);
         if (notification == null) return NotFound();
+
+        if (claimEnrollmentId.HasValue)
+        {
+            var enrollment = await _context.ClassEnrollments.FirstOrDefaultAsync(ce => ce.Id == claimEnrollmentId.Value);
+            if (enrollment == null || enrollment.ClassId != notification.ClassId) return Forbid();
+        }
 
         notification.IsRead = true;
         await _context.SaveChangesAsync();
@@ -301,5 +316,6 @@ public class LearnController : ControllerBase
         return Ok();
     }
 }
+
 
 
