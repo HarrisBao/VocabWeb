@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -412,17 +412,34 @@ public class AuthController : ControllerBase
             return BadRequest(ModelState);
 
         var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        _logger.LogInformation("Attempting student login for email: {Email}", normalizedEmail);
+
         var user = await _userManager.FindByEmailAsync(normalizedEmail);
-        if (user == null || !user.IsActive)
+        if (user == null)
+        {
+            _logger.LogWarning("StudentLogin failed: User not found for email: {Email}", normalizedEmail);
             return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+        }
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("StudentLogin failed: User is inactive for email: {Email}", normalizedEmail);
+            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+        }
 
         var passCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
         if (!passCheck.Succeeded)
+        {
+            _logger.LogWarning("StudentLogin failed: Invalid password for email: {Email}", normalizedEmail);
             return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+        }
 
         var isStudent = await _userManager.IsInRoleAsync(user, "Student");
         if (!isStudent)
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+            _logger.LogWarning("StudentLogin failed: User {Email} does not have Student role. Roles: {Roles}", normalizedEmail, string.Join(", ", userRoles));
             return StatusCode(403, new { message = "Tài khoản của bạn không có quyền học viên." });
+        }
 
         user.LastLoginAt = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
@@ -460,5 +477,53 @@ public class AuthController : ControllerBase
                 CreatedAt = user.CreatedAt
             }
         });
+    }
+
+    [HttpPost("student/register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StudentRegister([FromBody] StudentRegisterDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
+        
+        if (existingUser != null)
+        {
+            return BadRequest(new { message = "Email này đã được sử dụng." });
+        }
+
+        var newUser = new ApplicationUser
+        {
+            UserName = normalizedEmail,
+            Email = normalizedEmail,
+            FullName = dto.FullName.Trim(),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            LastLoginAt = DateTime.UtcNow
+        };
+
+        var result = await _userManager.CreateAsync(newUser, dto.Password);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            return BadRequest(new { message = "Đăng ký thất bại: " + errors });
+        }
+
+        // Add to Student role
+        await _userManager.AddToRoleAsync(newUser, "Student");
+
+        // Create student profile
+        var profile = new StudentProfile
+        {
+            FullName = newUser.FullName,
+            UserId = newUser.Id
+        };
+        _db.StudentProfiles.Add(profile);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Đăng ký thành công" });
     }
 }

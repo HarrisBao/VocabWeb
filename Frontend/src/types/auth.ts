@@ -26,8 +26,6 @@ export interface StudentRegisterFormData {
   email: string
   password: string
   confirmPassword: string
-  level: 'beginner' | 'intermediate' | 'advanced'
-  className?: string
 }
 
 export interface ForgotPasswordFormData {

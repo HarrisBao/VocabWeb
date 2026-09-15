@@ -94,3 +94,18 @@ public class ChangePasswordDto
     [MinLength(8, ErrorMessage = "Mật khẩu mới phải có ít nhất 8 ký tự")]
     public string NewPassword { get; set; } = string.Empty;
 }
+
+public class StudentRegisterDto
+{
+    [Required(ErrorMessage = "Họ và tên không được để trống")]
+    [MinLength(2, ErrorMessage = "Họ và tên phải có ít nhất 2 ký tự")]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email không được để trống")]
+    [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Mật khẩu không được để trống")]
+    [MinLength(8, ErrorMessage = "Mật khẩu phải có ít nhất 8 ký tự")]
+    public string Password { get; set; } = string.Empty;
+}

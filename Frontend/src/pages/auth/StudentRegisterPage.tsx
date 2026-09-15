@@ -3,13 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../components/layout/AuthLayout'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { api } from '../../services/api'
 import type { StudentRegisterFormData, FormErrors } from '../../types/auth'
-
-const LEVELS = [
-  { value: 'beginner', label: 'Beginner — Mục tiêu IELTS 5.0–5.5' },
-  { value: 'intermediate', label: 'Intermediate — Mục tiêu IELTS 6.0–6.5' },
-  { value: 'advanced', label: 'Advanced — Mục tiêu IELTS 7.0+' },
-]
 
 export const StudentRegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -18,13 +13,12 @@ export const StudentRegisterPage: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    level: 'beginner',
-    className: '',
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const validate = (): boolean => {
     const errs: FormErrors = {}
@@ -43,10 +37,22 @@ export const StudentRegisterPage: React.FC = () => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
-    // TODO: Connect to ASP.NET Core Web API — POST /api/auth/student/register
-    await new Promise(r => setTimeout(r, 1500))
-    setLoading(false)
-    navigate('/student/login')
+    setErrorMessage(null)
+    
+    try {
+      await api.post('/auth/student/register', {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password
+      }, { requiresAuth: false })
+      
+      // Auto login or redirect to login
+      navigate('/student/login')
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Đăng ký thất bại. Vui lòng thử lại.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const passwordStrength = () => {
@@ -74,6 +80,14 @@ export const StudentRegisterPage: React.FC = () => {
       subtitle="Tạo tài khoản miễn phí và bắt đầu chinh phục từ vựng IELTS ngay hôm nay!"
       role="student"
     >
+      {errorMessage && (
+        <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1">{errorMessage}</div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
           label="Họ và tên"
@@ -103,52 +117,6 @@ export const StudentRegisterPage: React.FC = () => {
           leftIcon={
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          }
-        />
-
-        {/* Level selection */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-green-900">
-            Trình độ hiện tại <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-1 gap-2">
-            {LEVELS.map(l => (
-              <label
-                key={l.value}
-                className={[
-                  'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
-                  form.level === l.value
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 hover:border-green-300',
-                ].join(' ')}
-              >
-                <input
-                  type="radio"
-                  name="level"
-                  value={l.value}
-                  checked={form.level === l.value}
-                  onChange={e => setForm(f => ({ ...f, level: e.target.value as StudentRegisterFormData['level'] }))}
-                  className="text-green-600 focus:ring-green-500"
-                />
-                <span className={`text-sm font-medium ${form.level === l.value ? 'text-green-800' : 'text-gray-700'}`}>
-                  {l.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <Input
-          label="Tên lớp học (tùy chọn)"
-          type="text"
-          placeholder="VD: IELTS 7.0 — Tháng 9/2025"
-          value={form.className}
-          onChange={e => setForm(f => ({ ...f, className: e.target.value }))}
-          hint="Nhập tên lớp nếu bạn đã được giáo viên cấp mã lớp"
-          leftIcon={
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           }
         />
