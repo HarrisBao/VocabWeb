@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import { SKILLS_LIST } from '../../config/skills';
 import { api } from '../../services/api';
+import { NotificationBell } from '../shared/NotificationBell';
 
 export const StudentLayout: React.FC = () => {
   const location = useLocation();
@@ -40,7 +41,7 @@ export const StudentLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to={basePath} className="font-black text-xl text-brand tracking-tight">
-              IELTS Thanh Lê
+              IELTS Thanh LÃª
             </Link>
             
             {/* Desktop Nav */}
@@ -53,7 +54,7 @@ export const StudentLayout: React.FC = () => {
                     : 'text-gray-600 hover:bg-surface-hover'
                 }`}
               >
-                Trang chủ
+                Trang chá»§
               </Link>
               {SKILLS_LIST.map(skill => (
                 <Link
@@ -71,7 +72,7 @@ export const StudentLayout: React.FC = () => {
             </nav>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">`n              <NotificationBell classSlug={classSlug} />
             {classSlug ? (
               <>
                 <button
@@ -81,7 +82,7 @@ export const StudentLayout: React.FC = () => {
                   }}
                   className="text-sm font-bold text-gray-500 hover:text-gray-900"
                 >
-                  Đổi học sinh
+                  Äá»•i há»c sinh
                 </button>
                 <button
                   onClick={() => {
@@ -90,7 +91,7 @@ export const StudentLayout: React.FC = () => {
                   }}
                   className="text-sm font-bold text-red-500 hover:text-red-700"
                 >
-                  Thoát
+                  ThoÃ¡t
                 </button>
               </>
             ) : (
@@ -101,7 +102,7 @@ export const StudentLayout: React.FC = () => {
                 }}
                 className="text-sm font-bold text-red-500 hover:text-red-700"
               >
-                Đăng xuất
+                ÄÄƒng xuáº¥t
               </button>
             )}
             <div className="w-8 h-8 rounded-full bg-brand-light text-brand-text flex items-center justify-center font-bold text-sm">
@@ -147,3 +148,4 @@ export const StudentLayout: React.FC = () => {
     </div>
   );
 };
+

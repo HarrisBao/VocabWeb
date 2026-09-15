@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Data;
@@ -38,12 +38,12 @@ public class LearnController : ControllerBase
 
         if (cls == null)
         {
-            return NotFound(new { message = "Không tìm thấy lớp học hoặc lớp đã bị lưu trữ." });
+            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c hoáº·c lá»›p Ä‘Ã£ bá»‹ lÆ°u trá»¯." });
         }
 
         if (!cls.AllowGuestAccess && !User.Identity!.IsAuthenticated)
         {
-            return Unauthorized(new { message = "Lớp học này yêu cầu tài khoản học viên để truy cập." });
+            return Unauthorized(new { message = "Lá»›p há»c nÃ y yÃªu cáº§u tÃ i khoáº£n há»c viÃªn Ä‘á»ƒ truy cáº­p." });
         }
 
         var dto = new StudentClassDto
@@ -83,7 +83,7 @@ public class LearnController : ControllerBase
 
         if (vocabSet == null)
         {
-            return NotFound(new { message = "Không tìm thấy bộ từ vựng." });
+            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
         }
 
         // Check access
@@ -155,7 +155,7 @@ public class LearnController : ControllerBase
             .Include(vs => vs.Items)
             .FirstOrDefaultAsync(vs => vs.Id == id);
 
-        if (vocabSet == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
+        if (vocabSet == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng." });
 
         var definitions = _questionGeneration.GetActivityDefinitions();
         var result = new List<PracticeAvailabilityDto>();
@@ -169,7 +169,7 @@ public class LearnController : ControllerBase
             if (vocabSet.Items.Count == 0)
             {
                 isAvailable = false;
-                reason = "ChÆ°a cÃ³ tá»« vá»±ng.";
+                reason = "ChÃ†Â°a cÃƒÂ³ tÃ¡Â»Â« vÃ¡Â»Â±ng.";
             }
             else if (def.RequiredInputs.Contains("Meaning") && vocabSet.Items.Count < 2)
             {
@@ -177,7 +177,7 @@ public class LearnController : ControllerBase
                 if (def.Type == ActivityType.WORD_TO_MEANING || def.Type == ActivityType.MEANING_TO_WORD || def.Type == ActivityType.LISTEN_TO_MEANING || def.Type == ActivityType.LISTEN_TO_WORD)
                 {
                     isAvailable = false;
-                    reason = "Cáº§n Ã­t nháº¥t 2 tá»« vá»±ng Ä‘á»ƒ táº¡o cÃ¡c Ä‘Ã¡p Ã¡n lá»±a chá» n.";
+                    reason = "CÃ¡ÂºÂ§n ÃƒÂ­t nhÃ¡ÂºÂ¥t 2 tÃ¡Â»Â« vÃ¡Â»Â±ng Ã„â€˜Ã¡Â»Æ’ tÃ¡ÂºÂ¡o cÃƒÂ¡c Ã„â€˜ÃƒÂ¡p ÃƒÂ¡n lÃ¡Â»Â±a chÃ¡Â» n.";
                 }
             }
             
@@ -188,7 +188,7 @@ public class LearnController : ControllerBase
                 if (questions.Count == 0)
                 {
                     isAvailable = false;
-                    reason = "KhÃ´ng Ä‘á»§ dá»¯ liá»‡u há»£p lá»‡ cho hoáº¡t Ä‘á»™ng nÃ y.";
+                    reason = "KhÃƒÂ´ng Ã„â€˜Ã¡Â»Â§ dÃ¡Â»Â¯ liÃ¡Â»â€¡u hÃ¡Â»Â£p lÃ¡Â»â€¡ cho hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng nÃƒÂ y.";
                 }
             }
 
@@ -212,7 +212,7 @@ public class LearnController : ControllerBase
             .Include(vs => vs.Items)
             .FirstOrDefaultAsync(vs => vs.Id == id);
 
-        if (vocabSet == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
+        if (vocabSet == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng." });
 
         var questions = _questionGeneration.GenerateQuestions(vocabSet.Items.ToList(), new List<ActivityType> { type });
         
@@ -249,4 +249,57 @@ public class LearnController : ControllerBase
             Questions = safeQuestions
         });
     }
+
+    [HttpGet("classes/{slug}/notifications")]
+    public async Task<IActionResult> GetClassNotifications(string slug)
+    {
+        var studentProfileIdStr = User.FindFirst("StudentProfileId")?.Value;
+        if (string.IsNullOrEmpty(studentProfileIdStr) || !int.TryParse(studentProfileIdStr, out int profileId))
+        {
+            return Unauthorized();
+        }
+
+        var cls = await _context.Classes.FirstOrDefaultAsync(c => c.FixedLinkToken == slug && !c.IsArchived);
+        if (cls == null) return NotFound("Class not found");
+
+        // Verify active enrollment
+        var enrollment = await _context.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == cls.Id && ce.StudentProfileId == profileId && ce.IsActive);
+        if (enrollment == null) return Forbid();
+
+        var notifications = await _context.StudentNotifications
+            .Where(n => n.StudentProfileId == profileId && n.ClassId == cls.Id)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(10)
+            .Select(n => new 
+            {
+                n.Id,
+                n.Type,
+                n.Message,
+                n.IsRead,
+                n.CreatedAt
+            })
+            .ToListAsync();
+
+        return Ok(notifications);
+    }
+
+    [HttpPut("notifications/{id}/read")]
+    public async Task<IActionResult> MarkNotificationRead(int id)
+    {
+        var studentProfileIdStr = User.FindFirst("StudentProfileId")?.Value;
+        if (string.IsNullOrEmpty(studentProfileIdStr) || !int.TryParse(studentProfileIdStr, out int profileId))
+        {
+            return Unauthorized();
+        }
+
+        var notification = await _context.StudentNotifications.FirstOrDefaultAsync(n => n.Id == id && n.StudentProfileId == profileId);
+        if (notification == null) return NotFound();
+
+        notification.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
 }
+
+

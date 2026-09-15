@@ -26,6 +26,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
     public DbSet<ClassSessionTest> ClassSessionTests => Set<ClassSessionTest>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<StudentNotification> StudentNotifications => Set<StudentNotification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -233,6 +234,24 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(ta => ta.ClassEnrollment)
             .WithMany()
             .HasForeignKey(ta => ta.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+        // StudentNotification
+        builder.Entity<StudentNotification>()
+            .HasOne(sn => sn.StudentProfile)
+            .WithMany()
+            .HasForeignKey(sn => sn.StudentProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<StudentNotification>()
+            .HasOne(sn => sn.Class)
+            .WithMany()
+            .HasForeignKey(sn => sn.ClassId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentNotification>()
+            .HasOne(sn => sn.ActorUser)
+            .WithMany()
+            .HasForeignKey(sn => sn.ActorUserId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

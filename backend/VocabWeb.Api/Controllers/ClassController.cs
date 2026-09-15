@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +56,7 @@ public class ClassController : ControllerBase
                 FixedLinkToken = c.FixedLinkToken,
                 FixedLinkUrl = $"/class/{c.FixedLinkToken}",
                 LessonCount = c.Lessons.Count,
-                MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == c.Id),
+                MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == c.Id && ce.IsActive),
                 CreatedAt = c.CreatedAt
             })
             .ToListAsync();
@@ -77,7 +77,7 @@ public class ClassController : ControllerBase
                     .ThenInclude(vs => vs.Items)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
+        if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
 
         return Ok(new ClassDto
         {
@@ -88,7 +88,7 @@ public class ClassController : ControllerBase
             FixedLinkToken = cls.FixedLinkToken,
             FixedLinkUrl = $"/class/{cls.FixedLinkToken}",
             LessonCount = cls.Lessons.Count,
-            MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == cls.Id),
+            MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == cls.Id && ce.IsActive),
             CreatedAt = cls.CreatedAt,
             Lessons = cls.Lessons
                 .OrderByDescending(l => l.IsPinned)
@@ -108,7 +108,7 @@ public class ClassController : ControllerBase
                 }).ToList(),
             Members = _db.ClassEnrollments
                 .Include(ce => ce.StudentProfile)
-                .Where(ce => ce.ClassId == cls.Id)
+                .Where(ce => ce.ClassId == cls.Id && ce.IsActive)
                 .OrderBy(ce => ce.JoinedAt)
                 .Select(m => new ClassMemberDto
                 {
@@ -181,7 +181,7 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
+        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
 
         cls.Name = dto.Name.Trim();
         if (!string.IsNullOrWhiteSpace(dto.Code))
@@ -193,7 +193,7 @@ public class ClassController : ControllerBase
 
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Cáº­p nháº­t thÃ´ng tin lá»›p thÃ nh cÃ´ng." });
+        return Ok(new { message = "CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃƒÂ´ng tin lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng." });
     }
 
     [HttpDelete("{id}")]
@@ -206,13 +206,13 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
+        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
 
         cls.IsArchived = true;
         cls.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "ÄÃ£ xÃ³a lá»›p há»c thÃ nh cÃ´ng." });
+        return Ok(new { message = "Ã„ÂÃƒÂ£ xÃƒÂ³a lÃ¡Â»â€ºp hÃ¡Â»Âc thÃƒÂ nh cÃƒÂ´ng." });
     }
 
     [HttpPost("{id}/lessons")]
@@ -225,20 +225,20 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
+        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
 
         var set = await _db.VocabularySets
             .Where(s => s.Id == dto.VocabularySetId && s.TeacherId == teacherId && !s.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (set == null) return BadRequest(new { message = "Bá»™ tá»« vá»±ng khÃ´ng há»£p lá»‡ hoáº·c khÃ´ng thuá»™c quyá»n sá»Ÿ há»¯u cá»§a báº¡n." });
+        if (set == null) return BadRequest(new { message = "BÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡ hoÃ¡ÂºÂ·c khÃƒÂ´ng thuÃ¡Â»â„¢c quyÃ¡Â»Ân sÃ¡Â»Å¸ hÃ¡Â»Â¯u cÃ¡Â»Â§a bÃ¡ÂºÂ¡n." });
 
         var alreadyAssigned = await _db.ClassLessons
             .AnyAsync(l => l.ClassId == id && l.VocabularySetId == dto.VocabularySetId);
 
         if (alreadyAssigned)
         {
-            return BadRequest(new { message = "Bá»™ tá»« vá»±ng nÃ y Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»›p há»c." });
+            return BadRequest(new { message = "BÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c thÃƒÂªm vÃƒÂ o lÃ¡Â»â€ºp hÃ¡Â»Âc." });
         }
 
         var maxOrder = await _db.ClassLessons
@@ -259,7 +259,7 @@ public class ClassController : ControllerBase
         _db.ClassLessons.Add(lesson);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "ThÃªm bá»™ tá»« vá»±ng vÃ o lá»›p thÃ nh cÃ´ng." });
+        return Ok(new { message = "ThÃƒÂªm bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng vÃƒÂ o lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng." });
     }
 
     [HttpDelete("{id}/lessons/{lessonId}")]
@@ -272,12 +272,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i há»c trong lá»›p." });
+        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
 
         _db.ClassLessons.Remove(lesson);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "ÄÃ£ gá»¡ bÃ i há»c khá»i lá»›p." });
+        return Ok(new { message = "Ã„ÂÃƒÂ£ gÃ¡Â»Â¡ bÃƒÂ i hÃ¡Â»Âc khÃ¡Â»Âi lÃ¡Â»â€ºp." });
     }
 
     [HttpPut("{id}/lessons/{lessonId}/pin")]
@@ -290,12 +290,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i há»c trong lá»›p." });
+        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
 
         lesson.IsPinned = !lesson.IsPinned;
         await _db.SaveChangesAsync();
 
-        return Ok(new { isPinned = lesson.IsPinned, message = lesson.IsPinned ? "ÄÃ£ ghim bÃ i há»c." : "ÄÃ£ bá» ghim bÃ i há»c." });
+        return Ok(new { isPinned = lesson.IsPinned, message = lesson.IsPinned ? "Ã„ÂÃƒÂ£ ghim bÃƒÂ i hÃ¡Â»Âc." : "Ã„ÂÃƒÂ£ bÃ¡Â»Â ghim bÃƒÂ i hÃ¡Â»Âc." });
     }
 
     [HttpPut("{id}/lessons/{lessonId}/visibility")]
@@ -308,12 +308,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i há»c trong lá»›p." });
+        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
 
         lesson.IsHidden = !lesson.IsHidden;
         await _db.SaveChangesAsync();
 
-        return Ok(new { isHidden = lesson.IsHidden, message = lesson.IsHidden ? "ÄÃ£ áº©n bÃ i há»c khá»i há»c sinh." : "ÄÃ£ hiá»ƒn thá»‹ bÃ i há»c." });
+        return Ok(new { isHidden = lesson.IsHidden, message = lesson.IsHidden ? "Ã„ÂÃƒÂ£ Ã¡ÂºÂ©n bÃƒÂ i hÃ¡Â»Âc khÃ¡Â»Âi hÃ¡Â»Âc sinh." : "Ã„ÂÃƒÂ£ hiÃ¡Â»Æ’n thÃ¡Â»â€¹ bÃƒÂ i hÃ¡Â»Âc." });
     }
     [HttpGet("{id}/enrollments")]
     public async Task<IActionResult> GetEnrollments(int id)
@@ -335,6 +335,109 @@ public class ClassController : ControllerBase
         return Ok(enrollments);
     }
 
+    [HttpGet("{id}/students/search")]
+    public async Task<IActionResult> SearchStudents(int id, [FromQuery] string q)
+    {
+        if (!await HasAccessToClass(id)) return Forbid();
+        if (string.IsNullOrWhiteSpace(q)) return Ok(new List<object>());
+
+        q = q.Trim().ToLower();
+
+        // Phone normalization for search
+        var normalizedPhoneQuery = q.Replace(" ", "").Replace("-", "");
+        if (normalizedPhoneQuery.StartsWith("0"))
+            normalizedPhoneQuery = "+84" + normalizedPhoneQuery.Substring(1);
+
+        var students = await _db.StudentProfiles
+            .Where(sp => sp.FullName.ToLower().Contains(q) || (sp.NormalizedPhone != null && sp.NormalizedPhone.Contains(normalizedPhoneQuery)))
+            .Take(10)
+            .Select(sp => new 
+            {
+                sp.Id,
+                sp.FullName,
+                Phone = sp.NormalizedPhone
+            })
+            .ToListAsync();
+
+        return Ok(students);
+    }
+
+    [HttpPost("{id}/enrollments/{studentProfileId}")]
+    public async Task<IActionResult> EnrollStudent(int id, int studentProfileId)
+    {
+        if (!await HasAccessToClass(id)) return Forbid();
+        var cls = await _db.Classes.FindAsync(id);
+        if (cls == null) return NotFound("Class not found");
+
+        var profile = await _db.StudentProfiles.FindAsync(studentProfileId);
+        if (profile == null) return NotFound("Student not found");
+
+        var enrollment = await _db.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == id && ce.StudentProfileId == studentProfileId);
+        
+        if (enrollment != null && enrollment.IsActive)
+        {
+            return BadRequest(new { message = "Học sinh này đã có trong lớp." });
+        }
+
+        var actorId = GetTeacherId(); // Could be Teacher or TA
+
+        if (enrollment != null)
+        {
+            // Reactivate
+            enrollment.IsActive = true;
+            enrollment.LeftAt = null;
+        }
+        else
+        {
+            enrollment = new ClassEnrollment
+            {
+                ClassId = id,
+                StudentProfileId = studentProfileId,
+                JoinedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+            _db.ClassEnrollments.Add(enrollment);
+        }
+
+        // Add Notification
+        var actor = await _db.Users.FindAsync(actorId);
+        var actorName = actor?.FullName ?? "Staff";
+        _db.StudentNotifications.Add(new StudentNotification
+        {
+            StudentProfileId = studentProfileId,
+            Type = "CLASS_ADDED",
+            ClassId = id,
+            ActorUserId = actorId,
+            Message = $"Bạn đã được thêm vào lớp {cls.Name} bởi {actorName}."
+        });
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new ClassMemberDto
+        {
+            Id = enrollment.Id,
+            StudentProfileId = profile.Id,
+            FullName = profile.FullName,
+            Phone = profile.NormalizedPhone,
+            UserId = profile.UserId,
+            JoinedAt = enrollment.JoinedAt
+        });
+    }
+
+    [HttpDelete("{id}/enrollments/{studentProfileId}")]
+    public async Task<IActionResult> RemoveStudent(int id, int studentProfileId)
+    {
+        if (!await HasAccessToClass(id)) return Forbid();
+        var enrollment = await _db.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == id && ce.StudentProfileId == studentProfileId);
+        if (enrollment == null || !enrollment.IsActive) return NotFound("Enrollment not found");
+
+        enrollment.IsActive = false;
+        enrollment.LeftAt = DateTime.UtcNow;
+        
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Đã xóa học sinh khỏi lớp." });
+    }
+
     [HttpPost("{id}/students/no-account")]
     public async Task<IActionResult> AddNoAccountStudent(int id, [FromBody] NoAccountStudentDto dto)
     {
@@ -352,45 +455,24 @@ public class ClassController : ControllerBase
         }
 
         var profile = await _db.StudentProfiles.FirstOrDefaultAsync(sp => sp.NormalizedPhone == normalizedPhone);
-        if (profile == null)
+        if (profile != null)
         {
-            profile = new StudentProfile
-            {
-                FullName = dto.FullName,
-                NormalizedPhone = normalizedPhone,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            _db.StudentProfiles.Add(profile);
-            await _db.SaveChangesAsync();
+            // If phone already exists, do not create duplicate
+            // We should just enroll them
+            return await EnrollStudent(id, profile.Id);
         }
-        else
+        
+        profile = new StudentProfile
         {
-            // Optional: update name if provided? Let's just keep existing profile.
-        }
+            FullName = dto.FullName,
+            NormalizedPhone = normalizedPhone,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _db.StudentProfiles.Add(profile);
+        await _db.SaveChangesAsync(); // save to get ID
 
-        var enrollment = await _db.ClassEnrollments.FirstOrDefaultAsync(ce => ce.ClassId == id && ce.StudentProfileId == profile.Id);
-        if (enrollment == null)
-        {
-            enrollment = new ClassEnrollment
-            {
-                ClassId = id,
-                StudentProfileId = profile.Id,
-                JoinedAt = DateTime.UtcNow
-            };
-            _db.ClassEnrollments.Add(enrollment);
-            await _db.SaveChangesAsync();
-        }
-
-        return Ok(new ClassEnrollmentDto
-        {
-            Id = enrollment.Id,
-            StudentProfileId = profile.Id,
-            FullName = profile.FullName,
-            Phone = profile.NormalizedPhone,
-            UserId = profile.UserId,
-            JoinedAt = enrollment.JoinedAt
-        });
+        return await EnrollStudent(id, profile.Id);
     }
 
     [HttpGet("{id}/sessions")]
@@ -408,7 +490,7 @@ public class ClassController : ControllerBase
         foreach (var cs in sessions)
         {
             var eligibleEnrollmentIds = await _db.ClassEnrollments
-                .Where(ce => ce.ClassId == id && ce.JoinedAt.Date <= cs.SessionDate.Date)
+                .Where(ce => ce.ClassId == id && ce.JoinedAt.Date <= cs.SessionDate.Date && (ce.LeftAt == null || ce.LeftAt.Value.Date >= cs.SessionDate.Date))
                 .Select(ce => ce.Id)
                 .ToListAsync();
 
@@ -549,17 +631,17 @@ public class ClassController : ControllerBase
         var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
         
-        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng với email này." });
+        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng vá»›i email nÃ y." });
         
         // Ensure user is TA
         var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
         var isTa = await userManager.IsInRoleAsync(user, "TA");
-        if (!isTa) return BadRequest(new { message = "Người dùng này không có quyền Trợ giảng (TA)." });
+        if (!isTa) return BadRequest(new { message = "NgÆ°á»i dÃ¹ng nÃ y khÃ´ng cÃ³ quyá»n Trá»£ giáº£ng (TA)." });
 
         var alreadyAssigned = await _db.ClassStaffAssignments
             .AnyAsync(csa => csa.ClassId == id && csa.UserId == user.Id && csa.StaffRole == "TA");
             
-        if (alreadyAssigned) return BadRequest(new { message = "Trợ giảng này đã được gán vào lớp." });
+        if (alreadyAssigned) return BadRequest(new { message = "Trá»£ giáº£ng nÃ y Ä‘Ã£ Ä‘Æ°á»£c gÃ¡n vÃ o lá»›p." });
 
         _db.ClassStaffAssignments.Add(new ClassStaffAssignment
         {
@@ -569,7 +651,7 @@ public class ClassController : ControllerBase
         });
         
         await _db.SaveChangesAsync();
-        return Ok(new { message = "Đã gán trợ giảng thành công." });
+        return Ok(new { message = "ÄÃ£ gÃ¡n trá»£ giáº£ng thÃ nh cÃ´ng." });
     }
 
     [HttpDelete("{id}/tas/{userId}")]
@@ -580,11 +662,14 @@ public class ClassController : ControllerBase
         var assignment = await _db.ClassStaffAssignments
             .FirstOrDefaultAsync(csa => csa.ClassId == id && csa.UserId == userId && csa.StaffRole == "TA");
             
-        if (assignment == null) return NotFound(new { message = "Không tìm thấy trợ giảng này trong lớp." });
+        if (assignment == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y trá»£ giáº£ng nÃ y trong lá»›p." });
         
         _db.ClassStaffAssignments.Remove(assignment);
         await _db.SaveChangesAsync();
         
-        return Ok(new { message = "Đã gỡ trợ giảng khỏi lớp." });
+        return Ok(new { message = "ÄÃ£ gá»¡ trá»£ giáº£ng khá»i lá»›p." });
     }
 }
+
+
+

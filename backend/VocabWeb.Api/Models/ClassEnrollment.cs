@@ -11,4 +11,7 @@ public class ClassEnrollment
     public StudentProfile StudentProfile { get; set; } = null!;
     
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    
+    public bool IsActive { get; set; } = true;
+    public DateTime? LeftAt { get; set; }
 }
