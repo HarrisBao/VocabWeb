@@ -324,8 +324,8 @@ export const TeacherReadingEditPage: React.FC = () => {
                                 <input 
                                   type="text"
                                   value={ans}
-                                  onChange={e => handleKeyChange(q.id, idx, e.target.value)}
-                                  className={`border ${!ans.trim() ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-300 focus:border-brand focus:ring-brand bg-white'} rounded-lg px-3 py-2 text-sm flex-1 font-mono uppercase shadow-sm`}
+                                  onChange={e => handleKeyChange(q.id, idx, g.interactionType === 'SHORT_LETTER_RESPONSE' ? e.target.value.toUpperCase() : e.target.value)}
+                                  className={`border ${!ans.trim() ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-300 focus:border-brand focus:ring-brand bg-white'} rounded-lg px-3 py-2 text-sm flex-1 font-mono ${g.interactionType === 'SHORT_LETTER_RESPONSE' ? 'uppercase' : ''} shadow-sm`}
                                   placeholder={idx === 0 ? "Nhập đáp án chính..." : "Nhập đáp án thay thế..."}
                                 />
                                 {idx > 0 && (
