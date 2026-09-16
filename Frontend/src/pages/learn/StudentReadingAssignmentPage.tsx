@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
@@ -61,11 +61,11 @@ export const StudentReadingAssignmentPage: React.FC = () => {
       const load = 0
       const res = await api.post(`/learn/class/${id}/reading/${readingId}/submit`, answers)
       
-      alert('Ná»™p bÃ i thÃ nh cÃ´ng!')
+      alert('Nộp bài thành công!')
       setResult(res.data)
     } catch (e) {
       
-      alert('Lá»—i khi ná»™p bÃ i')
+      alert('Lỗi khi nộp bài')
     }
   }
 
@@ -77,14 +77,14 @@ export const StudentReadingAssignmentPage: React.FC = () => {
 
   if (loading) return <div className="p-8 text-center"><Spinner /></div>
   
-  if (!data) return <div className="p-8 text-center text-red-500 font-bold">BÃ i táº­p khÃ´ng tá»“n táº¡i hoáº·c chÆ°a má»Ÿ.</div>
+  if (!data) return <div className="p-8 text-center text-red-500 font-bold">Bài tập không tồn tại hoặc chưa mở.</div>
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shrink-0 shadow-sm relative z-10">
         <div>
           <h1 className="text-xl font-bold text-gray-900">{data.title}</h1>
-          {result && <div className="text-sm text-gray-500 mt-1">ÄÃ£ ná»™p bÃ i</div>}
+          {result && <div className="text-sm text-gray-500 mt-1">Đã nộp bài</div>}
         </div>
         <div className="flex items-center gap-6">
           {!result && (
@@ -98,10 +98,10 @@ export const StudentReadingAssignmentPage: React.FC = () => {
               {result.correctCount} / {result.totalQuestions}
             </div>
           ) : (
-            <Button onClick={handleSubmit}>Ná»™p bÃ i</Button>
+            <Button onClick={handleSubmit}>Nộp bài</Button>
           )}
           
-          <Button variant="outline" onClick={() => navigate(-1)}>ThoÃ¡t</Button>
+          <Button variant="outline" onClick={() => navigate(-1)}>Thoát</Button>
         </div>
       </div>
 
@@ -130,15 +130,15 @@ export const StudentReadingAssignmentPage: React.FC = () => {
                           {result ? (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-xs text-gray-500 w-24">CÃ¢u tráº£ lá»i:</span>
+                                <span className="font-bold text-xs text-gray-500 w-24">Câu trả lời:</span>
                                 <span className={`px-3 py-1 rounded font-mono font-bold text-sm ${ansResult?.isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                  {ansResult?.studentAnswer || '(Trá»‘ng)'}
+                                  {ansResult?.studentAnswer || '(Trống)'}
                                 </span>
-                                {ansResult?.isCorrect ? 'âœ…' : 'âŒ'}
+                                {ansResult?.isCorrect ? '✅' : '❌'}
                               </div>
                               {!ansResult?.isCorrect && (
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs text-gray-500 w-24">ÄÃ¡p Ã¡n Ä‘Ãºng:</span>
+                                  <span className="font-bold text-xs text-gray-500 w-24">Đáp án đúng:</span>
                                   <span className="px-3 py-1 rounded bg-blue-100 text-blue-700 font-mono font-bold text-sm">
                                     {ansResult?.correctAnswer}
                                   </span>
@@ -151,7 +151,7 @@ export const StudentReadingAssignmentPage: React.FC = () => {
                               value={answers[q.id] || ''}
                               onChange={e => handleAnswerChange(q.id, e.target.value)}
                               className="w-full max-w-sm border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:border-brand focus:ring-0 font-mono uppercase"
-                              placeholder="Nháº­p cÃ¢u tráº£ lá»i..."
+                              placeholder="Nhập câu trả lời..."
                               autoComplete="off"
                               spellCheck="false"
                             />

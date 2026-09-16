@@ -82,7 +82,7 @@ public class LearnTestAccessController : ControllerBase
             studentId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var enrollmentClaim = User.FindFirst("ClassEnrollmentId")?.Value;
             if (int.TryParse(enrollmentClaim, out int ceId)) classEnrollmentId = ceId;
-            participantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Há»c sinh";
+            participantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh";
         }
         else
         {
@@ -223,7 +223,7 @@ public class LearnTestAccessController : ControllerBase
             GuestSessionId = ticketData.GuestSessionId,
             GuestDisplayName = ticketData.GuestDisplayName,
             ParticipantDisplayNameSnapshot = !string.IsNullOrEmpty(ticketData.StudentId)
-                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Há»c sinh")
+                ? (User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Học sinh")
                 : ticketData.GuestDisplayName,
             AttemptNumber = attemptsCount + 1,
             Status = "IN_PROGRESS",

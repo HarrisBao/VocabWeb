@@ -136,7 +136,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
 
       {showCreateForm && (
         <form onSubmit={handleCreateNew} className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
-          <h4 className="text-sm font-semibold text-gray-700">Táº¡o há»c sinh má»›i</h4>
+          <h4 className="text-sm font-semibold text-gray-700">Tạo học sinh mới</h4>
           <Input 
             placeholder="Họ và tên *" 
             value={newName} 
@@ -150,7 +150,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
             required 
           />
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>Há»§y</Button>
+            <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>Hủy</Button>
             <Button type="submit" loading={isAdding}>Thêm vào lớp</Button>
           </div>
         </form>
