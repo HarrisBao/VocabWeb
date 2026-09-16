@@ -95,6 +95,18 @@ export const TeacherReadingEditPage: React.FC = () => {
     setKeys({ ...keys, [questionId]: list })
   }
 
+  const handleChangeInteractionType = async (groupId: number, newType: string) => {
+    try {
+      await api.put(`/teacher/class/${id}/reading/${readingId}/groups/${groupId}/interaction`, { type: newType })
+      setData((prev: any) => ({
+        ...prev,
+        questionGroups: prev.questionGroups.map((g: any) => g.id === groupId ? { ...g, interactionType: newType } : g)
+      }))
+    } catch (err) {
+      alert('Lỗi khi cập nhật loại câu hỏi')
+    }
+  }
+
   const handleSaveDraft = async () => {
     try {
       // 1. Save Info
@@ -231,8 +243,19 @@ export const TeacherReadingEditPage: React.FC = () => {
                 <div key={g.id} className="space-y-4">
                   <div className="font-bold text-brand-text mb-4 whitespace-pre-wrap bg-brand-light/30 p-4 rounded-xl border border-brand-light text-sm">
                     {g.instruction}
-                    <div className="mt-2 text-xs text-brand font-semibold uppercase opacity-70">
-                      [{g.interactionType === 'INLINE_GAP' ? 'Điền từ' : g.interactionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' : g.interactionType === 'TRUE_FALSE_NOT_GIVEN' ? 'Đúng / Sai' : 'Trả lời ngắn'}]
+                    <div className="mt-4 flex items-center gap-2">
+                      <span className="text-xs text-gray-500 font-semibold uppercase">Cách trả lời:</span>
+                      <select 
+                        value={g.interactionType} 
+                        onChange={(e) => handleChangeInteractionType(g.id, e.target.value)}
+                        className="text-xs border-gray-300 rounded p-1 text-brand font-bold bg-white focus:ring-brand focus:border-brand shadow-sm cursor-pointer"
+                      >
+                        <option value="SHORT_TEXT">Nhập câu trả lời ngắn</option>
+                        <option value="INLINE_GAP">Điền vào chỗ trống</option>
+                        <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
+                        <option value="TRUE_FALSE_NOT_GIVEN">TRUE / FALSE / NOT GIVEN</option>
+                        <option value="YES_NO_NOT_GIVEN">YES / NO / NOT GIVEN</option>
+                      </select>
                     </div>
                   </div>
                   <div className="space-y-4">

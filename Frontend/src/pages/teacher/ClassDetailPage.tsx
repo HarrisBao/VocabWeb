@@ -5,6 +5,8 @@ import { Card, Badge } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { TaUser } from '../../types'
+import { TeacherReadingTab } from './TeacherReadingTab'
+
 
 interface AvailableVocabSet {
   id: number
@@ -481,7 +483,11 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
             <span>{copiedLink ? '✓ Đã copy link' : '📋 Copy link cố định'}</span>
           </button>
 
-          {activeTab === 'lessons' && (
+          {/* TAB 2: READING */}
+        {activeTab === 'reading' && (
+          <TeacherReadingTab classId={id!} />
+        )}
+        {activeTab === 'lessons' && (
             <Button size="sm" onClick={openAddLessonModal} className="font-bold">
               + Gỡ
             </Button>
@@ -517,15 +523,17 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
             <span>📚 Bài học</span>
               <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.lessons.length}</span>
             </button>
-            <button
+                        <button
               onClick={() => setActiveTab('reading')}
-              className={pb-3 text-sm font-bold border-b-2 transition-colors  flex items-center space-x-2}
+              className={[
+                'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+                activeTab === 'reading'
+                  ? 'border-green-600 text-green-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              ].join(' ')}
             >
               <span>📖 Reading</span>
-            <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
-              {cls.lessons.length}
-            </span>
-          </button>
+            </button>
 
           <button
             onClick={() => setActiveTab('members')}
@@ -593,7 +601,11 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
       </div>
 
       {/* TAB 1: BÀI HỌC */}
-      {activeTab === 'lessons' && (
+      {/* TAB 2: READING */}
+        {activeTab === 'reading' && (
+          <TeacherReadingTab classId={id!} />
+        )}
+        {activeTab === 'lessons' && (
         <div className="space-y-4">
           {cls.lessons.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

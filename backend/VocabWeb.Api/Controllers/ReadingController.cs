@@ -253,7 +253,21 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
-                [HttpPut("{id}/publish")]
+        
+        public class InteractionTypeDto { public string Type { get; set; } = string.Empty; }
+
+        [HttpPut("{id}/groups/{groupId}/interaction")]
+        public async Task<IActionResult> UpdateGroupInteraction(int classId, int id, int groupId, [FromBody] InteractionTypeDto dto)
+        {
+            if (!await HasAccessToClass(classId)) return Forbid();
+            var group = await _db.ReadingQuestionGroups.FirstOrDefaultAsync(g => g.Id == groupId && g.ReadingAssignmentId == id);
+            if (group == null) return NotFound();
+            group.InteractionType = dto.Type;
+            await _db.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPut("{id}/publish")]
         public async Task<IActionResult> Publish(int classId, int id)
         {
             if (!await HasAccessToClass(classId)) return Forbid();
