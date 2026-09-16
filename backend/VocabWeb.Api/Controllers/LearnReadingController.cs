@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -37,7 +37,7 @@ namespace VocabWeb.Api.Controllers
             if (enrollment == null) return Forbid();
 
             var list = await _db.ReadingAssignments
-                .Where(r => r.ClassId == classId && r.Status == "PUBLISHED")
+                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED")
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new {
                     r.Id,
@@ -60,7 +60,7 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
-                .FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId && r.Status == "PUBLISHED");
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED");
 
             if (assignment == null) return NotFound();
 
@@ -86,8 +86,46 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
-        [HttpPost("{id}/submit")]
-        
+        [HttpPost("{id}/start")]
+        public async Task<IActionResult> StartAttempt(int classId, int id)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var assignment = await _db.ReadingAssignments
+                .Include(r => r.QuestionGroups)
+                .ThenInclude(g => g.Questions)
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED");
+
+            if (assignment == null) return NotFound();
+
+            // Check if there is an active unsubmitted attempt
+            var activeAttempt = await _db.ReadingAttempts
+                .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
+
+            if (activeAttempt != null)
+            {
+                return Ok(new { attemptId = activeAttempt.Id, startedAt = activeAttempt.StartedAt, allowedDurationSecondsSnapshot = activeAttempt.AllowedDurationSecondsSnapshot });
+            }
+
+            int attemptNumber = await _db.ReadingAttempts.CountAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id) + 1;
+
+            var attempt = new ReadingAttempt
+            {
+                ReadingAssignmentId = id,
+                ClassEnrollmentId = enrollment.Id,
+                AttemptNumber = attemptNumber,
+                StartedAt = DateTime.UtcNow,
+                AllowedDurationSecondsSnapshot = assignment.DurationMinutes * 60,
+                TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count()
+            };
+
+            _db.ReadingAttempts.Add(attempt);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { attemptId = attempt.Id, startedAt = attempt.StartedAt, allowedDurationSecondsSnapshot = attempt.AllowedDurationSecondsSnapshot });
+        }
+
         [HttpGet("{id}/attempts")]
         public async Task<IActionResult> GetAttempts(int classId, int id)
         {
@@ -95,7 +133,7 @@ namespace VocabWeb.Api.Controllers
             if (enrollment == null) return Forbid();
 
             var attempts = await _db.ReadingAttempts
-                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id)
+                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
                 .OrderByDescending(a => a.SubmittedAt)
                 .Select(a => new {
                     a.Id,
@@ -103,6 +141,8 @@ namespace VocabWeb.Api.Controllers
                     a.StartedAt,
                     a.SubmittedAt,
                     a.TimeSpentSeconds,
+                    a.AllowedDurationSecondsSnapshot,
+                    a.OvertimeSeconds,
                     a.CorrectCount,
                     a.TotalQuestions
                 })
@@ -126,7 +166,11 @@ namespace VocabWeb.Api.Controllers
             return Ok(new {
                 attempt.Id,
                 attempt.AttemptNumber,
+                attempt.StartedAt,
                 attempt.SubmittedAt,
+                attempt.TimeSpentSeconds,
+                attempt.AllowedDurationSecondsSnapshot,
+                attempt.OvertimeSeconds,
                 attempt.CorrectCount,
                 attempt.TotalQuestions,
                 Answers = attempt.Answers.Select(a => new {
@@ -148,21 +192,38 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
                 .ThenInclude(q => q.AcceptedAnswers)
-                .FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId && r.Status == "PUBLISHED");
+                .FirstOrDefaultAsync(r => r.Id == id && r.Status == "PUBLISHED"); // Allow submission even if unassigned later
 
             if (assignment == null) return NotFound();
 
-            int attemptNumber = await _db.ReadingAttempts.CountAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id) + 1;
+            var attempt = await _db.ReadingAttempts
+                .Include(a => a.Answers)
+                .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
 
-            var attempt = new ReadingAttempt
+            if (attempt == null)
             {
-                ReadingAssignmentId = id,
-                ClassEnrollmentId = enrollment.Id,
-                AttemptNumber = attemptNumber,
-                StartedAt = DateTime.UtcNow, // Simplified. We could require explicit start.
-                SubmittedAt = DateTime.UtcNow,
-                TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count()
-            };
+                // Fallback if no start was explicitly called (robustness)
+                int attemptNumber = await _db.ReadingAttempts.CountAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id) + 1;
+                attempt = new ReadingAttempt
+                {
+                    ReadingAssignmentId = id,
+                    ClassEnrollmentId = enrollment.Id,
+                    AttemptNumber = attemptNumber,
+                    StartedAt = DateTime.UtcNow.AddMinutes(-assignment.DurationMinutes), // Fallback approximation
+                    AllowedDurationSecondsSnapshot = assignment.DurationMinutes * 60,
+                    TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count()
+                };
+                _db.ReadingAttempts.Add(attempt);
+            }
+
+            attempt.SubmittedAt = DateTime.UtcNow;
+            
+            // Calculate time spent
+            attempt.TimeSpentSeconds = (int)(attempt.SubmittedAt.Value - attempt.StartedAt).TotalSeconds;
+            if (attempt.TimeSpentSeconds < 0) attempt.TimeSpentSeconds = 0;
+
+            // Calculate overtime
+            attempt.OvertimeSeconds = System.Math.Max(0, attempt.TimeSpentSeconds - attempt.AllowedDurationSecondsSnapshot);
 
             int correctCount = 0;
 
@@ -177,16 +238,12 @@ namespace VocabWeb.Api.Controllers
                     }
 
                     // Grading logic
-                    // Normalize Unicode and case-insensitive
                     bool isCorrect = false;
                     string primaryAns = "";
                     foreach (var acc in q.AcceptedAnswers)
                     {
                         if (acc.IsPrimary) primaryAns = acc.Answer;
                         
-                        // Strict text grading as per prompt:
-                        // Trimming is done. Case insensitive. 
-                        // cars == Cars == CARS. cars != car.
                         if (string.Equals(ans, acc.Answer.Trim(), StringComparison.OrdinalIgnoreCase))
                         {
                             isCorrect = true;
@@ -207,13 +264,14 @@ namespace VocabWeb.Api.Controllers
             }
 
             attempt.CorrectCount = correctCount;
-            _db.ReadingAttempts.Add(attempt);
             await _db.SaveChangesAsync();
 
             return Ok(new {
                 attemptId = attempt.Id,
                 correctCount = attempt.CorrectCount,
                 totalQuestions = attempt.TotalQuestions,
+                timeSpentSeconds = attempt.TimeSpentSeconds,
+                overtimeSeconds = attempt.OvertimeSeconds,
                 answers = attempt.Answers.Select(a => new {
                     questionId = a.ReadingQuestionId,
                     studentAnswer = a.StudentAnswer,
@@ -224,4 +282,3 @@ namespace VocabWeb.Api.Controllers
         }
     }
 }
-

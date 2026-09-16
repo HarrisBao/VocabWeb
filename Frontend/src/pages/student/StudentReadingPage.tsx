@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { SKILL_REGISTRY } from '../../config/skills';
+import { Button } from '../../components/ui/Button';
 
 interface StudentLessonDto {
   vocabularySetId: number;
@@ -13,11 +14,19 @@ interface StudentLessonDto {
   displayOrder: number;
 }
 
+interface ReadingAssignmentDto {
+  id: number;
+  title: string;
+  durationMinutes: number;
+  attemptCount: number;
+}
+
 interface StudentClassDto {
   id: number;
   name: string;
   code: string;
   lessons: StudentLessonDto[];
+  readings?: ReadingAssignmentDto[]; // New
 }
 
 export const StudentReadingPage: React.FC = () => {
@@ -40,9 +49,21 @@ export const StudentReadingPage: React.FC = () => {
         );
 
         const results = await Promise.all(classPromises);
-        setClassesData(results.filter(Boolean) as StudentClassDto[]);
+        const validClasses = results.filter(Boolean) as StudentClassDto[];
+        
+        // Now fetch reading assignments for each class
+        for (const cls of validClasses) {
+          try {
+            const readings = await api.get(`/learn/class/${cls.id}/reading`);
+            cls.readings = Array.isArray(readings) ? readings : [];
+          } catch (e) {
+            cls.readings = [];
+          }
+        }
+        
+        setClassesData(validClasses);
       } catch (e) {
-        // Handle error
+        console.error(e);
       } finally {
         setLoading(false);
       }
@@ -81,7 +102,7 @@ export const StudentReadingPage: React.FC = () => {
         ) : classesData.length === 0 ? (
           <div className="bg-surface p-8 rounded-2xl border border-surface-hover text-center">
             <div className="text-4xl mb-4">📚</div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có bài từ vựng nào</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có lớp học nào</h3>
             <p className="text-gray-500 max-w-sm mx-auto">
               Vui lòng truy cập qua đường dẫn lớp học do giáo viên cung cấp để xem các bộ từ vựng được giao.
             </p>
@@ -97,9 +118,10 @@ export const StudentReadingPage: React.FC = () => {
                   </Link>
                 </div>
                 
-                <div className="p-6">
+                <div className="p-6 border-b border-gray-100">
+                  <h4 className="font-bold text-gray-700 mb-4 text-sm tracking-wide">TỪ VỰNG ĐƯỢC GIAO</h4>
                   {cls.lessons.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Chưa có bài học từ vựng.</p>
+                    <p className="text-gray-500 text-center py-4 text-sm">Chưa có bài học từ vựng.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {cls.lessons.map(lesson => (
@@ -121,21 +143,36 @@ export const StudentReadingPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                <div className="p-6 bg-gray-50/50">
+                  <h4 className="font-bold text-gray-700 mb-4 text-sm tracking-wide">BÀI TẬP READING</h4>
+                  {(!cls.readings || cls.readings.length === 0) ? (
+                    <p className="text-gray-500 text-center py-4 text-sm">Chưa có bài tập Reading được giao.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {cls.readings.map(reading => (
+                        <div key={reading.id} className="flex flex-col p-4 rounded-xl border border-surface-hover hover:border-brand hover:shadow-sm transition-all bg-white">
+                          <h4 className="font-bold text-gray-900 mb-1">{reading.title}</h4>
+                          <div className="text-xs text-gray-500 font-medium mb-4">
+                            {reading.durationMinutes} phút • Đã làm {reading.attemptCount} lần
+                          </div>
+                          <Link 
+                            to={`/learn/classes/${cls.id}/reading/${reading.id}`}
+                            className="w-full text-center"
+                          >
+                            <Button className="w-full" variant={reading.attemptCount > 0 ? 'outline' : 'primary'}>
+                              {reading.attemptCount > 0 ? 'Làm lại' : 'Làm bài'}
+                            </Button>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
-      </section>
-
-      {/* Future Reading Exercises */}
-      <section>
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-1">BÀI TẬP READING</h2>
-          <p className="text-gray-500">Các bài tập đọc hiểu (Coming Soon).</p>
-        </div>
-        <div className="bg-surface-muted p-8 rounded-2xl border border-gray-200 border-dashed text-center">
-          <p className="text-gray-500 font-medium">Chưa có bài tập Reading được giao.</p>
-        </div>
       </section>
     </div>
   );

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
-
 
 export const StudentReadingAssignmentPage: React.FC = () => {
   const { id, readingId } = useParams()
@@ -15,36 +14,42 @@ export const StudentReadingAssignmentPage: React.FC = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({})
   
   // timer state
-  const [timeLeft, setTimeLeft] = useState<number>(0)
+  const [startedAt, setStartedAt] = useState<Date | null>(null)
+  const [allowedDuration, setAllowedDuration] = useState<number>(0)
+  const [elapsed, setElapsed] = useState<number>(0)
   
   // result state after submit
   const [result, setResult] = useState<any>(null)
 
   useEffect(() => {
-    fetchData()
-  }, [readingId])
+    fetchDataAndStart()
+  }, [readingId, id])
 
   useEffect(() => {
-    if (!data || result) return
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          handleSubmit() // Auto submit when time's up
-          return 0
-        }
-        return prev - 1
-      })
+    if (!startedAt || result) return
+    
+    const interval = setInterval(() => {
+      const now = new Date()
+      const diffSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000)
+      setElapsed(diffSeconds > 0 ? diffSeconds : 0)
     }, 1000)
-    return () => clearInterval(timer)
-  }, [data, result])
+    
+    return () => clearInterval(interval)
+  }, [startedAt, result])
 
-  const fetchData = async () => {
+  const fetchDataAndStart = async () => {
     try {
       setLoading(true)
       const res = await api.get(`/learn/class/${id}/reading/${readingId}`)
-      setData(res.data)
-      setTimeLeft(res.data.durationMinutes * 60)
+      setData(res)
+      
+      const startRes = await api.post(`/learn/class/${id}/reading/${readingId}/start`, {})
+      setStartedAt(new Date(startRes.startedAt))
+      setAllowedDuration(startRes.allowedDurationSecondsSnapshot)
+      
+      const initialElapsed = Math.floor((new Date().getTime() - new Date(startRes.startedAt).getTime()) / 1000)
+      setElapsed(initialElapsed > 0 ? initialElapsed : 0)
+
     } catch (e) {
       console.error(e)
     } finally {
@@ -58,15 +63,21 @@ export const StudentReadingAssignmentPage: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const load = 0
       const res = await api.post(`/learn/class/${id}/reading/${readingId}/submit`, answers)
-      
       alert('Nộp bài thành công!')
-      setResult(res.data)
+      setResult(res)
     } catch (e) {
-      
       alert('Lỗi khi nộp bài')
     }
+  }
+
+  const handleRetry = () => {
+    // Reset state to do a new attempt
+    setResult(null)
+    setAnswers({})
+    setStartedAt(null)
+    setElapsed(0)
+    fetchDataAndStart()
   }
 
   const formatTime = (seconds: number) => {
@@ -79,6 +90,9 @@ export const StudentReadingAssignmentPage: React.FC = () => {
   
   if (!data) return <div className="p-8 text-center text-red-500 font-bold">Bài tập không tồn tại hoặc chưa mở.</div>
 
+  const isOvertime = elapsed > allowedDuration
+  const timeLeftOrOvertime = isOvertime ? elapsed - allowedDuration : allowedDuration - elapsed
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shrink-0 shadow-sm relative z-10">
@@ -88,73 +102,115 @@ export const StudentReadingAssignmentPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-6">
           {!result && (
-            <div className={`font-mono text-xl font-bold ${timeLeft < 300 ? 'text-red-500' : 'text-gray-800'}`}>
-              {formatTime(timeLeft)}
+            <div className={`font-mono text-xl font-bold ${isOvertime ? 'text-red-600' : 'text-gray-800'}`}>
+              {isOvertime ? `Quá giờ +${formatTime(timeLeftOrOvertime)}` : formatTime(timeLeftOrOvertime)}
             </div>
           )}
           
           {result ? (
-            <div className="bg-brand text-white font-bold px-4 py-2 rounded-lg text-lg shadow-md">
-              {result.correctCount} / {result.totalQuestions}
+            <div className="flex gap-4 items-center">
+              <div className="bg-brand text-white font-bold px-4 py-2 rounded-lg text-lg shadow-md">
+                {result.correctCount} / {result.totalQuestions}
+              </div>
+              <Button onClick={handleRetry} variant="outline">Làm lại</Button>
             </div>
           ) : (
-            <Button onClick={handleSubmit}>Nộp bài</Button>
+            <Button onClick={handleSubmit} className="font-bold text-base px-8 shadow-sm hover:shadow">
+              Nộp bài
+            </Button>
           )}
           
-          <Button variant="outline" onClick={() => navigate(-1)}>Thoát</Button>
+          <Link to={`/learn/classes/${id}`} className="text-gray-400 hover:text-gray-600 text-sm font-bold">
+            ✕ Thoát
+          </Link>
         </div>
       </div>
 
-      <div className="flex-1 flex gap-0 overflow-hidden relative z-0">
-        {/* Left Side: Passage */}
-        <div className="flex-1 bg-white border-r border-gray-200 overflow-y-auto p-8 custom-scrollbar">
-          <div className="prose max-w-none text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={{ __html: data.passage }}></div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left: Passage */}
+        <div className="w-1/2 border-r border-gray-200 bg-white overflow-y-auto custom-scrollbar p-10">
+          <div 
+            className="prose prose-lg max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-a:text-brand"
+            dangerouslySetInnerHTML={{ __html: data.passage || '' }} 
+          />
         </div>
 
-        {/* Right Side: Questions */}
-        <div className="flex-1 bg-[#F9FAFB] overflow-y-auto p-8 custom-scrollbar relative">
-          <div className="max-w-3xl mx-auto space-y-10">
-            {data.questionGroups?.map((g: any) => (
-              <div key={g.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div className="font-bold text-gray-800 mb-6 bg-blue-50 p-4 rounded-xl whitespace-pre-wrap">{g.instruction}</div>
+        {/* Right: Questions */}
+        <div className="w-1/2 bg-gray-50 overflow-y-auto custom-scrollbar p-10">
+          {result && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8 shadow-sm flex flex-col items-center">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Kết quả làm bài</h2>
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">Thời gian quy định</p>
+                  <p className="font-bold text-gray-900">{Math.floor(allowedDuration / 60)} phút</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">Thời gian làm</p>
+                  <p className="font-bold text-gray-900">{formatTime(result.timeSpentSeconds)}</p>
+                </div>
+              </div>
+              {result.overtimeSeconds > 0 && (
+                <div className="mt-4 w-full bg-red-50 rounded-xl p-4 text-center">
+                  <p className="text-sm text-red-600 mb-1">Quá giờ</p>
+                  <p className="font-bold text-red-700">+{formatTime(result.overtimeSeconds)}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-10 max-w-3xl mx-auto">
+            {data.questionGroups?.map((group: any) => (
+              <div key={group.id} className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                <div className="mb-6 pb-6 border-b border-gray-100">
+                  <span className="inline-block px-3 py-1 bg-brand/10 text-brand rounded-lg text-xs font-bold uppercase tracking-wider mb-3">
+                    {group.displayLabel || 'Questions'}
+                  </span>
+                  {group.instruction && (
+                    <div className="font-bold text-gray-800 text-lg leading-snug">{group.instruction}</div>
+                  )}
+                </div>
+                
                 <div className="space-y-6">
-                  {g.questions?.map((q: any) => {
+                  {group.questions?.map((q: any) => {
                     const ansResult = result?.answers?.find((a: any) => a.questionId === q.id)
+                    
                     return (
-                      <div key={q.id} className="flex gap-4 items-start">
-                        <div className="w-8 shrink-0 text-right font-bold text-brand mt-1">{q.displayNumber}.</div>
-                        <div className="flex-1">
-                          <div className="whitespace-pre-wrap text-[15px] font-medium text-gray-800 mb-3">{q.content}</div>
+                      <div key={q.id} className="flex gap-6 items-start group">
+                        <div className="shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-700 shadow-sm border border-gray-200">
+                          {q.displayNumber}
+                        </div>
+                        <div className="flex-1 pt-1.5">
+                          <div className="text-gray-900 text-base mb-3 leading-relaxed">{q.content}</div>
+                          <input
+                            type="text"
+                            disabled={!!result}
+                            value={answers[q.id] || ''}
+                            onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                            className={`w-full max-w-md border rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all ${
+                              result 
+                                ? ansResult?.isCorrect 
+                                  ? 'border-green-300 bg-green-50 text-green-900' 
+                                  : 'border-red-300 bg-red-50 text-red-900'
+                                : 'border-gray-300 bg-white hover:border-gray-400'
+                            }`}
+                            placeholder="Nhập câu trả lời..."
+                          />
                           
-                          {/* Answer Input */}
-                          {result ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-xs text-gray-500 w-24">Câu trả lời:</span>
-                                <span className={`px-3 py-1 rounded font-mono font-bold text-sm ${ansResult?.isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                  {ansResult?.studentAnswer || '(Trống)'}
+                          {result && (
+                            <div className="mt-3 flex items-center gap-2">
+                              {ansResult?.isCorrect ? (
+                                <span className="text-green-600 font-bold flex items-center gap-1">
+                                  <span>✅</span> Chính xác
                                 </span>
-                                {ansResult?.isCorrect ? '✅' : '❌'}
-                              </div>
-                              {!ansResult?.isCorrect && (
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs text-gray-500 w-24">Đáp án đúng:</span>
-                                  <span className="px-3 py-1 rounded bg-blue-100 text-blue-700 font-mono font-bold text-sm">
-                                    {ansResult?.correctAnswer}
-                                  </span>
+                              ) : (
+                                <div className="text-red-600 font-bold flex items-center gap-2 bg-red-50 px-3 py-2 rounded-lg border border-red-100 inline-flex">
+                                  <span>❌</span>
+                                  <span className="text-gray-600 text-sm font-medium border-l border-red-200 pl-2 ml-1">Đáp án:</span>
+                                  <span className="text-green-700">{ansResult?.correctAnswer}</span>
                                 </div>
                               )}
                             </div>
-                          ) : (
-                            <input 
-                              type="text"
-                              value={answers[q.id] || ''}
-                              onChange={e => handleAnswerChange(q.id, e.target.value)}
-                              className="w-full max-w-sm border-2 border-gray-200 rounded-lg px-4 py-2 text-sm focus:border-brand focus:ring-0 font-mono uppercase"
-                              placeholder="Nhập câu trả lời..."
-                              autoComplete="off"
-                              spellCheck="false"
-                            />
                           )}
                         </div>
                       </div>
@@ -166,26 +222,6 @@ export const StudentReadingAssignmentPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* Custom Scrollbar Styles for Independent scrolling */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent; 
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1; 
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8; 
-        }
-      `}</style>
     </div>
   )
 }
-
-
-

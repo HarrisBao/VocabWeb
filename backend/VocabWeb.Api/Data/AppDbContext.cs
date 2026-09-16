@@ -37,6 +37,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ReadingAcceptedAnswer> ReadingAcceptedAnswers => Set<ReadingAcceptedAnswer>();
     public DbSet<ReadingAttempt> ReadingAttempts => Set<ReadingAttempt>();
     public DbSet<ReadingAttemptAnswer> ReadingAttemptAnswers => Set<ReadingAttemptAnswer>();
+    public DbSet<ReadingClassAssignment> ReadingClassAssignments => Set<ReadingClassAssignment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

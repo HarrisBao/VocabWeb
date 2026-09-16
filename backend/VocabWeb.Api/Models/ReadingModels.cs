@@ -8,8 +8,8 @@ namespace VocabWeb.Api.Models
     {
         public int Id { get; set; }
         
-        public int ClassId { get; set; }
-        public Class Class { get; set; } = null!;
+        public int? ClassId { get; set; } // Deprecated, use ClassAssignments
+        public Class? Class { get; set; }
 
         [Required]
         [MaxLength(255)]
@@ -28,6 +28,7 @@ namespace VocabWeb.Api.Models
         public ReadingPassage? Passage { get; set; }
         public ICollection<ReadingQuestionGroup> QuestionGroups { get; set; } = new List<ReadingQuestionGroup>();
         public ICollection<ReadingAttempt> Attempts { get; set; } = new List<ReadingAttempt>();
+        public ICollection<ReadingClassAssignment> ClassAssignments { get; set; } = new List<ReadingClassAssignment>();
     }
 
     public class ReadingPassage
@@ -120,6 +121,8 @@ namespace VocabWeb.Api.Models
         public DateTime? SubmittedAt { get; set; }
 
         public int TimeSpentSeconds { get; set; } = 0;
+        public int AllowedDurationSecondsSnapshot { get; set; } = 0;
+        public int OvertimeSeconds { get; set; } = 0;
 
         public int CorrectCount { get; set; } = 0;
         public int TotalQuestions { get; set; } = 0;
@@ -143,5 +146,19 @@ namespace VocabWeb.Api.Models
 
         // Snapshot of correct answer at the time of submission
         public string CorrectAnswerSnapshot { get; set; } = string.Empty;
+    }
+
+    public class ReadingClassAssignment
+    {
+        public int Id { get; set; }
+
+        public int ReadingAssignmentId { get; set; }
+        public ReadingAssignment ReadingAssignment { get; set; } = null!;
+
+        public int ClassId { get; set; }
+        public Class Class { get; set; } = null!;
+
+        public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
     }
 }
