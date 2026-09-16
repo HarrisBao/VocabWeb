@@ -62,15 +62,13 @@ export const TeacherReadingEditPage: React.FC = () => {
 
     try {
       setIsUploading(true)
-      await api.post(`/teacher/class/${id}/reading/${readingId}/upload-docx`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      await api.post(`/teacher/class/${id}/reading/${readingId}/upload-docx`, formData)
       
       alert('Upload thành công! Nội dung đã được trích xuất.')
       await fetchData()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert('Có lỗi xảy ra khi upload hoặc phân tích file.')
+      alert(err.message || 'Có lỗi xảy ra khi upload hoặc phân tích file.')
     } finally {
       setIsUploading(false)
       e.target.value = ''
@@ -174,7 +172,7 @@ export const TeacherReadingEditPage: React.FC = () => {
 
       {isUploading && (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-xl mb-6 font-medium flex items-center gap-3 shadow-sm">
-          <Spinner /> Đang phân tích file Word, vui lòng đợi...
+          <Spinner /> Đang upload và phân tích file Word...
         </div>
       )}
 

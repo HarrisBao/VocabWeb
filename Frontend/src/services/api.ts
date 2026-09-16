@@ -61,7 +61,13 @@ class ApiService {
       ...(headers as Record<string, string>)
     }
 
-    if (!(rest.body instanceof FormData) && !requestHeaders['Content-Type']) {
+    if (rest.body instanceof FormData) {
+      // Strip manual multipart/form-data so the browser can automatically set the boundary
+      const contentTypeKey = Object.keys(requestHeaders).find(k => k.toLowerCase() === 'content-type')
+      if (contentTypeKey && requestHeaders[contentTypeKey].includes('multipart/form-data')) {
+        delete requestHeaders[contentTypeKey]
+      }
+    } else if (!requestHeaders['Content-Type']) {
       requestHeaders['Content-Type'] = 'application/json'
     }
 

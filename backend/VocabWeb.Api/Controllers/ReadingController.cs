@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -135,7 +135,8 @@ namespace VocabWeb.Api.Controllers
 
             if (assignment == null) return NotFound();
 
-            if (file == null || file.Length == 0) return BadRequest("File is empty");
+            if (file == null || file.Length == 0) return BadRequest(new { message = "Không tìm thấy file tải lên." });
+            if (!file.FileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)) return BadRequest(new { message = "File Word không hợp lệ. Vui lòng tải lên file .docx" });
 
             // Parse DOCX
             DocxReadingParser.ParseResult result;
