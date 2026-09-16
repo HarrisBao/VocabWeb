@@ -1,15 +1,22 @@
-﻿import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
 
-
 export const TeacherReadingEditPage: React.FC = () => {
   const { id, readingId } = useParams()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any>(null)
+  
+  // Editable basic info
+  const [title, setTitle] = useState('')
+  const [duration, setDuration] = useState(60)
+
+  // Answer keys
   const [keys, setKeys] = useState<Record<number, string[]>>({})
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -20,6 +27,8 @@ export const TeacherReadingEditPage: React.FC = () => {
       setLoading(true)
       const res = await api.get(`/teacher/class/${id}/reading/${readingId}`)
       setData(res.data)
+      setTitle(res.data.title || '')
+      setDuration(res.data.durationMinutes || 60)
 
       const newKeys: Record<number, string[]> = {}
       res.data.questionGroups?.forEach((g: any) => {
@@ -40,20 +49,31 @@ export const TeacherReadingEditPage: React.FC = () => {
     if (!e.target.files || e.target.files.length === 0) return
     const file = e.target.files[0]
     
+    if (data?.passage) {
+      const confirmUpload = window.confirm("Upload file mới sẽ thay thế nội dung Passage/Questions hiện tại. Bạn có muốn tiếp tục?")
+      if (!confirmUpload) {
+        e.target.value = ''
+        return
+      }
+    }
+
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const loadingId = 0
+      setIsUploading(true)
       await api.post(`/teacher/class/${id}/reading/${readingId}/upload-docx`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       
-      alert('Upload thÃ nh cÃ´ng!')
-      fetchData()
-    } catch (e) {
-      
-      alert('CÃ³ lá»—i xáº£y ra khi upload')
+      alert('Upload thành công! Nội dung đã được trích xuất.')
+      await fetchData()
+    } catch (err) {
+      console.error(err)
+      alert('Có lỗi xảy ra khi upload hoặc phân tích file.')
+    } finally {
+      setIsUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -75,100 +95,169 @@ export const TeacherReadingEditPage: React.FC = () => {
     setKeys({ ...keys, [questionId]: list })
   }
 
-  const handleSaveKeys = async () => {
+  const handleSaveDraft = async () => {
     try {
+      // 1. Save Info
+      await api.put(`/teacher/class/${id}/reading/${readingId}/info`, {
+        title,
+        durationMinutes: duration
+      })
+      
+      // 2. Save Keys
       await api.put(`/teacher/class/${id}/reading/${readingId}/keys`, keys)
-      alert('ÄÃ£ lÆ°u Ä‘Ã¡p Ã¡n!')
+      
+      alert('Đã lưu bản nháp thành công!')
+      fetchData()
     } catch (e) {
-      alert('Lá»—i khi lÆ°u Ä‘Ã¡p Ã¡n')
+      alert('Lỗi khi lưu bản nháp')
     }
   }
 
   const handlePublish = async () => {
     try {
-      await handleSaveKeys() // save first
+      // 1. Auto-save info and keys before publishing
+      await api.put(`/teacher/class/${id}/reading/${readingId}/info`, {
+        title,
+        durationMinutes: duration
+      })
+      await api.put(`/teacher/class/${id}/reading/${readingId}/keys`, keys)
+      
+      // 2. Publish
       await api.put(`/teacher/class/${id}/reading/${readingId}/publish`)
-      alert('ÄÃ£ xuáº¥t báº£n bÃ i táº­p!')
-      fetchData()
+      
+      alert('Đã xuất bản bài tập thành công!')
+      navigate(`/teacher/classes/${id}`)
     } catch (e: any) {
-      if (e.response?.data) alert(e.response.data)
-      else alert('Lá»—i khi xuáº¥t báº£n')
+      if (e.response?.data) {
+         alert(typeof e.response.data === 'string' ? e.response.data : e.response.data.title || "Lỗi khi xuất bản")
+      } else {
+         alert('Lỗi khi xuất bản. Vui lòng kiểm tra lại dữ liệu.')
+      }
     }
   }
 
   if (loading) return <div className="p-8 text-center"><Spinner /></div>
 
   return (
-    <div className="p-8 max-w-7xl mx-auto h-screen flex flex-col">
+    <div className="p-8 max-w-7xl mx-auto min-h-screen flex flex-col bg-gray-50">
       <div className="flex justify-between items-center mb-6 shrink-0">
         <div>
-          <Link to={`/teacher/classes/${id}`} className="text-brand hover:underline text-sm mb-1 inline-block">&larr; Quay láº¡i lá»›p há»c</Link>
-          <h1 className="text-2xl font-bold">{data?.title} {data?.status === 'PUBLISHED' && <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">ÄÃ£ xuáº¥t báº£n</span>}</h1>
+          <Link to={`/teacher/classes/${id}`} className="text-brand hover:underline text-sm mb-1 inline-block font-medium">&larr; Quay lại lớp học</Link>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            Thiết lập bài Reading
+            {data?.status === 'PUBLISHED' ? (
+              <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Đã xuất bản</span>
+            ) : (
+              <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Bản nháp</span>
+            )}
+          </h1>
         </div>
-        <div className="space-x-3">
+        <div className="space-x-4 flex items-center">
+          <Button variant="outline" onClick={handleSaveDraft} disabled={isUploading}>
+            💾 Lưu bản nháp
+          </Button>
           {data?.status !== 'PUBLISHED' && (
-            <Button onClick={handlePublish}>Xuáº¥t báº£n (Publish)</Button>
+            <Button onClick={handlePublish} disabled={isUploading}>
+              🚀 Xuất bản
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-gray-200 mb-6 shrink-0 flex items-center justify-between">
-        <div>
-          <h3 className="font-bold">Ná»™i dung bÃ i Ä‘á»c</h3>
-          <p className="text-sm text-gray-500">Upload file DOCX chá»©a bÃ i Ä‘á»c vÃ  cÃ¢u há»i.</p>
+      {isUploading && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-xl mb-6 font-medium flex items-center gap-3 shadow-sm">
+          <Spinner /> Đang phân tích file Word, vui lòng đợi...
         </div>
-        <label className="bg-brand text-white px-4 py-2 rounded-lg font-bold cursor-pointer hover:bg-brand-hover">
-          Upload DOCX
-          <input type="file" accept=".docx" className="hidden" onChange={handleUpload} />
-        </label>
+      )}
+
+      {/* Basic Info Section */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 mb-6 shrink-0 shadow-sm flex flex-wrap gap-6 items-start">
+        <div className="flex-1 min-w-[300px]">
+          <label className="block text-sm font-bold text-gray-700 mb-2">Tên bài Reading</label>
+          <input 
+            type="text" 
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="w-full border-gray-300 rounded-xl p-3 focus:ring-brand focus:border-brand transition-shadow"
+            placeholder="Ví dụ: IELTS Reading Practice 01"
+          />
+        </div>
+        
+        <div className="w-48">
+          <label className="block text-sm font-bold text-gray-700 mb-2">Thời gian (phút)</label>
+          <input 
+            type="number" 
+            value={duration}
+            onChange={e => setDuration(parseInt(e.target.value) || 0)}
+            className="w-full border-gray-300 rounded-xl p-3 focus:ring-brand focus:border-brand transition-shadow"
+            min="1"
+          />
+        </div>
+
+        <div className="w-64 pt-7">
+          <label className="bg-brand text-white px-6 py-3 rounded-xl font-bold cursor-pointer hover:bg-brand-hover transition-colors shadow-md flex items-center justify-center gap-2">
+            <span>📄 {data?.passage ? 'Đổi file DOCX' : 'Tải lên DOCX'}</span>
+            <input type="file" accept=".docx" className="hidden" onChange={handleUpload} disabled={isUploading} />
+          </label>
+        </div>
       </div>
 
+      {/* Document Area */}
       {!data?.passage ? (
-        <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
-          <div className="text-center text-gray-500">
-            <p>ChÆ°a cÃ³ ná»™i dung. HÃ£y upload file Word (DOCX).</p>
-            <p className="text-sm mt-2">BÃ i Ä‘á»c vÃ  cÃ¢u há»i sáº½ Ä‘Æ°á»£c trÃ­ch xuáº¥t tá»± Ä‘á»™ng.</p>
+        <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-3xl border-2 border-dashed border-gray-300 shadow-sm">
+          <div className="text-center text-gray-500 max-w-md">
+            <span className="text-6xl mb-4 block">📄</span>
+            <p className="text-xl font-bold mb-2 text-gray-700">Chưa có nội dung Reading</p>
+            <p className="text-sm">Vui lòng tải lên file Word (.docx) chứa nội dung bài đọc và câu hỏi. Hệ thống sẽ tự động phân tích và tạo form nhập đáp án.</p>
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex gap-6 overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
           {/* Passage Area */}
-          <div className="flex-1 bg-white border border-gray-200 rounded-xl flex flex-col overflow-hidden">
-            <div className="p-3 bg-gray-50 border-b border-gray-200 font-bold shrink-0">BÃ i Ä‘á»c</div>
-            <div className="p-6 overflow-y-auto prose max-w-none text-sm" dangerouslySetInnerHTML={{ __html: data.passage }}></div>
+          <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
+            <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
+              <span>Nội dung đoạn văn (Passage)</span>
+            </div>
+            <div className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: data.passage }}></div>
           </div>
 
           {/* Questions Area */}
-          <div className="flex-1 bg-white border border-gray-200 rounded-xl flex flex-col overflow-hidden">
-            <div className="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
-              <span className="font-bold">CÃ¢u há»i & ÄÃ¡p Ã¡n</span>
-              <Button size="sm" onClick={handleSaveKeys} variant="outline">LÆ°u Ä‘Ã¡p Ã¡n</Button>
+          <div className="w-full lg:w-[500px] bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm shrink-0">
+            <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
+              <span className="font-bold text-gray-800 uppercase tracking-wide">Câu hỏi & Đáp án</span>
             </div>
-            <div className="p-6 overflow-y-auto space-y-8">
+            <div className="p-6 overflow-y-auto space-y-10 custom-scrollbar">
               {data.questionGroups?.map((g: any) => (
-                <div key={g.id}>
-                  <div className="font-bold text-gray-800 mb-4 whitespace-pre-wrap">{g.instruction}</div>
+                <div key={g.id} className="space-y-4">
+                  <div className="font-bold text-brand-text mb-4 whitespace-pre-wrap bg-brand-light/30 p-4 rounded-xl border border-brand-light text-sm">
+                    {g.instruction}
+                    <div className="mt-2 text-xs text-brand font-semibold uppercase opacity-70">
+                      [{g.interactionType === 'INLINE_GAP' ? 'Điền từ' : g.interactionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' : g.interactionType === 'TRUE_FALSE_NOT_GIVEN' ? 'Đúng / Sai' : 'Trả lời ngắn'}]
+                    </div>
+                  </div>
                   <div className="space-y-4">
                     {g.questions?.map((q: any) => (
-                      <div key={q.id} className="border border-gray-100 p-4 rounded-lg bg-gray-50">
-                        <div className="font-semibold mb-2">
-                          <span className="inline-block w-8 text-brand">{q.displayNumber}.</span>
-                          <span className="whitespace-pre-wrap text-sm">{q.content}</span>
+                      <div key={q.id} className="border border-gray-200 p-5 rounded-xl bg-gray-50/50 hover:bg-white hover:shadow-md transition-all">
+                        <div className="font-semibold mb-3 flex items-start gap-3">
+                          <span className="bg-brand text-white text-xs px-2 py-1 rounded-md shrink-0 mt-0.5">Q. {q.displayNumber}</span>
+                          <span className="whitespace-pre-wrap text-sm text-gray-700">{q.content}</span>
                         </div>
-                        <div className="pl-8 space-y-2">
+                        <div className="space-y-2">
                           {keys[q.id]?.map((ans, idx) => (
                             <div key={idx} className="flex gap-2">
                               <input 
                                 type="text"
                                 value={ans}
                                 onChange={e => handleKeyChange(q.id, idx, e.target.value)}
-                                className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 font-mono uppercase"
-                                placeholder={idx === 0 ? "ÄÃ¡p Ã¡n chÃ­nh..." : "ÄÃ¡p Ã¡n thay tháº¿..."}
+                                className={`border ${!ans.trim() ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'} rounded-lg px-3 py-2 text-sm flex-1 font-mono`}
+                                placeholder={idx === 0 ? "Nhập đáp án chính..." : "Nhập đáp án thay thế..."}
                               />
-                              <button onClick={() => removeKeyOption(q.id, idx)} className="text-red-500 hover:bg-red-50 px-2 rounded font-bold">Ã—</button>
+                              <button onClick={() => removeKeyOption(q.id, idx)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 rounded-lg font-bold transition-colors" title="Xóa đáp án">✕</button>
                             </div>
                           ))}
-                          <button onClick={() => addKeyOption(q.id)} className="text-xs text-brand hover:underline font-bold">+ ThÃªm Ä‘Ã¡p Ã¡n thay tháº¿</button>
+                          <button onClick={() => addKeyOption(q.id)} className="text-xs text-brand hover:text-brand-hover font-bold flex items-center gap-1 mt-2">
+                            <span>+ Thêm đáp án thay thế</span>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -179,7 +268,12 @@ export const TeacherReadingEditPage: React.FC = () => {
           </div>
         </div>
       )}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      `}</style>
     </div>
   )
 }
-

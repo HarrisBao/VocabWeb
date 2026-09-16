@@ -147,6 +147,20 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
+        [HttpPut("{id}/info")]
+        public async Task<IActionResult> UpdateInfo(int classId, int id, [FromBody] ReadingAssignment dto)
+        {
+            if (!await HasAccessToClass(classId)) return Forbid();
+            var assignment = await _db.ReadingAssignments.FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId);
+            if (assignment == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(dto.Title)) assignment.Title = dto.Title;
+            if (dto.DurationMinutes > 0) assignment.DurationMinutes = dto.DurationMinutes;
+
+            await _db.SaveChangesAsync();
+            return Ok();
+        }
+
         [HttpPut("{id}/keys")]
         public async Task<IActionResult> SaveAnswerKeys(int classId, int id, [FromBody] System.Collections.Generic.Dictionary<int, string[]> keys)
         {
@@ -184,8 +198,6 @@ namespace VocabWeb.Api.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/publish")]
-        
         [HttpGet("{id}/attempts")]
         public async Task<IActionResult> GetAttempts(int classId, int id)
         {
@@ -241,12 +253,13 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
-        [HttpPut("{id}/publish")]
+                [HttpPut("{id}/publish")]
         public async Task<IActionResult> Publish(int classId, int id)
         {
             if (!await HasAccessToClass(classId)) return Forbid();
 
             var assignment = await _db.ReadingAssignments
+                .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
                 .ThenInclude(q => q.AcceptedAnswers)
@@ -254,13 +267,25 @@ namespace VocabWeb.Api.Controllers
 
             if (assignment == null) return NotFound();
 
-            // Validate answer keys exist
-            int qCount = assignment.QuestionGroups.SelectMany(g => g.Questions).Count();
-            int aCount = assignment.QuestionGroups.SelectMany(g => g.Questions).Count(q => q.AcceptedAnswers.Any());
+            if (string.IsNullOrWhiteSpace(assignment.Title))
+                return BadRequest("Tên bài Reading không được để trống.");
 
-            if (aCount < qCount)
+            if (assignment.DurationMinutes <= 0)
+                return BadRequest("Thời gian làm bài không hợp lệ.");
+
+            if (assignment.Passage == null || string.IsNullOrWhiteSpace(assignment.Passage.ContentHtml))
+                return BadRequest("Chưa có nội dung đoạn văn (Passage). Vui lòng tải lên file DOCX hợp lệ.");
+
+            var allQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).ToList();
+            if (!allQuestions.Any())
+                return BadRequest("Không tìm thấy câu hỏi nào. Vui lòng kiểm tra lại file Word.");
+
+            foreach (var q in allQuestions)
             {
-                return BadRequest($"Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ Ä‘Ã¡p Ã¡n. ÄÃ£ nháº­p {aCount}/{qCount} cÃ¢u.");
+                if (!q.AcceptedAnswers.Any(a => !string.IsNullOrWhiteSpace(a.Answer)))
+                {
+                    return BadRequest($"Question {q.DisplayNumber} chưa có đáp án.");
+                }
             }
 
             assignment.Status = "PUBLISHED";

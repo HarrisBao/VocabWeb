@@ -30,14 +30,12 @@ namespace VocabWeb.Api.Services
                 var passageBlocks = new List<string>();
                 var questionBlocks = new List<string>();
 
-                // Simplified parsing: 
-                // We split into Passage and Questions by looking for a paragraph starting with "Questions XX-YY"
                 foreach (var paragraph in body.Elements<Paragraph>())
                 {
                     string text = paragraph.InnerText.Trim();
                     if (string.IsNullOrEmpty(text)) continue;
 
-                    if (!inQuestionsSection && Regex.IsMatch(text, @"^Questions?\s+\d+[\-–]\d+", RegexOptions.IgnoreCase))
+                    if (!inQuestionsSection && Regex.IsMatch(text, @"^Questions?\s+\d+\s*[\-\–\—\s(to)]+\s*\d+", RegexOptions.IgnoreCase))
                     {
                         inQuestionsSection = true;
                     }
@@ -52,22 +50,19 @@ namespace VocabWeb.Api.Services
                     }
                 }
 
-                // Process Passage
                 result.PassageHtml = string.Join("<br/><br/>", passageBlocks.Select(p => $"<p>{p}</p>"));
 
-                // Process Questions
-                ReadingQuestionGroup currentGroup = null;
+                ReadingQuestionGroup? currentGroup = null;
                 int sortOrder = 0;
 
                 foreach (var block in questionBlocks)
                 {
-                    // Is it an instruction / group header?
-                    if (Regex.IsMatch(block, @"^Questions?\s+\d+[\-–]\d+", RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(block, @"^Questions?\s+\d+\s*[\-\–\—\s(to)]+\s*\d+", RegexOptions.IgnoreCase))
                     {
                         currentGroup = new ReadingQuestionGroup
                         {
                             Instruction = block,
-                            InteractionType = "SHORT_TEXT", // default
+                            InteractionType = "SHORT_TEXT",
                             SortOrder = ++sortOrder
                         };
                         result.QuestionGroups.Add(currentGroup);
@@ -85,14 +80,12 @@ namespace VocabWeb.Api.Services
                         result.QuestionGroups.Add(currentGroup);
                     }
 
-                    // Is it a question? (e.g. "14. reference to...")
                     var qMatch = Regex.Match(block, @"^(\d+)\.\s+(.*)");
                     if (qMatch.Success)
                     {
                         var qNumber = qMatch.Groups[1].Value;
                         var qContent = qMatch.Groups[2].Value;
 
-                        // Check for inline gaps
                         if (qContent.Contains("___") || qContent.Contains("..."))
                         {
                             currentGroup.InteractionType = "INLINE_GAP";
@@ -100,6 +93,10 @@ namespace VocabWeb.Api.Services
                         else if (block.Contains("TRUE") && block.Contains("FALSE"))
                         {
                             currentGroup.InteractionType = "TRUE_FALSE_NOT_GIVEN";
+                        }
+                        else if (block.Contains("YES") && block.Contains("NO"))
+                        {
+                            currentGroup.InteractionType = "YES_NO_NOT_GIVEN";
                         }
 
                         currentGroup.Questions.Add(new ReadingQuestion
@@ -111,7 +108,6 @@ namespace VocabWeb.Api.Services
                     }
                     else
                     {
-                        // Maybe it's a multiple choice option like "A. ...", or just instruction continuation
                         var optMatch = Regex.Match(block, @"^[A-F]\.\s+(.*)");
                         if (optMatch.Success && currentGroup.Questions.Count > 0)
                         {
@@ -121,14 +117,12 @@ namespace VocabWeb.Api.Services
                         }
                         else
                         {
-                            // Append to instruction if we haven't found any questions yet
                             if (currentGroup.Questions.Count == 0)
                             {
                                 currentGroup.Instruction += $"\n{block}";
                             }
                             else
                             {
-                                // Or append to last question
                                 var lastQ = currentGroup.Questions.Last();
                                 lastQ.Content += $"\n{block}";
                             }
