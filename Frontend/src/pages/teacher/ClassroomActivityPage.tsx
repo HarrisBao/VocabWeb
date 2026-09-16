@@ -109,7 +109,7 @@ export const ClassroomActivityPage: React.FC = () => {
       })
   }, [id, selectedSource])
 
-  const resetAllStates = (wordList: WordItem[]) => {
+  const resetAllStates = (wordList: WordItem[], forceActivity?: ActivityType) => {
     const shuffled = [...wordList].sort(() => Math.random() - 0.5)
     setAvailablePool(shuffled)
     setUsedPool([])
@@ -125,7 +125,12 @@ export const ClassroomActivityPage: React.FC = () => {
     setFlipRightStack([])
     setFlipAnimating(null)
 
-    setGridTiles(null)
+    const targetActivity = forceActivity || activityType
+    if (targetActivity === 'grid') {
+      setGridTiles(shuffled.map(w => ({ id: Math.random().toString(), word: w, revealed: false })))
+    } else {
+      setGridTiles(null)
+    }
     
     setR1Result(null)
   }
@@ -134,17 +139,7 @@ export const ClassroomActivityPage: React.FC = () => {
     resetAllStates(words)
   }
 
-  useEffect(() => {
-    if (activityType === 'grid') {
-      setGridTiles(availablePool.map(w => ({ id: Math.random().toString(), word: w, revealed: false })).sort(() => Math.random() - 0.5))
-    } else {
-      setGridTiles(null)
-    }
 
-    if (activityType === 'wheel' && !wheelSpinning && !wheelResult) {
-      setWheelItems(availablePool)
-    }
-  }, [activityType])
 
   const getDisplayText = (w: WordItem) => mode === 'word' ? w.word : w.meaning
 
@@ -298,7 +293,13 @@ export const ClassroomActivityPage: React.FC = () => {
           <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Loại hoạt động</label>
           <select 
             value={activityType} 
-            onChange={e => setActivityType(e.target.value as ActivityType)}
+            onChange={e => {
+              const newType = e.target.value as ActivityType;
+              if (newType !== activityType) {
+                setActivityType(newType);
+                resetAllStates(words, newType);
+              }
+            }}
             className="w-full border-gray-200 rounded-xl text-sm font-medium bg-gray-50 focus:bg-white transition-colors"
             disabled={r3Spinning || wheelSpinning}
           >
