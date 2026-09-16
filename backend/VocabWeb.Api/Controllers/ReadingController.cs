@@ -39,6 +39,49 @@ namespace VocabWeb.Api.Controllers
             return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
         }
 
+        [HttpGet("/api/teacher/reading")]
+        public async Task<IActionResult> GetAllTeacherReadings()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            var query = _db.ReadingAssignments
+                .Include(r => r.Class)
+                .Include(r => r.QuestionGroups)
+                .ThenInclude(g => g.Questions)
+                .AsQueryable();
+
+            if (userRole == "Teacher")
+            {
+                query = query.Where(r => r.Class.TeacherId == userId);
+            }
+            else if (userRole == "TA")
+            {
+                var taClassIds = await _db.ClassStaffAssignments
+                    .Where(ta => ta.UserId == userId)
+                    .Select(ta => ta.ClassId)
+                    .ToListAsync();
+                query = query.Where(r => taClassIds.Contains(r.ClassId));
+            }
+
+            var assignments = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ClassId,
+                    ClassName = r.Class.Name,
+                    r.Title,
+                    r.DurationMinutes,
+                    r.Status,
+                    r.CreatedAt,
+                    QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count()
+                })
+                .ToListAsync();
+
+            return Ok(assignments);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAssignments(int classId)
         {

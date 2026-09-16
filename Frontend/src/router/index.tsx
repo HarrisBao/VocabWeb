@@ -44,6 +44,7 @@ import { TestCreatePage } from '../pages/teacher/TestCreatePage'
 import { TestDetailPage } from '../pages/teacher/TestDetailPage'
 import { ClassTestResultsPage } from '../pages/teacher/ClassTestResultsPage'
 import { ClassroomActivityPage } from '../pages/teacher/ClassroomActivityPage'
+import { TeacherReadingListPage } from '../pages/teacher/TeacherReadingListPage'
 import { TeacherReadingEditPage } from '../pages/teacher/TeacherReadingEditPage'
 import { TeacherReadingResultsPage } from '../pages/teacher/TeacherReadingResultsPage'
 import { ProfilePage } from '../pages/teacher/ProfilePage'
@@ -152,6 +153,7 @@ export const AppRouter = () => {
             <Route path="vocabulary/new" element={<VocabularyDetailPage />} />
             <Route path="vocabulary/:id" element={<VocabularyDetailPage />} />
             <Route path="classes" element={<ClassListPage />} />
+            <Route path="reading" element={<TeacherReadingListPage />} />
             <Route path="classes/:id" element={<ClassDetailPage />} />
             <Route path="classes/:id/activities" element={<ClassroomActivityPage />} />
             <Route path="classes/:id/reading/:readingId/edit" element={<TeacherReadingEditPage />} />
