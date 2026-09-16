@@ -27,6 +27,7 @@ const COLORS = [
 
 export const ClassroomActivityPage: React.FC = () => {
   const { id } = useParams()
+  const prevOrderRef = useRef<number[]>([])
   const [sources, setSources] = useState<SourceItem[]>([])
   const [selectedSource, setSelectedSource] = useState<string>('')
   const [words, setWords] = useState<WordItem[]>([])
@@ -110,7 +111,28 @@ export const ClassroomActivityPage: React.FC = () => {
   }, [id, selectedSource])
 
   const resetAllStates = (wordList: WordItem[], forceActivity?: ActivityType) => {
-    const shuffled = [...wordList].sort(() => Math.random() - 0.5)
+    let shuffled = [...wordList].sort(() => Math.random() - 0.5)
+
+    if (wordList.length >= 2) {
+      let attempt = 0;
+      const isIdentical = (arr: WordItem[]) => {
+        if (prevOrderRef.current.length !== arr.length) return false;
+        return arr.every((w, i) => w.id === prevOrderRef.current[i]);
+      };
+
+      while (isIdentical(shuffled) && attempt < 10) {
+        shuffled = [...wordList].sort(() => Math.random() - 0.5);
+        attempt++;
+      }
+
+      if (isIdentical(shuffled)) {
+        const first = shuffled.shift();
+        if (first) shuffled.push(first);
+      }
+    }
+
+    prevOrderRef.current = shuffled.map(w => w.id);
+
     setAvailablePool(shuffled)
     setUsedPool([])
     
