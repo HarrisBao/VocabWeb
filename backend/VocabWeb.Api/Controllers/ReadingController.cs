@@ -181,12 +181,17 @@ namespace VocabWeb.Api.Controllers
                 assignment.DurationMinutes,
                 assignment.Status,
                 Passage = assignment.Passage?.ContentHtml,
-                QuestionGroups = assignment.QuestionGroups.Select(g => new {
+                QuestionGroups = assignment.QuestionGroups.OrderBy(g => g.SortOrder).Select(g => new {
                     g.Id,
+                    g.DisplayLabel,
                     g.Instruction,
+                    g.AcademicQuestionType,
                     g.InteractionType,
+                    g.AllowedAnswerDomain,
+                    g.ReferenceItems,
+                    g.StructuredContent,
                     g.SortOrder,
-                    Questions = g.Questions.Select(q => new {
+                    Questions = g.Questions.OrderBy(q => q.SortOrder).Select(q => new {
                         q.Id,
                         q.DisplayNumber,
                         q.Content,

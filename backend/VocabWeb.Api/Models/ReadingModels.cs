@@ -47,11 +47,24 @@ namespace VocabWeb.Api.Models
         public int ReadingAssignmentId { get; set; }
         public ReadingAssignment ReadingAssignment { get; set; } = null!;
 
+        [MaxLength(100)]
+        public string DisplayLabel { get; set; } = string.Empty;
+
         public string Instruction { get; set; } = string.Empty;
         
-        // e.g., SHORT_TEXT, MULTIPLE_CHOICE, TRUE_FALSE_NOT_GIVEN
+        [MaxLength(50)]
+        public string AcademicQuestionType { get; set; } = string.Empty;
+
+        // e.g., SHORT_TEXT, MULTIPLE_CHOICE, TRUE_FALSE_NOT_GIVEN, INLINE_GAP, SHORT_LETTER_RESPONSE
         [MaxLength(50)]
         public string InteractionType { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string AllowedAnswerDomain { get; set; } = string.Empty;
+
+        public string? ReferenceItems { get; set; } // JSON serialized List of items (e.g., A - Matt Elliot, B - Karen Russell)
+
+        public string? StructuredContent { get; set; } // Template text for inline gaps
 
         public int SortOrder { get; set; } = 0;
 

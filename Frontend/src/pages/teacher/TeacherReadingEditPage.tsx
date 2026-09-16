@@ -125,6 +125,18 @@ export const TeacherReadingEditPage: React.FC = () => {
 
   const handlePublish = async () => {
     try {
+      // 0. Validate all questions have at least one answer
+      for (const group of (data?.questionGroups || [])) {
+        for (const q of (group.questions || [])) {
+          const qKeys = keys[q.id] || [];
+          const hasValidKey = qKeys.some(k => k && k.trim() !== '');
+          if (!hasValidKey) {
+            alert(`Question ${q.displayNumber} chưa có đáp án.`);
+            return;
+          }
+        }
+      }
+
       // 1. Auto-save info and keys before publishing
       await api.put(`/teacher/class/${id}/reading/${readingId}/info`, {
         title,
@@ -230,57 +242,107 @@ export const TeacherReadingEditPage: React.FC = () => {
           {/* Questions Area */}
           <div className="w-full lg:w-[500px] bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm shrink-0">
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
-              <span className="font-bold text-gray-800 uppercase tracking-wide">Câu hỏi & Đáp án</span>
+              <span className="font-bold text-gray-800 uppercase tracking-wide">Cấu hình câu hỏi & Đáp án</span>
             </div>
             <div className="p-6 overflow-y-auto space-y-10 custom-scrollbar">
-              {data.questionGroups?.map((g: any) => (
-                <div key={g.id} className="space-y-4">
-                  <div className="font-bold text-brand-text mb-4 whitespace-pre-wrap bg-brand-light/30 p-4 rounded-xl border border-brand-light text-sm">
-                    {g.instruction}
-                    <div className="mt-4 flex items-center gap-2">
-                      <span className="text-xs text-gray-500 font-semibold uppercase">Cách trả lời:</span>
-                      <select 
-                        value={g.interactionType} 
-                        onChange={(e) => handleChangeInteractionType(g.id, e.target.value)}
-                        className="text-xs border-gray-300 rounded p-1 text-brand font-bold bg-white focus:ring-brand focus:border-brand shadow-sm cursor-pointer"
-                      >
-                        <option value="SHORT_TEXT">Nhập câu trả lời ngắn</option>
-                        <option value="INLINE_GAP">Điền vào chỗ trống</option>
-                        <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
-                        <option value="TRUE_FALSE_NOT_GIVEN">TRUE / FALSE / NOT GIVEN</option>
-                        <option value="YES_NO_NOT_GIVEN">YES / NO / NOT GIVEN</option>
-                      </select>
+              {data.questionGroups?.map((g: any) => {
+                const isSummary = g.academicQuestionType === 'SUMMARY_COMPLETION';
+                let parsedRefItems: any[] = [];
+                try {
+                  if (g.referenceItems) parsedRefItems = JSON.parse(g.referenceItems);
+                } catch (e) {}
+
+                return (
+                  <div key={g.id} className="space-y-4 border-2 border-gray-100 p-5 rounded-2xl bg-white shadow-sm">
+                    {/* Header */}
+                    <div className="flex flex-col gap-2 mb-4">
+                      <div className="font-bold text-lg text-gray-800">{g.displayLabel || 'Questions'}</div>
+                      <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                        {g.academicQuestionType && (
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Loại bài: {g.academicQuestionType.replace(/_/g, ' ')}</span>
+                        )}
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Kiểu: {g.interactionType === 'SHORT_LETTER_RESPONSE' ? 'Nhập chữ cái' : 
+                                 g.interactionType === 'INLINE_GAP' ? 'Điền chỗ trống' : 
+                                 g.interactionType === 'TRUE_FALSE_NOT_GIVEN' ? 'T/F/NG' : 
+                                 g.interactionType === 'YES_NO_NOT_GIVEN' ? 'Y/N/NG' : 'Nhập ngắn'}
+                        </span>
+                        {g.allowedAnswerDomain && (
+                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">Miền đáp án: {g.allowedAnswerDomain}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Instruction */}
+                    {g.instruction && (
+                      <div className="font-medium text-gray-600 mb-4 whitespace-pre-wrap bg-gray-50 p-4 rounded-xl text-sm italic border-l-4 border-brand">
+                        {g.instruction}
+                      </div>
+                    )}
+
+                    {/* Reference Items (List of People etc.) */}
+                    {parsedRefItems.length > 0 && (
+                      <div className="mb-4 bg-yellow-50/50 p-4 rounded-xl border border-yellow-100">
+                        <div className="font-bold text-xs text-yellow-800 uppercase mb-2">Danh sách tham chiếu</div>
+                        <ul className="space-y-1">
+                          {parsedRefItems.map((item: any, i: number) => (
+                            <li key={i} className="text-sm"><span className="font-bold mr-2 text-gray-700">{item.key}</span> {item.label}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Summary Completion template rendering */}
+                    {isSummary && g.structuredContent && (
+                      <div className="mb-6 p-5 bg-blue-50/30 rounded-xl border border-blue-100 text-sm leading-relaxed whitespace-pre-wrap">
+                        {g.structuredContent.split(/(\{\{Q\d+\}\})/).map((part: string, i: number) => {
+                          const match = part.match(/\{\{Q(\d+)\}\}/);
+                          if (match) {
+                            return <span key={i} className="inline-block mx-1 px-2 py-0.5 bg-brand text-white font-bold rounded shadow-sm text-xs">[{match[1]}]</span>;
+                          }
+                          return <span key={i}>{part}</span>;
+                        })}
+                      </div>
+                    )}
+
+                    {/* Individual Questions */}
+                    <div className="space-y-4">
+                      {g.questions?.map((q: any) => (
+                        <div key={q.id} className="border border-gray-200 p-5 rounded-xl bg-gray-50/50 hover:bg-white hover:shadow-md transition-all">
+                          <div className="font-semibold mb-4 flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="bg-brand text-white text-sm px-2.5 py-1 rounded-md shrink-0 font-bold">{q.displayNumber}</span>
+                            </div>
+                            {!isSummary && q.content && (
+                              <span className="whitespace-pre-wrap text-sm text-gray-700">{q.content}</span>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <div className="text-xs font-bold text-gray-500 uppercase">Đáp án đúng</div>
+                            {keys[q.id]?.map((ans, idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <input 
+                                  type="text"
+                                  value={ans}
+                                  onChange={e => handleKeyChange(q.id, idx, e.target.value)}
+                                  className={`border ${!ans.trim() ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50' : 'border-gray-300 focus:border-brand focus:ring-brand bg-white'} rounded-lg px-3 py-2 text-sm flex-1 font-mono uppercase shadow-sm`}
+                                  placeholder={idx === 0 ? "Nhập đáp án chính..." : "Nhập đáp án thay thế..."}
+                                />
+                                {idx > 0 && (
+                                  <button onClick={() => removeKeyOption(q.id, idx)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 rounded-lg font-bold transition-colors" title="Xóa đáp án">✕</button>
+                                )}
+                              </div>
+                            ))}
+                            <button onClick={() => addKeyOption(q.id)} className="text-xs text-brand hover:text-brand-hover font-bold flex items-center gap-1 mt-2">
+                              <span>+ Thêm đáp án được chấp nhận</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    {g.questions?.map((q: any) => (
-                      <div key={q.id} className="border border-gray-200 p-5 rounded-xl bg-gray-50/50 hover:bg-white hover:shadow-md transition-all">
-                        <div className="font-semibold mb-3 flex items-start gap-3">
-                          <span className="bg-brand text-white text-xs px-2 py-1 rounded-md shrink-0 mt-0.5">Q. {q.displayNumber}</span>
-                          <span className="whitespace-pre-wrap text-sm text-gray-700">{q.content}</span>
-                        </div>
-                        <div className="space-y-2">
-                          {keys[q.id]?.map((ans, idx) => (
-                            <div key={idx} className="flex gap-2">
-                              <input 
-                                type="text"
-                                value={ans}
-                                onChange={e => handleKeyChange(q.id, idx, e.target.value)}
-                                className={`border ${!ans.trim() ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'} rounded-lg px-3 py-2 text-sm flex-1 font-mono`}
-                                placeholder={idx === 0 ? "Nhập đáp án chính..." : "Nhập đáp án thay thế..."}
-                              />
-                              <button onClick={() => removeKeyOption(q.id, idx)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 rounded-lg font-bold transition-colors" title="Xóa đáp án">✕</button>
-                            </div>
-                          ))}
-                          <button onClick={() => addKeyOption(q.id)} className="text-xs text-brand hover:text-brand-hover font-bold flex items-center gap-1 mt-2">
-                            <span>+ Thêm đáp án thay thế</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
