@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+﻿import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
@@ -100,7 +100,7 @@ export const TeacherReadingListPage: React.FC = () => {
       }
     } catch (e) {
       console.error(e)
-      alert("Lỗi tải thông tin phân công")
+      alert("Lỗi khi lưu thiết lập lớp")
     }
   }
 

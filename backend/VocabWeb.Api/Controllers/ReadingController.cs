@@ -45,31 +45,7 @@ namespace VocabWeb.Api.Controllers
             return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
         }
 
-        [HttpGet("/api/teacher/reading")]
         
-        [HttpGet("/api/teacher/reading/migrate-data")]
-        [AllowAnonymous]
-        public async Task<IActionResult> MigrateData()
-        {
-            var assignments = await _db.ReadingAssignments.Where(r => r.ClassId != null).ToListAsync();
-            int count = 0;
-            foreach (var a in assignments)
-            {
-                if (!_db.ReadingClassAssignments.Any(ca => ca.ReadingAssignmentId == a.Id && ca.ClassId == a.ClassId))
-                {
-                    _db.ReadingClassAssignments.Add(new ReadingClassAssignment
-                    {
-                        ReadingAssignmentId = a.Id,
-                        ClassId = a.ClassId.Value,
-                        IsActive = true,
-                        AssignedAt = System.DateTime.UtcNow
-                    });
-                    count++;
-                }
-            }
-            await _db.SaveChangesAsync();
-            return Ok(new { Migrated = count });
-        }
 
         [HttpGet("/api/teacher/reading")]
         public async Task<IActionResult> GetAllTeacherReadings()
