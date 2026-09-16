@@ -1,32 +1,33 @@
 # run-backend.ps1
 # ─────────────────────────────────────────────────────────────────────────────
 # Safe backend start/restart for VocabWeb.Api.
+# Separates Build Output from Runtime Output to prevent MSB3021/MSB3027.
 # ─────────────────────────────────────────────────────────────────────────────
 
 param([switch]$Test)
 
 $ErrorActionPreference = 'Stop'
 $ProjectDir = Join-Path $PSScriptRoot "backend\VocabWeb.Api"
-$TestDir    = Join-Path $PSScriptRoot "backend\VocabWeb.Tests"
-$ArtifactsDir = "C:\Users\HarrisBao\AppData\Local\Temp\VocabWeb_Artifacts\bin\VocabWeb.Api\debug"
-$DllPath = Join-Path $ArtifactsDir "VocabWeb.Api.dll"
-$ExePath = Join-Path $ArtifactsDir "VocabWeb.Api.exe"
+
+# The separate directory where the backend actually runs
+$RuntimeDir = "C:\Users\HarrisBao\AppData\Local\Temp\VocabWeb_Runtime"
+$RuntimeDllPath = Join-Path $RuntimeDir "VocabWeb.Api.dll"
 
 function Stop-BackendSafely {
-    Write-Host "-- [1/6] Stopping existing backend processes..." -ForegroundColor Cyan
+    Write-Host "-- [1/5] Stopping existing runtime processes..." -ForegroundColor Cyan
 
-    $apiProcs = @(Get-Process -Name "VocabWeb.Api" -ErrorAction SilentlyContinue)
-    foreach ($p in $apiProcs) {
-        Write-Host "  Stopping VocabWeb.Api PID $($p.Id)..." -ForegroundColor Yellow
-        $p | Stop-Process -Force -ErrorAction SilentlyContinue
-    }
-
+    # Stop dotnet hosts specifically running the runtime DLL
     $dotnetProcs = @(Get-Process -Name "dotnet" -ErrorAction SilentlyContinue)
     foreach ($p in $dotnetProcs) {
         try {
             $cmdline = (Get-CimInstance Win32_Process -Filter "ProcessId=$($p.Id)" -ErrorAction SilentlyContinue).CommandLine
-            if ($cmdline -and ($cmdline -match "VocabWeb.Api.dll" -or $cmdline -match "dotnet run")) {
-                Write-Host "  Stopping dotnet host PID $($p.Id) (VocabWeb runner)..." -ForegroundColor Yellow
+            if ($cmdline -and $cmdline -match "VocabWeb_Runtime\\VocabWeb.Api.dll") {
+                Write-Host "  Stopping dotnet host PID $($p.Id) (VocabWeb runtime)..." -ForegroundColor Yellow
+                $p | Stop-Process -Force -ErrorAction SilentlyContinue
+            }
+            # Also catch any legacy artifact runners just in case they're still alive
+            elseif ($cmdline -and ($cmdline -match "VocabWeb_Artifacts" -and $cmdline -match "VocabWeb.Api.dll")) {
+                Write-Host "  Stopping legacy dotnet host PID $($p.Id)..." -ForegroundColor Yellow
                 $p | Stop-Process -Force -ErrorAction SilentlyContinue
             }
         } catch {}
@@ -34,7 +35,7 @@ function Stop-BackendSafely {
 }
 
 function Wait-BackendGone {
-    Write-Host "-- [2/6] Waiting for port 7035 to be released..." -ForegroundColor Cyan
+    Write-Host "-- [2/5] Waiting for port 7035 to be released..." -ForegroundColor Cyan
     $maxWait = 30
     $waited  = 0
     while ($waited -lt ($maxWait * 1000)) {
@@ -51,55 +52,49 @@ function Wait-BackendGone {
     exit 1
 }
 
-function Clean-AppHost {
-    Write-Host "-- [3/6] Cleaning stale AppHost if exists..." -ForegroundColor Cyan
-    if (Test-Path $ExePath) {
-        Write-Host "  Found old VocabWeb.Api.exe. Removing..." -ForegroundColor Yellow
-        Remove-Item $ExePath -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Invoke-Build {
-    Write-Host "-- [4/6] Building backend (UseAppHost=false)..." -ForegroundColor Cyan
+function Invoke-Publish {
+    Write-Host "-- [3/5] Publishing backend to separate Runtime directory..." -ForegroundColor Cyan
     Push-Location $ProjectDir
     try {
-        dotnet build -p:UseAppHost=false
+        # Publish directly to VocabWeb_Runtime, bypassing the VS Artifacts bin directory lock
+        # This will build and copy all dependencies (DLL, appsettings, deps.json, etc.)
+        dotnet publish -c Debug -p:UseAppHost=false -o $RuntimeDir
         if ($LASTEXITCODE -ne 0) {
-            Write-Error "dotnet build failed (exit $LASTEXITCODE). Aborting."
+            Write-Error "dotnet publish failed (exit $LASTEXITCODE). Aborting."
             exit $LASTEXITCODE
         }
-        Write-Host "  Build succeeded." -ForegroundColor Green
+        Write-Host "  Publish succeeded to $RuntimeDir." -ForegroundColor Green
     } finally {
         Pop-Location
     }
 }
 
 function Assert-OutputValid {
-    Write-Host "-- [5/6] Verifying build output..." -ForegroundColor Cyan
-    if (-not (Test-Path $DllPath)) {
-        Write-Error "Missing DLL: $DllPath"
+    Write-Host "-- [4/5] Verifying runtime output..." -ForegroundColor Cyan
+    if (-not (Test-Path $RuntimeDllPath)) {
+        Write-Error "Missing Runtime DLL: $RuntimeDllPath"
         exit 1
     }
-    if (Test-Path $ExePath) {
-        Write-Error "VocabWeb.Api.exe was still generated despite UseAppHost=false! Aborting."
+    if (Test-Path (Join-Path $RuntimeDir "VocabWeb.Api.exe")) {
+        Write-Error "VocabWeb.Api.exe was generated in runtime dir despite UseAppHost=false! Aborting."
         exit 1
     }
-    Write-Host "  Output valid: DLL exists, EXE does not." -ForegroundColor Green
+    Write-Host "  Output valid: Runtime DLL exists, EXE does not." -ForegroundColor Green
 }
 
 function Start-Backend {
-    Write-Host "-- [6/6] Starting VocabWeb.Api from DLL..." -ForegroundColor Cyan
+    Write-Host "-- [5/5] Starting VocabWeb.Api from Runtime Directory..." -ForegroundColor Cyan
     Set-Location $ProjectDir
     
     $env:ASPNETCORE_ENVIRONMENT = "Development"
     $env:ASPNETCORE_URLS = "https://localhost:7035"
     
-    dotnet exec $DllPath
+    # Start the application from the isolated runtime directory
+    dotnet exec $RuntimeDllPath
 }
 
 Stop-BackendSafely
 Wait-BackendGone
-Clean-AppHost
-Invoke-Build
+Invoke-Publish
 Assert-OutputValid
 Start-Backend
