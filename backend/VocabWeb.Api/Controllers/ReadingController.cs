@@ -12,6 +12,12 @@ using System.IO;
 
 namespace VocabWeb.Api.Controllers
 {
+    public class CreateOrUpdateReadingDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public int DurationMinutes { get; set; }
+    }
+
     [ApiController]
     [Route("api/teacher/class/{classId}/[controller]")]
     [Authorize(Roles = "Teacher,TA")]
@@ -97,7 +103,7 @@ namespace VocabWeb.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAssignment(int classId, [FromBody] ReadingAssignment dto)
+        public async Task<IActionResult> CreateAssignment(int classId, [FromBody] CreateOrUpdateReadingDto dto)
         {
             if (!await HasAccessToClass(classId)) return Forbid();
 
@@ -191,7 +197,7 @@ namespace VocabWeb.Api.Controllers
         }
 
         [HttpPut("{id}/info")]
-        public async Task<IActionResult> UpdateInfo(int classId, int id, [FromBody] ReadingAssignment dto)
+        public async Task<IActionResult> UpdateInfo(int classId, int id, [FromBody] CreateOrUpdateReadingDto dto)
         {
             if (!await HasAccessToClass(classId)) return Forbid();
             var assignment = await _db.ReadingAssignments.FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId);
