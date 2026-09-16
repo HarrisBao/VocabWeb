@@ -1,0 +1,227 @@
+﻿using System;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using VocabWeb.Api.Data;
+using VocabWeb.Api.Models;
+
+namespace VocabWeb.Api.Controllers
+{
+    [ApiController]
+    [Route("api/learn/class/{classId}/reading")]
+    [Authorize]
+    public class LearnReadingController : ControllerBase
+    {
+        private readonly AppDbContext _db;
+
+        public LearnReadingController(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        private async Task<ClassEnrollment?> GetEnrollment(int classId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            return await _db.ClassEnrollments
+                .Include(ce => ce.StudentProfile)
+                .FirstOrDefaultAsync(ce => ce.ClassId == classId && ce.StudentProfile.UserId == userId && ce.IsActive);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableAssignments(int classId)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var list = await _db.ReadingAssignments
+                .Where(r => r.ClassId == classId && r.Status == "PUBLISHED")
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new {
+                    r.Id,
+                    r.Title,
+                    r.DurationMinutes,
+                    AttemptCount = r.Attempts.Count(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
+                })
+                .ToListAsync();
+
+            return Ok(list);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetAssignment(int classId, int id)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var assignment = await _db.ReadingAssignments
+                .Include(r => r.Passage)
+                .Include(r => r.QuestionGroups)
+                .ThenInclude(g => g.Questions)
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId && r.Status == "PUBLISHED");
+
+            if (assignment == null) return NotFound();
+
+            // Do not include AcceptedAnswers!
+            return Ok(new {
+                assignment.Id,
+                assignment.Title,
+                assignment.DurationMinutes,
+                Passage = assignment.Passage?.ContentHtml,
+                QuestionGroups = assignment.QuestionGroups.OrderBy(g => g.SortOrder).Select(g => new {
+                    g.Id,
+                    g.Instruction,
+                    g.InteractionType,
+                    g.SortOrder,
+                    Questions = g.Questions.OrderBy(q => q.SortOrder).Select(q => new {
+                        q.Id,
+                        q.DisplayNumber,
+                        q.Content,
+                        q.SortOrder,
+                        // No accepted answers sent to client
+                    })
+                })
+            });
+        }
+
+        [HttpPost("{id}/submit")]
+        
+        [HttpGet("{id}/attempts")]
+        public async Task<IActionResult> GetAttempts(int classId, int id)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var attempts = await _db.ReadingAttempts
+                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id)
+                .OrderByDescending(a => a.SubmittedAt)
+                .Select(a => new {
+                    a.Id,
+                    a.AttemptNumber,
+                    a.StartedAt,
+                    a.SubmittedAt,
+                    a.TimeSpentSeconds,
+                    a.CorrectCount,
+                    a.TotalQuestions
+                })
+                .ToListAsync();
+
+            return Ok(attempts);
+        }
+
+        [HttpGet("{id}/attempts/{attemptId}")]
+        public async Task<IActionResult> GetAttemptDetails(int classId, int id, int attemptId)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var attempt = await _db.ReadingAttempts
+                .Include(a => a.Answers)
+                .FirstOrDefaultAsync(a => a.Id == attemptId && a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id);
+
+            if (attempt == null) return NotFound();
+
+            return Ok(new {
+                attempt.Id,
+                attempt.AttemptNumber,
+                attempt.SubmittedAt,
+                attempt.CorrectCount,
+                attempt.TotalQuestions,
+                Answers = attempt.Answers.Select(a => new {
+                    questionId = a.ReadingQuestionId,
+                    studentAnswer = a.StudentAnswer,
+                    isCorrect = a.IsCorrect,
+                    correctAnswer = a.CorrectAnswerSnapshot
+                })
+            });
+        }
+
+        [HttpPost("{id}/submit")]
+        public async Task<IActionResult> SubmitAnswers(int classId, int id, [FromBody] System.Collections.Generic.Dictionary<int, string> studentAnswers)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var assignment = await _db.ReadingAssignments
+                .Include(r => r.QuestionGroups)
+                .ThenInclude(g => g.Questions)
+                .ThenInclude(q => q.AcceptedAnswers)
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassId == classId && r.Status == "PUBLISHED");
+
+            if (assignment == null) return NotFound();
+
+            int attemptNumber = await _db.ReadingAttempts.CountAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id) + 1;
+
+            var attempt = new ReadingAttempt
+            {
+                ReadingAssignmentId = id,
+                ClassEnrollmentId = enrollment.Id,
+                AttemptNumber = attemptNumber,
+                StartedAt = DateTime.UtcNow, // Simplified. We could require explicit start.
+                SubmittedAt = DateTime.UtcNow,
+                TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count()
+            };
+
+            int correctCount = 0;
+
+            foreach (var group in assignment.QuestionGroups)
+            {
+                foreach (var q in group.Questions)
+                {
+                    string ans = "";
+                    if (studentAnswers.TryGetValue(q.Id, out var val) && val != null)
+                    {
+                        ans = val.Trim();
+                    }
+
+                    // Grading logic
+                    // Normalize Unicode and case-insensitive
+                    bool isCorrect = false;
+                    string primaryAns = "";
+                    foreach (var acc in q.AcceptedAnswers)
+                    {
+                        if (acc.IsPrimary) primaryAns = acc.Answer;
+                        
+                        // Strict text grading as per prompt:
+                        // Trimming is done. Case insensitive. 
+                        // cars == Cars == CARS. cars != car.
+                        if (string.Equals(ans, acc.Answer.Trim(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            isCorrect = true;
+                            break;
+                        }
+                    }
+
+                    if (isCorrect) correctCount++;
+
+                    attempt.Answers.Add(new ReadingAttemptAnswer
+                    {
+                        ReadingQuestionId = q.Id,
+                        StudentAnswer = ans,
+                        IsCorrect = isCorrect,
+                        CorrectAnswerSnapshot = primaryAns
+                    });
+                }
+            }
+
+            attempt.CorrectCount = correctCount;
+            _db.ReadingAttempts.Add(attempt);
+            await _db.SaveChangesAsync();
+
+            return Ok(new {
+                attemptId = attempt.Id,
+                correctCount = attempt.CorrectCount,
+                totalQuestions = attempt.TotalQuestions,
+                answers = attempt.Answers.Select(a => new {
+                    questionId = a.ReadingQuestionId,
+                    studentAnswer = a.StudentAnswer,
+                    isCorrect = a.IsCorrect,
+                    correctAnswer = a.CorrectAnswerSnapshot
+                })
+            });
+        }
+    }
+}
+

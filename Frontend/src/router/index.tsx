@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 
@@ -18,6 +18,7 @@ import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 
 // Learn
 import { ClassPage } from '../pages/learn/ClassPage'
+import { StudentReadingAssignmentPage } from '../pages/learn/StudentReadingAssignmentPage'
 import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
 
 // Student System Shell
@@ -42,6 +43,9 @@ import { TestListPage } from '../pages/teacher/TestListPage'
 import { TestCreatePage } from '../pages/teacher/TestCreatePage'
 import { TestDetailPage } from '../pages/teacher/TestDetailPage'
 import { ClassTestResultsPage } from '../pages/teacher/ClassTestResultsPage'
+import { ClassroomActivityPage } from '../pages/teacher/ClassroomActivityPage'
+import { TeacherReadingEditPage } from '../pages/teacher/TeacherReadingEditPage'
+import { TeacherReadingResultsPage } from '../pages/teacher/TeacherReadingResultsPage'
 import { ProfilePage } from '../pages/teacher/ProfilePage'
 
 // TA System
@@ -60,7 +64,7 @@ const TeacherRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-500 font-medium text-sm">Đang xác thực thông tin...</p>
+        <p className="text-gray-500 font-medium text-sm">Äang xÃ¡c thá»±c thÃ´ng tin...</p>
         </div>
       </div>
     )
@@ -81,7 +85,7 @@ const TaRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium text-sm">Đang xác thực thông tin...</p>
+          <p className="text-gray-500 font-medium text-sm">Äang xÃ¡c thá»±c thÃ´ng tin...</p>
         </div>
       </div>
     )
@@ -149,6 +153,9 @@ export const AppRouter = () => {
             <Route path="vocabulary/:id" element={<VocabularyDetailPage />} />
             <Route path="classes" element={<ClassListPage />} />
             <Route path="classes/:id" element={<ClassDetailPage />} />
+            <Route path="classes/:id/activities" element={<ClassroomActivityPage />} />
+            <Route path="classes/:id/reading/:readingId/edit" element={<TeacherReadingEditPage />} />
+            <Route path="classes/:id/reading/:readingId/results" element={<TeacherReadingResultsPage />} />
             <Route path="tests" element={<TestListPage />} />
             <Route path="tests/new" element={<TestCreatePage />} />
             <Route path="tests/:id" element={<TestDetailPage />} />
@@ -173,4 +180,9 @@ export const AppRouter = () => {
     </BrowserRouter>
   )
 }
+
+
+
+
+
 

@@ -59,7 +59,7 @@ interface ClassDetails {
   attempts: TestAttempt[]
 }
 
-type TabType = 'lessons' | 'members' | 'tas' | 'results' | 'settings' | 'attendance'
+type TabType = 'lessons' | 'reading' | 'members' | 'tas' | 'results' | 'settings' | 'attendance'
 
 interface ClassSession {
   id: number
@@ -469,6 +469,11 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
         </div>
 
         <div className="flex items-center gap-2">
+          <Link to={`/teacher/classes/${id}/activities`}>
+            <Button size="sm" variant="outline" className="font-bold border-brand text-brand">
+              🎭 Hoạt động trên lớp
+            </Button>
+          </Link>
           <button
             onClick={handleCopyLink}
             className="px-3.5 py-2 rounded-xl border border-surface-hover bg-surface hover:bg-surface-muted text-xs font-bold text-gray-700 shadow-2xs transition-colors flex items-center gap-1.5"
@@ -510,6 +515,13 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
             ].join(' ')}
           >
             <span>📚 Bài học</span>
+              <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.lessons.length}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('reading')}
+              className={pb-3 text-sm font-bold border-b-2 transition-colors  flex items-center space-x-2}
+            >
+              <span>📖 Reading</span>
             <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
               {cls.lessons.length}
             </span>
@@ -1107,6 +1119,9 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
     </div>
   )
 }
+
+
+
 
 
 

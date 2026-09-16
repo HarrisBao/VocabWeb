@@ -26,12 +26,86 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ClassStaffAssignment> ClassStaffAssignments => Set<ClassStaffAssignment>();
     public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
     public DbSet<ClassSessionTest> ClassSessionTests => Set<ClassSessionTest>();
+    public DbSet<ClassVocabularyReviewSet> ClassVocabularyReviewSets => Set<ClassVocabularyReviewSet>();
+    public DbSet<ClassVocabularyReviewSetUnit> ClassVocabularyReviewSetUnits => Set<ClassVocabularyReviewSetUnit>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<StudentNotification> StudentNotifications => Set<StudentNotification>();
+    public DbSet<ReadingAssignment> ReadingAssignments => Set<ReadingAssignment>();
+    public DbSet<ReadingPassage> ReadingPassages => Set<ReadingPassage>();
+    public DbSet<ReadingQuestionGroup> ReadingQuestionGroups => Set<ReadingQuestionGroup>();
+    public DbSet<ReadingQuestion> ReadingQuestions => Set<ReadingQuestion>();
+    public DbSet<ReadingAcceptedAnswer> ReadingAcceptedAnswers => Set<ReadingAcceptedAnswer>();
+    public DbSet<ReadingAttempt> ReadingAttempts => Set<ReadingAttempt>();
+    public DbSet<ReadingAttemptAnswer> ReadingAttemptAnswers => Set<ReadingAttemptAnswer>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<ReadingAssignment>()
+            .HasOne(r => r.Passage)
+            .WithOne(p => p.ReadingAssignment)
+            .HasForeignKey<ReadingPassage>(p => p.ReadingAssignmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingQuestionGroup>()
+            .HasOne(g => g.ReadingAssignment)
+            .WithMany(r => r.QuestionGroups)
+            .HasForeignKey(g => g.ReadingAssignmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingQuestion>()
+            .HasOne(q => q.QuestionGroup)
+            .WithMany(g => g.Questions)
+            .HasForeignKey(q => q.QuestionGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingAcceptedAnswer>()
+            .HasOne(a => a.ReadingQuestion)
+            .WithMany(q => q.AcceptedAnswers)
+            .HasForeignKey(a => a.ReadingQuestionId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingAttempt>()
+            .HasOne(a => a.ReadingAssignment)
+            .WithMany(r => r.Attempts)
+            .HasForeignKey(a => a.ReadingAssignmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingAttempt>()
+            .HasOne(a => a.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(a => a.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<ReadingAttemptAnswer>()
+            .HasOne(a => a.ReadingAttempt)
+            .WithMany(a => a.Answers)
+            .HasForeignKey(a => a.ReadingAttemptId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ReadingAttemptAnswer>()
+            .HasOne(a => a.ReadingQuestion)
+            .WithMany()
+            .HasForeignKey(a => a.ReadingQuestionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        builder.Entity<ClassVocabularyReviewSetUnit>()
+            .HasKey(u => new { u.ReviewSetId, u.ClassLessonId });
+            
+        builder.Entity<ClassVocabularyReviewSetUnit>()
+            .HasOne(u => u.ReviewSet)
+            .WithMany(r => r.Units)
+            .HasForeignKey(u => u.ReviewSetId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<ClassVocabularyReviewSetUnit>()
+            .HasOne(u => u.ClassLesson)
+            .WithMany()
+            .HasForeignKey(u => u.ClassLessonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
 
         // VocabularySet -> Teacher
         builder.Entity<VocabularySet>()

@@ -11,7 +11,7 @@ namespace VocabWeb.Api.Controllers;
 [ApiController]
 [Route("api/teacher/[controller]")]
 [Authorize(Roles = "Teacher,TA")]
-public class ClassController : ControllerBase
+public partial class ClassController : ControllerBase
 {
     private readonly AppDbContext _db;
 
