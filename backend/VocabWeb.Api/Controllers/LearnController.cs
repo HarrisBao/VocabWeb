@@ -38,12 +38,12 @@ public class LearnController : ControllerBase
 
         if (cls == null)
         {
-            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c hoáº·c lá»›p Ä‘Ã£ bá»‹ lÆ°u trá»¯." });
+            return NotFound(new { message = "Không tìm thấy lớp học hoặc lớp đã bị lưu trữ." });
         }
 
         if (!cls.AllowGuestAccess && !User.Identity!.IsAuthenticated)
         {
-            return Unauthorized(new { message = "Lá»›p há»c nÃ y yÃªu cáº§u tÃ i khoáº£n há»c viÃªn Ä‘á»ƒ truy cáº­p." });
+            return Unauthorized(new { message = "Lớp học này yêu cầu tài khoản học viên để truy cập." });
         }
 
         var dto = new StudentClassDto
@@ -83,7 +83,7 @@ public class LearnController : ControllerBase
 
         if (vocabSet == null)
         {
-            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bá»™ tá»« vá»±ng." });
+            return NotFound(new { message = "Không tìm thấy bộ từ vựng." });
         }
 
         // Check access
@@ -155,7 +155,7 @@ public class LearnController : ControllerBase
             .Include(vs => vs.Items)
             .FirstOrDefaultAsync(vs => vs.Id == id);
 
-        if (vocabSet == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng." });
+        if (vocabSet == null) return NotFound(new { message = "Không tìm thấy bộ từ vựng." });
 
         var definitions = _questionGeneration.GetActivityDefinitions();
         var result = new List<PracticeAvailabilityDto>();
@@ -169,7 +169,7 @@ public class LearnController : ControllerBase
             if (vocabSet.Items.Count == 0)
             {
                 isAvailable = false;
-                reason = "ChÃ†Â°a cÃƒÂ³ tÃ¡Â»Â« vÃ¡Â»Â±ng.";
+                reason = "Chưa có từ vựng.";
             }
             else if (def.RequiredInputs.Contains("Meaning") && vocabSet.Items.Count < 2)
             {
@@ -177,7 +177,7 @@ public class LearnController : ControllerBase
                 if (def.Type == ActivityType.WORD_TO_MEANING || def.Type == ActivityType.MEANING_TO_WORD || def.Type == ActivityType.LISTEN_TO_MEANING || def.Type == ActivityType.LISTEN_TO_WORD)
                 {
                     isAvailable = false;
-                    reason = "CÃ¡ÂºÂ§n ÃƒÂ­t nhÃ¡ÂºÂ¥t 2 tÃ¡Â»Â« vÃ¡Â»Â±ng Ã„â€˜Ã¡Â»Æ’ tÃ¡ÂºÂ¡o cÃƒÂ¡c Ã„â€˜ÃƒÂ¡p ÃƒÂ¡n lÃ¡Â»Â±a chÃ¡Â» n.";
+                    reason = "Cần ít nhất 2 từ vựng để tạo các đáp án lựa chọn.";
                 }
             }
             
@@ -188,7 +188,7 @@ public class LearnController : ControllerBase
                 if (questions.Count == 0)
                 {
                     isAvailable = false;
-                    reason = "KhÃƒÂ´ng Ã„â€˜Ã¡Â»Â§ dÃ¡Â»Â¯ liÃ¡Â»â€¡u hÃ¡Â»Â£p lÃ¡Â»â€¡ cho hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng nÃƒÂ y.";
+                    reason = "Không đủ dữ liệu hợp lệ cho hoạt động này.";
                 }
             }
 
@@ -212,7 +212,7 @@ public class LearnController : ControllerBase
             .Include(vs => vs.Items)
             .FirstOrDefaultAsync(vs => vs.Id == id);
 
-        if (vocabSet == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng." });
+        if (vocabSet == null) return NotFound(new { message = "Không tìm thấy bộ từ vựng." });
 
         var questions = _questionGeneration.GenerateQuestions(vocabSet.Items.ToList(), new List<ActivityType> { type });
         

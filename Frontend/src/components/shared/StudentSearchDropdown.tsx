@@ -77,7 +77,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input 
-          placeholder="TÃ¬m há»c sinh theo tÃªn hoáº·c SÄT..." 
+          placeholder="Tìm học sinh theo tên hoặc SĐT..." 
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => { if (query.trim().length >= 2) setIsOpen(true) }}
@@ -89,7 +89,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
           {loading ? (
             <div className="p-4 flex items-center justify-center text-gray-500">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Äang tÃ¬m...
+              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Đang tìm...
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
@@ -117,7 +117,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
             </div>
           ) : (
             <div className="p-4 text-center">
-              <p className="text-sm text-gray-500 mb-3">KhÃ´ng tÃ¬m tháº¥y há»c sinh phÃ¹ há»£p.</p>
+              <p className="text-sm text-gray-500 mb-3">Không tìm thấy học sinh phù hợp.</p>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -127,7 +127,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
                   setNewName(query) // prepopulate
                 }}
               >
-                Táº¡o há»c sinh chÆ°a cÃ³ tÃ i khoáº£n
+                Tạo học sinh chưa có tài khoản
               </Button>
             </div>
           )}
@@ -138,20 +138,20 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
         <form onSubmit={handleCreateNew} className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
           <h4 className="text-sm font-semibold text-gray-700">Táº¡o há»c sinh má»›i</h4>
           <Input 
-            placeholder="Há» vÃ  tÃªn *" 
+            placeholder="Họ và tên *" 
             value={newName} 
             onChange={e => setNewName(e.target.value)} 
             required 
           />
           <Input 
-            placeholder="Sá»‘ Ä‘iá»‡n thoáº¡i *" 
+            placeholder="Số điện thoại *" 
             value={newPhone} 
             onChange={e => setNewPhone(e.target.value)} 
             required 
           />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>Há»§y</Button>
-            <Button type="submit" loading={isAdding}>ThÃªm vÃ o lá»›p</Button>
+            <Button type="submit" loading={isAdding}>Thêm vào lớp</Button>
           </div>
         </form>
       )}

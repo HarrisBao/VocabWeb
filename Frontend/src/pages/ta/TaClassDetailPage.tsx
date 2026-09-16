@@ -125,7 +125,7 @@ export const TaClassDetailPage: React.FC = () => {
   const [newSessionDate, setNewSessionDate] = useState('')
   const [newSessionTitle, setNewSessionTitle] = useState('')
   const [newSessionTestId, setNewSessionTestId] = useState<number | ''>('')
-  const [togglingVisibilityId, setTogglingVisibilityId] = useState<number | null>(null)
+  const [togglingVắngVisibilityId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchClassDetails()
@@ -159,13 +159,13 @@ export const TaClassDetailPage: React.FC = () => {
         title: newSessionTitle,
         testId: newSessionTestId ? Number(newSessionTestId) : null
       })
-      setMessage({ type: 'success', text: 'TÃ¡ÂºÂ¡o buÃ¡Â»â€¢i hÃ¡Â»Âc thÃƒÂ nh cÃƒÂ´ng!' })
+      setMessage({ type: 'success', text: 'Tạo buổi học thành công!' })
       setNewSessionDate('')
       setNewSessionTitle('')
       setNewSessionTestId('')
       fetchClassSessions()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'TÃ¡ÂºÂ¡o buÃ¡Â»â€¢i hÃ¡Â»Âc thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Tạo buổi học thất bại.' })
     } finally {
       setIsCreatingSession(false)
     }
@@ -191,7 +191,7 @@ export const TaClassDetailPage: React.FC = () => {
         return { ...s, attendanceRecords: records }
       }))
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t Ã„â€˜iÃ¡Â»Æ’m danh thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Cập nhật điểm danh thất bại.' })
     }
   }
 
@@ -204,7 +204,7 @@ export const TaClassDetailPage: React.FC = () => {
       setEditCode(data.code)
       setEditDesc(data.description || '')
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ£i chi tiÃ¡ÂºÂ¿t lÃ¡Â»â€ºp hÃ¡Â»Âc.' })
+      setMessage({ type: 'error', text: err.message || 'Không thể tải chi tiết lớp học.' })
     } finally {
       setLoading(false)
     }
@@ -233,11 +233,11 @@ export const TaClassDetailPage: React.FC = () => {
         vocabularySetId: selectedSetId,
         isPinned: isPinnedChecked
       })
-      setMessage({ type: 'success', text: 'ThÃƒÂªm bÃƒÂ i hÃ¡Â»Âc vÃƒÂ o lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng!' })
+      setMessage({ type: 'success', text: 'Thêm bài học vào lớp thành công!' })
       setIsAddLessonModalOpen(false)
       fetchClassDetails()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'ThÃƒÂªm bÃƒÂ i hÃ¡Â»Âc thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Thêm bài học thất bại.' })
     } finally {
       setAddingLesson(false)
     }
@@ -248,7 +248,7 @@ export const TaClassDetailPage: React.FC = () => {
       await api.put(`/teacher/class/${id}/lessons/${lessonId}/pin`)
       fetchClassDetails()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Thao tÃƒÂ¡c thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Thao tác thất bại.' })
     }
   }
 
@@ -280,20 +280,20 @@ export const TaClassDetailPage: React.FC = () => {
           )
         }
       })
-      setMessage({ type: 'error', text: err.message || 'Thay Ã„â€˜Ã¡Â»â€¢i trÃ¡ÂºÂ¡ng thÃƒÂ¡i hiÃ¡Â»Æ’n thÃ¡Â»â€¹ thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Thay đổi trạng thái hiển thị thất bại.' })
     } finally {
       setTogglingVisibilityId(null)
     }
   }
 
   const handleRemoveLesson = async (lessonId: number, title: string) => {
-    if (!window.confirm(`GÃ¡Â»Â¡ bÃƒÂ i hÃ¡Â»Âc "${title}" khÃ¡Â»Âi lÃ¡Â»â€ºp nÃƒÂ y?`)) return
+    if (!window.confirm(`Gỡ bài học "${title}" khỏi lớp này?`)) return
     try {
       await api.delete(`/teacher/class/${id}/lessons/${lessonId}`)
-      setMessage({ type: 'success', text: 'Ã„ÂÃƒÂ£ gÃ¡Â»Â¡ bÃƒÂ i hÃ¡Â»Âc khÃ¡Â»Âi lÃ¡Â»â€ºp.' })
+      setMessage({ type: 'success', text: 'Đã gỡ bài học khỏi lớp.' })
       fetchClassDetails()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'GÃ¡Â»Â¡ bÃƒÂ i hÃ¡Â»Âc thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Gỡ bài học thất bại.' })
     }
   }
 
@@ -306,10 +306,10 @@ export const TaClassDetailPage: React.FC = () => {
         code: editCode.trim(),
         description: editDesc.trim()
       })
-      setMessage({ type: 'success', text: 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃƒÂ´ng tin lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng!' })
+      setMessage({ type: 'success', text: 'Cập nhật thông tin lớp thành công!' })
       fetchClassDetails()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i.' })
+      setMessage({ type: 'error', text: err.message || 'Cập nhật thất bại.' })
     } finally {
       setSavingSettings(false)
     }
@@ -325,10 +325,10 @@ export const TaClassDetailPage: React.FC = () => {
           memberCount: cls.memberCount + 1,
           members: [...cls.members, res]
         })
-        setMessage({ type: 'success', text: 'ÄÃ£ thÃªm há»c sinh vÃ o lá»›p.' })
+        setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lá»—i khi thÃªm há»c sinh.' })
+      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lỗi khi thêm học sinh.' })
     } finally {
       setIsAddingStudent(false)
     }
@@ -347,17 +347,19 @@ export const TaClassDetailPage: React.FC = () => {
           memberCount: cls.memberCount + 1,
           members: [...cls.members, res]
         })
-        setMessage({ type: 'success', text: 'ÄÃ£ thÃªm há»c sinh vÃ o lá»›p.' })
+        setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lá»—i khi thÃªm há»c sinh.' })
+      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lỗi khi thêm học sinh.' })
     } finally {
       setIsAddingStudent(false)
     }
   }
 
   const handleRemoveStudent = async (studentProfileId: number, studentName: string) => {
-    if (!window.confirm(`Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a ${studentName} khá»i lá»›p ${cls?.name}?\n\nLá»‹ch sá»­ há»c táº­p vÃ  káº¿t quáº£ trÆ°á»›c Ä‘Ã¢y váº«n Ä‘Æ°á»£c giá»¯ láº¡i.`)) return
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${studentName} khỏi lớp ${cls?.name}?
+
+Lịch sử học tập và kết quả trước đây vẫn được giữ lại.`)) return
     
     try {
       await api.delete(`/teacher/class/${id}/enrollments/${studentProfileId}`)
@@ -368,10 +370,10 @@ export const TaClassDetailPage: React.FC = () => {
           memberCount: cls.memberCount - 1,
           members: cls.members.filter(m => m.studentProfileId !== studentProfileId)
         })
-        setMessage({ type: 'success', text: 'ÄÃ£ xÃ³a há»c sinh khá»i lá»›p.' })
+        setMessage({ type: 'success', text: 'Đã xóa học sinh khỏi lớp.' })
       }
     } catch (err: any) {
-      setMessage({ type: 'error', text: 'Lá»—i khi xÃ³a há»c sinh.' })
+      setMessage({ type: 'error', text: 'Lỗi khi xóa học sinh.' })
     }
   }
 
@@ -394,9 +396,9 @@ export const TaClassDetailPage: React.FC = () => {
   if (!cls) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500 mb-4">KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc.</p>
+        <p className="text-gray-500 mb-4">Không tìm thấy lớp học.</p>
         <Link to="/teacher/classes">
-          <Button size="sm">Quay lÃ¡ÂºÂ¡i danh sÃƒÂ¡ch</Button>
+          <Button size="sm">Quay lại danh sách</Button>
         </Link>
       </div>
     )
@@ -409,7 +411,7 @@ export const TaClassDetailPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link to="/teacher/classes">
             <button className="p-2 rounded-xl bg-surface border border-surface-hover text-gray-600 hover:bg-surface-muted">
-              Ã¢â€ Â
+              ←
             </button>
           </Link>
           <div>
@@ -419,7 +421,7 @@ export const TaClassDetailPage: React.FC = () => {
                 {cls.code}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'LÃ¡Â»â€ºp hÃ¡Â»Âc IELTS Thanh LÃƒÂª'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'Lớp học IELTS Thanh Loan'}</p>
           </div>
         </div>
 
@@ -428,7 +430,7 @@ export const TaClassDetailPage: React.FC = () => {
             onClick={handleCopyLink}
             className="px-3.5 py-2 rounded-xl border border-surface-hover bg-surface hover:bg-surface-muted text-xs font-bold text-gray-700 shadow-2xs transition-colors flex items-center gap-1.5"
           >
-            <span>{copiedLink ? 'Ã¢Å“â€œ Ã„ÂÃƒÂ£ copy link' : 'Ã°Å¸â€œâ€¹ Copy link cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh'}</span>
+            <span>{copiedLink ? '✓ Đã copy link' : '📋 Copy link cố định'}</span>
           </button>
 
 
@@ -444,11 +446,11 @@ export const TaClassDetailPage: React.FC = () => {
           ].join(' ')}
         >
           <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="font-bold text-xs opacity-60 hover:opacity-100">Ã¢Å“â€¢</button>
+          <button onClick={() => setMessage(null)} className="font-bold text-xs opacity-60 hover:opacity-100">✕</button>
         </div>
       )}
 
-      {/* 4 Tabs: [BÃƒÂ i hÃ¡Â»Âc] [ThÃƒÂ nh viÃƒÂªn] [KÃ¡ÂºÂ¿t quÃ¡ÂºÂ£] [CÃƒÂ i Ã„â€˜Ã¡ÂºÂ·t] */}
+      {/* 4 Tabs: [Bài học] [Thành viên] [Kết quả
       <div className="border-b border-surface-hover">
         <nav className="flex space-x-8">
           <button
@@ -460,7 +462,7 @@ export const TaClassDetailPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            <span>Ã°Å¸â€œÅ¡ BÃƒÂ i hÃ¡Â»Âc</span>
+            <span>📚 Bài học</span>
             <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
               {cls.lessons.length}
             </span>
@@ -475,7 +477,7 @@ export const TaClassDetailPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            <span>Ã°Å¸â€˜Â¥ ThÃƒÂ nh viÃƒÂªn</span>
+            <span>👥 Thành viên</span>
             <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
               {cls.members.length}
             </span>
@@ -490,7 +492,7 @@ export const TaClassDetailPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            <span>Ã°Å¸â€œÂ Ã„ÂiÃ¡Â»Æ’m danh</span>
+            <span>Điểm danh</span>
           </button>
 
           <button
@@ -502,13 +504,13 @@ export const TaClassDetailPage: React.FC = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             ].join(' ')}
           >
-            <span>Ã°Å¸Ââ€  BÃƒÂ i kiÃ¡Â»Æ’m tra</span>
+            <span>📝 Bài kiểm tra</span>
           </button>
 
         </nav>
       </div>
 
-      {/* TAB 1: BÃƒâ‚¬I HÃ¡Â»Å’C */}
+      {/* TAB 1: BÀI HỌC */}
       {activeTab === 'lessons' && (
         <div className="space-y-4">
           {cls.lessons.length > 0 ? (
@@ -521,7 +523,7 @@ export const TaClassDetailPage: React.FC = () => {
                       <div className="flex items-center gap-1.5">
                         {lesson.isPinned && (
                           <span className="text-xs bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded border border-amber-200">
-                            Ã°Å¸â€œÅ’ Ã„ÂÃƒÂ£ ghim
+📌 Đã ghim
                           </span>
                         )}
                         <button
@@ -534,7 +536,7 @@ export const TaClassDetailPage: React.FC = () => {
                               : 'bg-brand-light text-brand-text border-green-200 hover:bg-green-100',
                             togglingVisibilityId === lesson.id ? 'opacity-70 cursor-wait' : 'cursor-pointer'
                           ].join(' ')}
-                          title={lesson.isHidden ? 'HiÃ¡Â»â€¡n bÃƒÂ i nÃƒÂ y cho hÃ¡Â»Âc sinh' : 'Ã¡ÂºÂ¨n bÃƒÂ i nÃƒÂ y khÃ¡Â»Âi hÃ¡Â»Âc sinh'}
+                          title={lesson.isHidden ? 'Hiện bài này cho học sinh' : 'Ẩn bài này khỏi học sinh'}
                         >
                           {togglingVisibilityId === lesson.id ? (
                             <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -551,7 +553,7 @@ export const TaClassDetailPage: React.FC = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           )}
-                          <span>{lesson.isHidden ? 'Ã„Âang Ã¡ÂºÂ©n' : 'Ã„Âang hiÃ¡Â»â€¡n'}</span>
+                          <span>{lesson.isHidden ? 'Đang ẩn' : 'Đang hiện'}</span>
                         </button>
                       </div>
                     </div>
@@ -560,7 +562,7 @@ export const TaClassDetailPage: React.FC = () => {
                       {lesson.vocabularySetTitle}
                     </h3>
                     <p className="text-xs text-gray-500 font-medium">
-                      {lesson.wordCount} tÃ¡Â»Â« vÃ¡Â»Â±ng
+                      {lesson.wordCount} từ vựng
                     </p>
                   </div>
 
@@ -572,17 +574,17 @@ export const TaClassDetailPage: React.FC = () => {
                           'p-1.5 rounded-lg text-xs font-semibold border transition-colors',
                           lesson.isPinned ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-500 hover:bg-surface-hover border-surface-hover'
                         ].join(' ')}
-                        title={lesson.isPinned ? 'BÃ¡Â»Â ghim' : 'Ghim lÃƒÂªn Ã„â€˜Ã¡ÂºÂ§u'}
+                        title={lesson.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}
                       >
-                        Ã°Å¸â€œÅ’
+                        📌
                       </button>
 
                       <button
                         onClick={() => handleRemoveLesson(lesson.id, lesson.vocabularySetTitle)}
                         className="p-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-surface-hover transition-colors"
-                        title="GÃ¡Â»Â¡ khÃ¡Â»Âi lÃ¡Â»â€ºp"
+                        title="Gỡ bài học khỏi lớp"
                       >
-                        Ã°Å¸â€”â€˜Ã¯Â¸Â
+                        🗑️
                       </button>
                     </div>
 
@@ -594,14 +596,14 @@ export const TaClassDetailPage: React.FC = () => {
                           onClick={() => {
                             const link = `${window.location.origin}/learn/vocabulary/${lesson.vocabularySetId}?classId=${id}`
                             navigator.clipboard.writeText(link)
-                            alert('Ã„ÂÃƒÂ£ copy link hÃ¡Â»Âc tÃ¡Â»Â« vÃ¡Â»Â±ng!')
+                            alert('Đã copy link học từ vựng!')
                           }}
                         >
-                          Ã°Å¸â€œâ€¹ Link HÃ¡Â»Âc
+📋 Link Học
                         </Button>
                         <Link to={`/teacher/vocabulary/${lesson.vocabularySetId}`}>
                           <Button variant="ghost" size="sm" className="text-xs">
-                            Xem chi tiÃ¡ÂºÂ¿t
+                            Xem chi tiết
                           </Button>
                         </Link>
                       </div>
@@ -612,29 +614,29 @@ export const TaClassDetailPage: React.FC = () => {
           ) : (
             <div className="text-center py-16 bg-surface rounded-2xl border border-surface-hover p-8">
               <div className="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-xl mb-3">
-                Ã°Å¸â€œÅ¡
+                📚
               </div>
-              <h3 className="text-base font-bold text-gray-900 mb-1">LÃ¡Â»â€ºp chÃ†Â°a cÃƒÂ³ bÃƒÂ i hÃ¡Â»Âc nÃƒÂ o</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-1">Lớp chưa có bài học nào</h3>
               <p className="text-xs text-gray-500 max-w-sm mx-auto mb-5">
-                GÃƒÂ¡n cÃƒÂ¡c bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng Ã„â€˜ÃƒÂ£ soÃ¡ÂºÂ¡n vÃƒÂ o lÃ¡Â»â€ºp nÃƒÂ y Ã„â€˜Ã¡Â»Æ’ hÃ¡Â»Âc viÃƒÂªn cÃƒÂ³ thÃ¡Â»Æ’ vÃƒÂ o hÃ¡Â»Âc vÃƒÂ  luyÃ¡Â»â€¡n tÃ¡ÂºÂ­p.
+                Gán các bộ từ vựng đã soạn vào lớp này để học viên có thể vào học và luyện tập.
               </p>
-              <Button size="sm" onClick={openAddLessonModal}>+ GÃƒÂ¡n bÃƒÂ i hÃ¡Â»Âc Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn</Button>
+              <Button size="sm" onClick={openAddLessonModal}>+ Gán bài học vào lớp</Button>
             </div>
           )}
         </div>
       )}
 
-      {/* TAB 2: THÃƒâ‚¬NH VIÃƒÅ N */}
+      {/* TAB 2: THÀNH VIÊN */}
       {activeTab === 'members' && (
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Danh sÃƒÂ¡ch hÃ¡Â»Âc sinh</h2>
-              <p className="text-xs text-gray-400 mt-0.5">ThÃƒÂªm hÃ¡Â»Âc sinh khÃƒÂ´ng cÃ¡ÂºÂ§n tÃƒÂ i khoÃ¡ÂºÂ£n bÃ¡ÂºÂ±ng sÃ¡Â»â€˜ Ã„â€˜iÃ¡Â»â€¡n thoÃ¡ÂºÂ¡i.</p>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Danh sách học sinh</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Thêm học sinh không cần tài khoản bằng số điện thoại.</p>
             </div>
           </div>
           
-          <div className="mb-6"><StudentSearchDropdown classId={parseInt(id!)} onSelect={handleSelectExistingStudent} onAddNoAccount={handleAddNoAccountStudent} isAdding={isAddingStudent} /></div>
+          <div className="mb-6">📝</div>
 
           {cls.members.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -646,7 +648,7 @@ export const TaClassDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-900">{m.fullName}</p>
-                      <p className="text-xs text-gray-500">{m.phone || 'ChÃ†Â°a cÃƒÂ³ SDT'}</p>
+                      <p className="text-xs text-gray-500">{m.phone || 'Chưa có SĐT'}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -655,7 +657,7 @@ export const TaClassDetailPage: React.FC = () => {
     onClick={() => handleRemoveStudent(m.studentProfileId, m.fullName)}
     className="text-xs text-red-600 hover:text-red-700 font-medium"
   >
-    XÃ³a khá»i lá»›p
+    Xóa khỏi lớp
   </button>
 </div>
                 </div>
@@ -663,15 +665,15 @@ export const TaClassDetailPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12 border-2 border-dashed border-surface-hover rounded-xl">
-              <p className="text-sm text-gray-500 mb-2">ChÃ†Â°a cÃƒÂ³ hÃ¡Â»Âc sinh nÃƒÂ o tham gia lÃ¡Â»â€ºp nÃƒÂ y</p>
+              <p className="text-sm text-gray-500 mb-2">Chưa có học sinh nào tham gia lớp này</p>
               <p className="text-xs text-gray-400 max-w-md mx-auto mb-4">
-                BÃ¡ÂºÂ¡n chÃ¡Â»â€° cÃ¡ÂºÂ§n gÃ¡Â»Â­i link cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh cÃ¡Â»Â§a lÃ¡Â»â€ºp cho hÃ¡Â»Âc viÃƒÂªn. Khi hÃ¡Â»Âc viÃƒÂªn truy cÃ¡ÂºÂ­p, hÃ¡Â»Â sÃ¡ÂºÂ½ thÃ¡ÂºÂ¥y Ã„â€˜Ã¡ÂºÂ§y Ã„â€˜Ã¡Â»Â§ danh mÃ¡Â»Â¥c bÃƒÂ i hÃ¡Â»Âc.
+                Bạn chỉ cần gửi link cố định của lớp cho học viên. Khi học viên truy cập, họ sẽ thấy đầy đủ danh mục bài học.
               </p>
               <button
                 onClick={handleCopyLink}
                 className="px-4 py-2 bg-brand-light text-brand-text border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
               >
-                {copiedLink ? 'Ã¢Å“â€œ Ã„ÂÃƒÂ£ copy link cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh' : 'Ã°Å¸â€œâ€¹ Copy link cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh gÃ¡Â»Â­i hÃ¡Â»Âc viÃƒÂªn'}
+                {copiedLink ? '✓ Đã copy link cố định' : '📋 Copy link cố định gửi học viên'}
               </button>
             </div>
           )}
@@ -683,22 +685,22 @@ export const TaClassDetailPage: React.FC = () => {
         <div className="space-y-6">
           <Card className="p-6">
             <div className="mb-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">TÃ¡ÂºÂ¡o buÃ¡Â»â€¢i hÃ¡Â»Âc mÃ¡Â»â€ºi</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Tạo buổi học mới</h2>
             </div>
             <form onSubmit={handleCreateSession} className="flex flex-col sm:flex-row gap-3">
               <Input type="date" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)} required />
-              <Input placeholder="TiÃƒÂªu Ã„â€˜Ã¡Â»Â (VD: Lesson 1)" value={newSessionTitle} onChange={e => setNewSessionTitle(e.target.value)} />
+              <Input placeholder="Tiêu đề (Ví dụ: Buổi 1)" value={newSessionTitle} onChange={e => setNewSessionTitle(e.target.value)} />
               <select 
                 className="flex h-10 w-full rounded-md border border-gray-300 bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={newSessionTestId} 
                 onChange={e => setNewSessionTestId(e.target.value)}
               >
-                <option value="">-- KhÃƒÂ´ng giao bÃƒÂ i tÃ¡ÂºÂ­p --</option>
+                <option value="">-- Không giao bài tập --</option>
                 {classTests.map(t => (
                   <option key={t.id} value={t.id}>{t.title}</option>
                 ))}
               </select>
-              <Button type="submit" loading={isCreatingSession}>TÃ¡ÂºÂ¡o</Button>
+              <Button type="submit" loading={isCreatingSession}>Tạo</Button>
             </form>
           </Card>
 
@@ -706,7 +708,7 @@ export const TaClassDetailPage: React.FC = () => {
             <Card key={session.id} className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900">{session.title || 'BuÃ¡Â»â€¢i hÃ¡Â»Âc'}</h3>
+                  <h3 className="font-bold text-lg text-gray-900">{session.title || 'Buổi học'}</h3>
                   <p className="text-sm text-gray-500">{new Date(session.sessionDate).toLocaleDateString('vi-VN')}</p>
                 </div>
               </div>
@@ -715,9 +717,9 @@ export const TaClassDetailPage: React.FC = () => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-surface-hover">
-                      <th className="py-2 text-sm text-gray-500 font-bold">HÃ¡Â»Âc sinh</th>
-                      <th className="py-2 text-sm text-gray-500 font-bold">Ã„ÂiÃ¡Â»Æ’m danh</th>
-                      <th className="py-2 text-sm text-gray-500 font-bold text-right">BÃƒÂ i tÃ¡ÂºÂ­p Ã„ÂÃƒÂ£ lÃƒÂ m</th>
+                      <th className="py-2 text-sm text-gray-500 font-bold">Học sinh</th>
+                      <th className="py-2 text-sm text-gray-500 font-bold">Điểm danh</th>
+                      <th className="py-2 text-sm text-gray-500 font-bold text-right">Đã làm</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -728,8 +730,8 @@ export const TaClassDetailPage: React.FC = () => {
                       return (
                         <tr key={member.id} className="hover:bg-surface-muted transition-colors">
                           <td className="py-3">
-                            <div className="font-bold text-gray-900">{member.fullName}</div>
-                            <div className="text-xs text-gray-500">{member.phone || 'ChÃ†Â°a cÃƒÂ³ SÃ„ÂT'}</div>
+                            <div className="font-bold text-gray-900">📝</div>
+                            <div className="text-xs text-gray-500">📝</div>
                           </td>
                           <td className="py-3">
                             <div className="flex gap-2">
@@ -737,33 +739,33 @@ export const TaClassDetailPage: React.FC = () => {
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'PRESENT')}
                                 className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'PRESENT' ? 'bg-brand-light text-brand-text border border-brand-light' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
-                                CÃƒÂ³ mÃ¡ÂºÂ·t
+                                Có mặt
                               </button>
                               <button
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'ABSENT')}
                                 className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ABSENT' ? 'bg-incorrect-bg text-incorrect-text border border-incorrect-bg' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
-                                VÃ¡ÂºÂ¯ng
+                                Vắng
                               </button>
                               <button
                                 onClick={() => handleUpdateAttendance(session.id, member.id, 'ONLINE')}
                                 className={`px-3 py-1 rounded text-xs font-bold transition-colors ${status === 'ONLINE' ? 'bg-writing-bg text-writing-text border border-writing-bg' : 'bg-surface border border-surface-hover text-gray-500 hover:bg-surface-muted'}`}
                               >
-                                HÃ¡Â»Âc online
+                                Học online
                               </button>
                             </div>
                           </td>
                           <td className="py-3 text-right">
-                            {session.activities.length === 0 && <span className="text-xs text-gray-400">KhÃƒÂ´ng cÃƒÂ³</span>}
+                            {session.activities.length === 0 && <span className="text-xs text-gray-400">Không có</span>}
                             {session.activities.map(act => {
                               const isCompleted = act.completedEnrollmentIds.includes(member.id);
                               return (
                                 <div key={act.testId} className="text-xs flex flex-col items-end gap-1 mb-2">
                                   <span className="font-medium text-gray-700">{act.title}</span>
                                   {isCompleted ? (
-                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Ã„ÂÃƒÂ£ lÃƒÂ m</span>
+                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Đã làm</span>
                                   ) : (
-                                    <span className="bg-surface-hover text-gray-500 px-2 py-0.5 rounded">ChÃ†Â°a lÃƒÂ m</span>
+                                    <span className="bg-surface-hover text-gray-500 px-2 py-0.5 rounded">Đã làm</span>
                                   )}
                                 </div>
                               )
@@ -780,16 +782,16 @@ export const TaClassDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: BÃƒâ‚¬I KIÃ¡Â»â€šM TRA */}
+      {/* TAB 3: BÀI KIỂM TRA */}
       {activeTab === 'results' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">BÃƒÂ i kiÃ¡Â»Æ’m tra cÃ¡Â»Â§a lÃ¡Â»â€ºp</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Danh sÃƒÂ¡ch cÃƒÂ¡c bÃƒÂ i kiÃ¡Â»Æ’m tra Ã„â€˜Ã†Â°Ã¡Â»Â£c gÃƒÂ¡n cho lÃ¡Â»â€ºp nÃƒÂ y.</p>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bài kiểm tra của lớp</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Danh sách các bài kiểm tra được gán cho lớp này.</p>
             </div>
             <Link to="/teacher/tests/new">
-              <Button size="sm" variant="secondary" className="font-bold">+ TÃ¡ÂºÂ¡o bÃƒÂ i kiÃ¡Â»Æ’m tra</Button>
+              <Button size="sm" variant="secondary" className="font-bold">+ Tạo bài kiểm tra</Button>
             </Link>
           </div>
 
@@ -804,12 +806,12 @@ export const TaClassDetailPage: React.FC = () => {
                     <p className="text-xs text-gray-500 mb-3 line-clamp-1">{test.description}</p>
                     <div className="space-y-1.5 text-xs text-gray-600 mb-4 border-y border-surface-hover py-3">
                       <div className="flex justify-between">
-                        <span>SÃ¡Â»â€˜ hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng:</span>
+                        <span>Số hoạt động:</span>
                         <span className="font-bold">{test.enabledTypes.length}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>SÃ¡Â»â€˜ lÃ†Â°Ã¡Â»Â£t lÃƒÂ m:</span>
-                        <span className="font-bold text-gray-900">{test.attemptCount} lÃ†Â°Ã¡Â»Â£t</span>
+                        <span>Số lượt làm:</span>
+                        <span className="font-bold text-gray-900">{test.attemptCount} lượt</span>
                       </div>
                     </div>
                   </div>
@@ -823,21 +825,21 @@ export const TaClassDetailPage: React.FC = () => {
                       onClick={() => {
                         const link = `${window.location.origin}/test/${test.publicCode}`
                         navigator.clipboard.writeText(link)
-                        alert('Ã„ÂÃƒÂ£ copy link bÃƒÂ i kiÃ¡Â»Æ’m tra!')
+                        alert('Đã copy link bài kiểm tra!')
                       }}
                     >
-                      Ã°Å¸â€œâ€¹ Copy Link KiÃ¡Â»Æ’m Tra
+📋 Copy Link Kiểm Tra
                     </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     <Link to={`/teacher/tests/${test.id}`} className="flex-1">
                       <Button variant="outline" size="sm" fullWidth>
-                        Xem bÃƒÂ i
+                        Xem bài
                       </Button>
                     </Link>
                     <Link to={`/teacher/tests/${test.id}/results`} className="flex-1">
                       <Button variant="primary" size="sm" fullWidth>
-                        KÃ¡ÂºÂ¿t quÃ¡ÂºÂ£
+                        Kết quả
                       </Button>
                     </Link>
                   </div>
@@ -846,10 +848,10 @@ export const TaClassDetailPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-16 border-2 border-dashed border-surface-hover rounded-xl bg-surface">
-              <div className="text-3xl mb-3">Ã°Å¸â€œÂ</div>
-              <p className="text-sm font-bold text-gray-700 mb-1">LÃ¡Â»â€ºp chÃ†Â°a cÃƒÂ³ bÃƒÂ i kiÃ¡Â»Æ’m tra</p>
+              <div className="text-3xl mb-3">📝</div>
+              <p className="text-sm font-bold text-gray-700 mb-1">Lớp chưa có bài kiểm tra</p>
               <p className="text-xs text-gray-400 max-w-sm mx-auto mb-4">
-                ChÃ†Â°a cÃƒÂ³ bÃƒÂ i kiÃ¡Â»Æ’m tra nÃƒÂ o Ã„â€˜Ã†Â°Ã¡Â»Â£c gÃƒÂ¡n cho lÃ¡Â»â€ºp nÃƒÂ y.
+⚙️ Cài đặtra nào được gán cho lớp này.
               </p>
             </div>
           )}

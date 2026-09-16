@@ -77,7 +77,7 @@ public class ClassController : ControllerBase
                     .ThenInclude(vs => vs.Items)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c." });
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
 
         return Ok(new ClassDto
         {
@@ -181,7 +181,7 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
 
         cls.Name = dto.Name.Trim();
         if (!string.IsNullOrWhiteSpace(dto.Code))
@@ -193,7 +193,7 @@ public class ClassController : ControllerBase
 
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃƒÂ´ng tin lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng." });
+        return Ok(new { message = "Cập nhật thông tin lớp thành công." });
     }
 
     [HttpDelete("{id}")]
@@ -206,13 +206,13 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
 
         cls.IsArchived = true;
         cls.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Ã„ÂÃƒÂ£ xÃƒÂ³a lÃ¡Â»â€ºp hÃ¡Â»Âc thÃƒÂ nh cÃƒÂ´ng." });
+        return Ok(new { message = "Đã xóa lớp học thành công." });
     }
 
     [HttpPost("{id}/lessons")]
@@ -225,20 +225,20 @@ public class ClassController : ControllerBase
             .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (cls == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y lÃ¡Â»â€ºp hÃ¡Â»Âc." });
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
 
         var set = await _db.VocabularySets
             .Where(s => s.Id == dto.VocabularySetId && s.TeacherId == teacherId && !s.IsArchived)
             .FirstOrDefaultAsync();
 
-        if (set == null) return BadRequest(new { message = "BÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡ hoÃ¡ÂºÂ·c khÃƒÂ´ng thuÃ¡Â»â„¢c quyÃ¡Â»Ân sÃ¡Â»Å¸ hÃ¡Â»Â¯u cÃ¡Â»Â§a bÃ¡ÂºÂ¡n." });
+        if (set == null) return BadRequest(new { message = "Bộ từ vựng không hợp lệ hoặc không thuộc quyền sở hữu của bạn." });
 
         var alreadyAssigned = await _db.ClassLessons
             .AnyAsync(l => l.ClassId == id && l.VocabularySetId == dto.VocabularySetId);
 
         if (alreadyAssigned)
         {
-            return BadRequest(new { message = "BÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c thÃƒÂªm vÃƒÂ o lÃ¡Â»â€ºp hÃ¡Â»Âc." });
+            return BadRequest(new { message = "Bộ từ vựng này đã được thêm vào lớp học." });
         }
 
         var maxOrder = await _db.ClassLessons
@@ -259,7 +259,7 @@ public class ClassController : ControllerBase
         _db.ClassLessons.Add(lesson);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "ThÃƒÂªm bÃ¡Â»â„¢ tÃ¡Â»Â« vÃ¡Â»Â±ng vÃƒÂ o lÃ¡Â»â€ºp thÃƒÂ nh cÃƒÂ´ng." });
+        return Ok(new { message = "Thêm bộ từ vựng vào lớp thành công." });
     }
 
     [HttpDelete("{id}/lessons/{lessonId}")]
@@ -272,12 +272,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
+        if (lesson == null) return NotFound(new { message = "Không tìm thấy bài học trong lớp." });
 
         _db.ClassLessons.Remove(lesson);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Ã„ÂÃƒÂ£ gÃ¡Â»Â¡ bÃƒÂ i hÃ¡Â»Âc khÃ¡Â»Âi lÃ¡Â»â€ºp." });
+        return Ok(new { message = "Đã gỡ bài học khỏi lớp." });
     }
 
     [HttpPut("{id}/lessons/{lessonId}/pin")]
@@ -290,12 +290,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
+        if (lesson == null) return NotFound(new { message = "Không tìm thấy bài học trong lớp." });
 
         lesson.IsPinned = !lesson.IsPinned;
         await _db.SaveChangesAsync();
 
-        return Ok(new { isPinned = lesson.IsPinned, message = lesson.IsPinned ? "Ã„ÂÃƒÂ£ ghim bÃƒÂ i hÃ¡Â»Âc." : "Ã„ÂÃƒÂ£ bÃ¡Â»Â ghim bÃƒÂ i hÃ¡Â»Âc." });
+        return Ok(new { isPinned = lesson.IsPinned, message = lesson.IsPinned ? "Đã ghim bài học." : "Đã bỏ ghim bài học." });
     }
 
     [HttpPut("{id}/lessons/{lessonId}/visibility")]
@@ -308,12 +308,12 @@ public class ClassController : ControllerBase
             .Include(l => l.Class)
             .FirstOrDefaultAsync(l => l.Id == lessonId && l.ClassId == id && l.Class.TeacherId == teacherId);
 
-        if (lesson == null) return NotFound(new { message = "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y bÃƒÂ i hÃ¡Â»Âc trong lÃ¡Â»â€ºp." });
+        if (lesson == null) return NotFound(new { message = "Không tìm thấy bài học trong lớp." });
 
         lesson.IsHidden = !lesson.IsHidden;
         await _db.SaveChangesAsync();
 
-        return Ok(new { isHidden = lesson.IsHidden, message = lesson.IsHidden ? "Ã„ÂÃƒÂ£ Ã¡ÂºÂ©n bÃƒÂ i hÃ¡Â»Âc khÃ¡Â»Âi hÃ¡Â»Âc sinh." : "Ã„ÂÃƒÂ£ hiÃ¡Â»Æ’n thÃ¡Â»â€¹ bÃƒÂ i hÃ¡Â»Âc." });
+        return Ok(new { isHidden = lesson.IsHidden, message = lesson.IsHidden ? "Đã ẩn bài học." : "Đã hiển thị bài học." });
     }
     [HttpGet("{id}/enrollments")]
     public async Task<IActionResult> GetEnrollments(int id)
@@ -479,7 +479,7 @@ public class ClassController : ControllerBase
             if (normalizedPhone.StartsWith("0"))
                 normalizedPhone = "+84" + normalizedPhone.Substring(1);
             else
-                normalizedPhone = "+" + normalizedPhone;
+                return BadRequest(new { message = "Học sinh này đã có trong lớp." });
         }
 
         var profile = await _db.StudentProfiles.FirstOrDefaultAsync(sp => sp.NormalizedPhone == normalizedPhone);
@@ -662,17 +662,17 @@ public class ClassController : ControllerBase
         var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
         
-        if (user == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng vá»›i email nÃ y." });
+        if (user == null) return NotFound(new { message = "Không tìm thấy người dùng với email này." });
         
         // Ensure user is TA
         var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
         var isTa = await userManager.IsInRoleAsync(user, "TA");
-        if (!isTa) return BadRequest(new { message = "NgÆ°á»i dÃ¹ng nÃ y khÃ´ng cÃ³ quyá»n Trá»£ giáº£ng (TA)." });
+        if (!isTa) return BadRequest(new { message = "Người dùng này không có quyền Trợ giảng (TA)." });
 
         var alreadyAssigned = await _db.ClassStaffAssignments
             .AnyAsync(csa => csa.ClassId == id && csa.UserId == user.Id && csa.StaffRole == "TA");
             
-        if (alreadyAssigned) return BadRequest(new { message = "Trá»£ giáº£ng nÃ y Ä‘Ã£ Ä‘Æ°á»£c gÃ¡n vÃ o lá»›p." });
+        if (alreadyAssigned) return BadRequest(new { message = "Trợ giảng này đã được gán vào lớp." });
 
         _db.ClassStaffAssignments.Add(new ClassStaffAssignment
         {
@@ -682,7 +682,7 @@ public class ClassController : ControllerBase
         });
         
         await _db.SaveChangesAsync();
-        return Ok(new { message = "ÄÃ£ gÃ¡n trá»£ giáº£ng thÃ nh cÃ´ng." });
+        return Ok(new { message = "Đã gán trợ giảng thành công." });
     }
 
     [HttpDelete("{id}/tas/{userId}")]
@@ -693,12 +693,12 @@ public class ClassController : ControllerBase
         var assignment = await _db.ClassStaffAssignments
             .FirstOrDefaultAsync(csa => csa.ClassId == id && csa.UserId == userId && csa.StaffRole == "TA");
             
-        if (assignment == null) return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y trá»£ giáº£ng nÃ y trong lá»›p." });
+        if (assignment == null) return NotFound(new { message = "Không tìm thấy trợ giảng này trong lớp." });
         
         _db.ClassStaffAssignments.Remove(assignment);
         await _db.SaveChangesAsync();
         
-        return Ok(new { message = "ÄÃ£ gá»¡ trá»£ giáº£ng khá»i lá»›p." });
+        return Ok(new { message = "Đã gỡ trợ giảng khỏi lớp." });
     }
 }
 

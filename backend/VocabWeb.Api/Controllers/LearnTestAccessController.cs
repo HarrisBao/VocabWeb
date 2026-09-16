@@ -36,7 +36,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test == null)
         {
-            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i kiá»ƒm tra hoáº·c bÃ i Ä‘Ã£ bá»‹ Ä‘Ã³ng." });
+            return NotFound(new { message = "Không tìm thấy bài kiểm tra hoặc bài đã bị đóng." });
         }
 
         return Ok(new PublicTestMetadataDto
@@ -63,13 +63,13 @@ public class LearnTestAccessController : ControllerBase
             .FirstOrDefaultAsync(t => t.PublicCode == publicCode && !t.IsArchived);
 
         if (test == null)
-            return NotFound(new { message = "KhÃ´ng tÃ¬m tháº¥y bÃ i kiá»ƒm tra." });
+            return NotFound(new { message = "Không tìm thấy bài kiểm tra." });
 
         if (test.StartDate.HasValue && DateTime.UtcNow < test.StartDate.Value)
-            return BadRequest(new { message = "BÃ i kiá»ƒm tra chÆ°a báº¯t Ä‘áº§u." });
+            return BadRequest(new { message = "Bài kiểm tra chưa bắt đầu." });
 
         if (test.Deadline.HasValue && DateTime.UtcNow > test.Deadline.Value)
-            return BadRequest(new { message = "BÃ i kiá»ƒm tra Ä‘Ã£ káº¿t thÃºc." });
+            return BadRequest(new { message = "Bài kiểm tra đã kết thúc." });
 
         // Verify Identity
         bool isLoggedIn = User.Identity?.IsAuthenticated ?? false;
@@ -88,7 +88,7 @@ public class LearnTestAccessController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(dto.GuestDisplayName) || string.IsNullOrWhiteSpace(dto.GuestSessionId))
             {
-                return BadRequest(new { message = "Vui lÃ²ng nháº­p tÃªn cá»§a báº¡n Ä‘á»ƒ lÃ m bÃ i." });
+                return BadRequest(new { message = "Vui lòng nhập tên của bạn để làm bài." });
             }
             participantName = dto.GuestDisplayName.Trim();
         }
@@ -98,7 +98,7 @@ public class LearnTestAccessController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(dto.AccessCode))
             {
-                return BadRequest(new { message = "MÃ£ vÃ o bÃ i chÆ°a Ä‘Ãºng." }); // Keep message vague
+                return BadRequest(new { message = "Mã vào bài chưa đúng." }); // Keep message vague
             }
 
             var hasher = new PasswordHasher<Test>();
@@ -106,7 +106,7 @@ public class LearnTestAccessController : ControllerBase
 
             if (result != PasswordVerificationResult.Success)
             {
-                return BadRequest(new { message = "MÃ£ vÃ o bÃ i chÆ°a Ä‘Ãºng." });
+                return BadRequest(new { message = "Mã vào bài chưa đúng." });
             }
         }
 
@@ -127,7 +127,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test.MaxAttempts.HasValue && attemptsCount >= test.MaxAttempts.Value)
         {
-            return BadRequest(new { message = "Báº¡n Ä‘Ã£ sá»­ dá»¥ng háº¿t sá»‘ lÆ°á»£t lÃ m bÃ i." });
+            return BadRequest(new { message = "Bạn đã sử dụng hết số lượt làm bài." });
         }
 
         // Issue Access Ticket
@@ -158,7 +158,7 @@ public class LearnTestAccessController : ControllerBase
     public async Task<ActionResult<StartAttemptResponseDto>> StartAttempt(string publicCode, [FromHeader(Name = "X-Access-Ticket")] string ticket)
     {
         if (string.IsNullOrEmpty(ticket))
-            return Unauthorized(new { message = "Thiáº¿u thÃ´ng tin xÃ¡c thá»±c phiÃªn lÃ m bÃ i." });
+            return Unauthorized(new { message = "Thiếu thông tin xác thực phiên làm bài." });
 
         AccessTicketData? ticketData;
         try
@@ -168,12 +168,12 @@ public class LearnTestAccessController : ControllerBase
         }
         catch
         {
-            return Unauthorized(new { message = "PhiÃªn lÃ m bÃ i khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n." });
+            return Unauthorized(new { message = "Phiên làm bài không hợp lệ hoặc đã hết hạn." });
         }
 
         if (ticketData == null || ticketData.Expiry < DateTime.UtcNow)
         {
-            return Unauthorized(new { message = "PhiÃªn lÃ m bÃ i Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i." });
+            return Unauthorized(new { message = "Phiên làm bài đã hết hạn. Vui lòng đăng nhập lại." });
         }
 
         var test = await _context.Tests
@@ -183,10 +183,10 @@ public class LearnTestAccessController : ControllerBase
             .FirstOrDefaultAsync(t => t.PublicCode == publicCode && t.Id == ticketData.TestId && !t.IsArchived);
 
         if (test == null)
-            return NotFound(new { message = "BÃ i kiá»ƒm tra khÃ´ng há»£p lá»‡." });
+            return NotFound(new { message = "Bài kiểm tra không hợp lệ." });
 
         if (test.Deadline.HasValue && DateTime.UtcNow > test.Deadline.Value)
-            return BadRequest(new { message = "BÃ i kiá»ƒm tra Ä‘Ã£ káº¿t thÃºc." });
+            return BadRequest(new { message = "Bài kiểm tra đã kết thúc." });
 
         // Calculate attempts again to prevent race condition
         int attemptsCount = 0;
@@ -205,7 +205,7 @@ public class LearnTestAccessController : ControllerBase
 
         if (test.MaxAttempts.HasValue && attemptsCount >= test.MaxAttempts.Value)
         {
-            return BadRequest(new { message = "Báº¡n Ä‘Ã£ sá»­ dá»¥ng háº¿t sá»‘ lÆ°á»£t lÃ m bÃ i." });
+            return BadRequest(new { message = "Bạn đã sử dụng hết số lượt làm bài." });
         }
 
         var enabledTypes = test.EnabledTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
