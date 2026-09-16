@@ -38,21 +38,55 @@ export const ClassroomActivityPage: React.FC = () => {
   // Grid/Flip state
   const [revealedIds, setRevealedIds] = useState<number[]>([])
 
+  const [isLoadingSources, setIsLoadingSources] = useState(true)
+  const [isLoadingWords, setIsLoadingWords] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
-    api.get(`/teacher/class/${id}/classroom-activity-sources`).then(res => {
-      setSources(res.data)
-      if (res.data.length > 0) {
-        setSelectedSource(res.data[0].id)
-      }
-    })
+    setIsLoadingSources(true)
+    api.get<SourceItem[]>(`/teacher/class/${id}/classroom-activity-sources`)
+      .then(data => {
+        const safeData = Array.isArray(data) ? data : []
+        setSources(safeData)
+        if (safeData.length > 0) {
+          setSelectedSource(safeData[0].id)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load sources:', err)
+        setError('Không thể tải danh sách nguồn từ vựng.')
+        setSources([])
+      })
+      .finally(() => {
+        setIsLoadingSources(false)
+      })
   }, [id])
 
   useEffect(() => {
-    if (!selectedSource) return
-    api.get(`/teacher/class/${id}/classroom-activity-words?sourceId=${selectedSource}`).then(res => {
-      setWords(res.data)
-      resetPool(res.data)
-    })
+    if (!selectedSource) {
+      setWords([])
+      resetPool([])
+      return
+    }
+    
+    setIsLoadingWords(true)
+    api.get<WordItem[]>(`/teacher/class/${id}/classroom-activity-words?sourceId=${selectedSource}`)
+      .then(data => {
+        // Deduplicate by id just in case
+        const safeData = Array.isArray(data) ? data : []
+        const uniqueWords = Array.from(new Map(safeData.map(w => [w.id, w])).values())
+        setWords(uniqueWords)
+        resetPool(uniqueWords)
+      })
+      .catch(err => {
+        console.error('Failed to load words:', err)
+        setError('Không thể tải danh sách từ vựng.')
+        setWords([])
+        resetPool([])
+      })
+      .finally(() => {
+        setIsLoadingWords(false)
+      })
   }, [id, selectedSource])
 
   const resetPool = (wordList: WordItem[] = words) => {
@@ -122,8 +156,14 @@ export const ClassroomActivityPage: React.FC = () => {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Hoạt động từ vựng trên lớp</h1>
         </div>
-        <Button onClick={() => resetPool()} variant="outline">🔄 Làm mới (Reset)</Button>
+        <Button onClick={() => resetPool()} variant="outline" disabled={isLoadingSources || isLoadingWords || words.length === 0}>🔄 Làm mới (Reset)</Button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-8">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-6 items-center mb-8">
         <div>
@@ -132,7 +172,9 @@ export const ClassroomActivityPage: React.FC = () => {
             value={selectedSource} 
             onChange={e => setSelectedSource(e.target.value)}
             className="border-gray-200 rounded-lg text-sm"
+            disabled={isLoadingSources || sources.length === 0}
           >
+            {sources.length === 0 && <option value="">Không có nguồn</option>}
             {sources.map(s => (
               <option key={s.id} value={s.id}>{s.title} ({s.wordCount} từ)</option>
             ))}
@@ -176,8 +218,16 @@ export const ClassroomActivityPage: React.FC = () => {
       </div>
 
       <div className="flex-1 bg-surface-muted rounded-2xl border border-gray-200 p-8 flex flex-col items-center justify-center">
-        {words.length === 0 ? (
+        {isLoadingSources || isLoadingWords ? (
           <Spinner />
+        ) : sources.length === 0 ? (
+          <div className="text-center text-gray-500">
+            <p className="text-xl font-bold mb-4">Chưa có bộ từ để sử dụng cho hoạt động trên lớp.</p>
+          </div>
+        ) : words.length === 0 ? (
+          <div className="text-center text-gray-500">
+            <p className="text-xl font-bold mb-4">Chưa có từ vựng trong bộ này.</p>
+          </div>
         ) : availablePool.length === 0 && currentDisplay.length === 0 && activityType !== 'flip' && activityType !== 'grid' ? (
           <div className="text-center text-gray-500">
             <p className="text-xl font-bold mb-4">Đã sử dụng hết bộ từ.</p>
