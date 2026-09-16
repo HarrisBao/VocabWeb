@@ -26,12 +26,12 @@ export const TeacherReadingEditPage: React.FC = () => {
     try {
       setLoading(true)
       const res = await api.get(`/teacher/class/${id}/reading/${readingId}`)
-      setData(res.data)
-      setTitle(res.data.title || '')
-      setDuration(res.data.durationMinutes || 60)
+      setData(res)
+      setTitle(res.title || '')
+      setDuration(res.durationMinutes || 60)
 
       const newKeys: Record<number, string[]> = {}
-      res.data.questionGroups?.forEach((g: any) => {
+      res.questionGroups?.forEach((g: any) => {
         g.questions?.forEach((q: any) => {
           newKeys[q.id] = q.acceptedAnswers?.map((a: any) => a.answer) || []
           if (newKeys[q.id].length === 0) newKeys[q.id] = ['']
@@ -140,11 +140,7 @@ export const TeacherReadingEditPage: React.FC = () => {
       alert('Đã xuất bản bài tập thành công!')
       navigate(`/teacher/classes/${id}`)
     } catch (e: any) {
-      if (e.response?.data) {
-         alert(typeof e.response.data === 'string' ? e.response.data : e.response.data.title || "Lỗi khi xuất bản")
-      } else {
-         alert('Lỗi khi xuất bản. Vui lòng kiểm tra lại dữ liệu.')
-      }
+      alert(e.message || 'Lỗi khi xuất bản. Vui lòng kiểm tra lại dữ liệu.');
     }
   }
 

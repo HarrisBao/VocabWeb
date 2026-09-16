@@ -43,7 +43,7 @@ export const TeacherReadingListPage: React.FC = () => {
     try {
       setLoading(true)
       const res = await api.get('/teacher/reading')
-      setAssignments(res.data)
+      setAssignments(Array.isArray(res) ? res : [])
     } catch (e) {
       console.error(e)
     } finally {
@@ -54,7 +54,7 @@ export const TeacherReadingListPage: React.FC = () => {
   const fetchClasses = async () => {
     try {
       const res = await api.get('/teacher/class')
-      setClasses(res.data)
+      setClasses(Array.isArray(res) ? res : [])
     } catch (e) {
       console.error(e)
     }
@@ -78,7 +78,7 @@ export const TeacherReadingListPage: React.FC = () => {
         durationMinutes: newDuration
       })
       // Redirect to the edit page which belongs to the class route
-      navigate(`/teacher/classes/${selectedClassId}/reading/${res.data.id}/edit`)
+      navigate(`/teacher/classes/${selectedClassId}/reading/${res.id}/edit`)
     } catch (err) {
       console.error(err)
       alert('Lỗi khi tạo bài Reading.')

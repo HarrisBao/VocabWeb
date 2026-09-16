@@ -25,7 +25,7 @@ export const TeacherReadingTab: React.FC<{ classId: string }> = ({ classId }) =>
     try {
       setLoading(true)
       const res = await api.get(`/teacher/class/${classId}/reading`)
-      setAssignments(res.data)
+      setAssignments(Array.isArray(res) ? res : [])
     } catch (e) {
       console.error(e)
     } finally {
@@ -39,7 +39,7 @@ export const TeacherReadingTab: React.FC<{ classId: string }> = ({ classId }) =>
         title: 'New Reading Assignment',
         durationMinutes: 60
       })
-      navigate(`/teacher/classes/${classId}/reading/${res.data.id}/edit`)
+      navigate(`/teacher/classes/${classId}/reading/${res.id}/edit`)
     } catch (e) {
       console.error(e)
     }

@@ -18,7 +18,7 @@ export const TeacherReadingResultsPage: React.FC = () => {
     try {
       setLoading(true)
       const res = await api.get(`/teacher/class/${id}/reading/${readingId}/attempts`)
-      setAttempts(res.data)
+      setAttempts(Array.isArray(res) ? res : [])
     } catch (e) {
       console.error(e)
     } finally {
