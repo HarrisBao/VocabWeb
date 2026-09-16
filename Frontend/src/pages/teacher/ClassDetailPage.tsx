@@ -131,7 +131,7 @@ export const ClassDetailPage: React.FC = () => {
   const [newSessionDate, setNewSessionDate] = useState('')
   const [newSessionTitle, setNewSessionTitle] = useState('')
   const [newSessionTestId, setNewSessionTestId] = useState<number | ''>('')
-  const [togglingVắngVisibilityId] = useState<number | null>(null)
+  const [togglingVisibilityId, setTogglingVisibilityId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchClassDetails()
@@ -1119,6 +1119,7 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
     </div>
   )
 }
+
 
 
 

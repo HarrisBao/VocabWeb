@@ -125,7 +125,7 @@ export const TaClassDetailPage: React.FC = () => {
   const [newSessionDate, setNewSessionDate] = useState('')
   const [newSessionTitle, setNewSessionTitle] = useState('')
   const [newSessionTestId, setNewSessionTestId] = useState<number | ''>('')
-  const [togglingVắngVisibilityId] = useState<number | null>(null)
+  const [togglingVisibilityId, setTogglingVisibilityId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchClassDetails()
