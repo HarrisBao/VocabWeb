@@ -47,6 +47,31 @@ namespace VocabWeb.Api.Controllers
 
         
 
+        
+        [HttpGet]
+        public async Task<IActionResult> GetClassAssignments(int classId)
+        {
+            if (!await HasAccessToClass(classId)) return Forbid();
+
+            var assignments = await _db.ReadingAssignments
+                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive))
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ClassId,
+                    r.Title,
+                    r.DurationMinutes,
+                    r.Status,
+                    r.CreatedAt,
+                    QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count(),
+                    AssignedClassesCount = r.ClassAssignments.Count(ca => ca.IsActive)
+                })
+                .ToListAsync();
+
+            return Ok(assignments);
+        }
+
         [HttpGet("/api/teacher/reading")]
         public async Task<IActionResult> GetAllTeacherReadings()
         {

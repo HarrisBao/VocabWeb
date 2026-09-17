@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Card, Badge } from '../../components/ui/Card'
@@ -476,27 +476,12 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
         </div>
 
         <div className="flex items-center gap-2">
-          <Link to={`/teacher/classes/${id}/activities`}>
-            <Button size="sm" variant="outline" className="font-bold border-brand text-brand">
-              🎭 Hoạt động trên lớp
-            </Button>
-          </Link>
           <button
             onClick={handleCopyLink}
             className="px-3.5 py-2 rounded-xl border border-surface-hover bg-surface hover:bg-surface-muted text-xs font-bold text-gray-700 shadow-2xs transition-colors flex items-center gap-1.5"
           >
             <span>{copiedLink ? '✓ Đã copy link' : '📋 Copy link cố định'}</span>
           </button>
-
-          {/* TAB 2: READING */}
-        {activeTab === 'reading' && (
-          <TeacherReadingTab classId={id!} />
-        )}
-        {activeTab === 'lessons' && (
-            <Button size="sm" onClick={openAddLessonModal} className="font-bold">
-              + Gỡ
-            </Button>
-          )}
         </div>
       </div>
 
@@ -515,103 +500,126 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
 
       {/* 4 Tabs: [Bài học] [Thành viên] [Kết quả */}
       <div className="border-b border-surface-hover">
-        <nav className="flex space-x-8">
+        <nav className="flex space-x-6 overflow-x-auto min-w-max">
           <button
             onClick={() => setActiveTab('lessons')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'lessons'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-brand text-brand'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
-            <span>📚 Bài học</span>
-              <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.lessons.length}</span>
-            </button>
-                        <button
-              onClick={() => setActiveTab('reading')}
-              className={[
-                'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
-                activeTab === 'reading'
-                  ? 'border-green-600 text-green-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              ].join(' ')}
-            >
-              <span>📖 Reading</span>
-            </button>
+            <span className={activeTab === 'lessons' ? 'text-brand' : 'text-gray-400'}>📚</span>
+            <span>Bài học</span>
+            <span className={[
+              'text-xs px-2 py-0.5 rounded-full font-bold',
+              activeTab === 'lessons' ? 'bg-brand-light text-brand-text' : 'bg-surface-hover text-gray-600'
+            ].join(' ')}>{cls.lessons.length}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reading')}
+            className={[
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'reading'
+                ? 'border-emerald-500 text-emerald-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
+            ].join(' ')}
+          >
+            <span className={activeTab === 'reading' ? 'text-emerald-500' : 'text-gray-400'}>📖</span>
+            <span>Reading</span>
+          </button>
 
           <button
             onClick={() => setActiveTab('members')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'members'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-500 text-blue-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
-            <span>👥 Thành viên</span>
-            <span className="bg-surface-hover text-gray-600 text-xs px-2 py-0.5 rounded-full">
-              {cls.members.length}
-            </span>
+            <span className={activeTab === 'members' ? 'text-blue-500' : 'text-gray-400'}>👥</span>
+            <span>Thành viên</span>
+            <span className={[
+              'text-xs px-2 py-0.5 rounded-full font-bold',
+              activeTab === 'members' ? 'bg-blue-50 text-blue-700' : 'bg-surface-hover text-gray-600'
+            ].join(' ')}>{cls.members.length}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('tas')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'tas'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-purple-500 text-purple-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
-            <span>👥 Trợ giảng</span>
+            <span className={activeTab === 'tas' ? 'text-purple-500' : 'text-gray-400'}>👨‍🏫</span>
+            <span>Trợ giảng</span>
           </button>
 
           <button
             onClick={() => setActiveTab('attendance')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'attendance'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-amber-500 text-amber-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
+            <span className={activeTab === 'attendance' ? 'text-amber-500' : 'text-gray-400'}>✓</span>
             <span>Điểm danh</span>
           </button>
 
           <button
             onClick={() => setActiveTab('results')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'results'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-orange-500 text-orange-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
-            <span>📝 Bài kiểm tra</span>
+            <span className={activeTab === 'results' ? 'text-orange-500' : 'text-gray-400'}>📝</span>
+            <span>Bài kiểm tra</span>
           </button>
 
           <button
             onClick={() => setActiveTab('settings')}
             className={[
-              'pb-3 text-sm font-bold border-b-2 transition-colors',
+              'pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap',
               activeTab === 'settings'
-                ? 'border-green-600 text-green-700'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-slate-600 text-slate-800'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
             ].join(' ')}
           >
-⚙️ Cài đặt
+            <span className={activeTab === 'settings' ? 'text-slate-500' : 'text-gray-400'}>⚙️</span>
+            <span>Cài đặt</span>
           </button>
         </nav>
       </div>
 
       {/* TAB 1: BÀI HỌC */}
-      {/* TAB 2: READING */}
-        {activeTab === 'reading' && (
-          <TeacherReadingTab classId={id!} />
-        )}
-        {activeTab === 'lessons' && (
+      {activeTab === 'lessons' && (
         <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Từ vựng</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to={`/teacher/classes/${id}/activities`}>
+                <Button size="sm" variant="outline" className="font-bold border-brand text-brand">
+                  🎭 Hoạt động trên lớp
+                </Button>
+              </Link>
+              <Button size="sm" onClick={openAddLessonModal} className="font-bold">
+                + Gắn bài học vào lớp
+              </Button>
+            </div>
+          </div>
           {cls.lessons.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {cls.lessons.map((lesson) => (
@@ -725,7 +733,12 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
         </div>
       )}
 
-            {/* TAB 2: THÀNH VIÊN */}
+      {/* TAB 2: READING */}
+      {activeTab === 'reading' && (
+        <TeacherReadingTab classId={id!} />
+      )}
+
+      {/* TAB 3: THÀNH VIÊN */}
       {activeTab === 'members' && (
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
