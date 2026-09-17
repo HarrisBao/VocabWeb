@@ -512,7 +512,7 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
         </div>
       )}
 
-      {/* 4 Tabs: [Bài học] [Thành viên] [Kết quả
+      {/* 4 Tabs: [Bài học] [Thành viên] [Kết quả */}
       <div className="border-b border-surface-hover">
         <nav className="flex space-x-8">
           <button
