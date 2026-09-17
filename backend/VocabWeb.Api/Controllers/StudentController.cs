@@ -76,7 +76,7 @@ public class StudentController : ControllerBase
             Code = cls.Code,
             Description = cls.Description,
             VocabularyCount = cls.Lessons.Count,
-            ReadingCount = await _db.ReadingAssignments.CountAsync(r => r.Status == "PUBLISHED" && r.ClassAssignments.Any(ca => ca.ClassId == id && ca.IsActive)),
+            ReadingCount = await _db.ReadingAssignments.CountAsync(r => r.Status == "READY" && r.ClassAssignments.Any(ca => ca.ClassId == id && ca.IsActive)),
             WritingCount = 0 // Mock for now
         };
 
@@ -135,7 +135,7 @@ public class StudentController : ControllerBase
         if (enrollment == null) return Forbid();
 
         var readings = await _db.ReadingAssignments
-            .Where(r => r.Status == "PUBLISHED" && r.ClassAssignments.Any(ca => ca.ClassId == id && ca.IsActive))
+            .Where(r => r.Status == "READY" && r.ClassAssignments.Any(ca => ca.ClassId == id && ca.IsActive))
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new 
             {

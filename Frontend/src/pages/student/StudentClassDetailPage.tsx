@@ -93,7 +93,7 @@ export const StudentClassDetailPage: React.FC = () => {
     if (activeTab === 'reading' && readings.length === 0 && !readingError) {
       setLoadingReading(true);
       api.get<ReadingAssignment[]>(`/student/classes/${id}/reading`)
-        .then(data => setReadings(data))
+        .then(data => setReadings(Array.isArray(data) ? data : []))
         .catch(e => {
           console.error("Lỗi tải reading", e);
           setReadingError(true);
