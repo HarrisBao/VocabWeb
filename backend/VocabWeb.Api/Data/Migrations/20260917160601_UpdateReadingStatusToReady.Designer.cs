@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VocabWeb.Api.Data;
 
 #nullable disable
 
-namespace VocabWeb.Api.Migrations
+namespace VocabWeb.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260917160601_UpdateReadingStatusToReady")]
+    partial class UpdateReadingStatusToReady
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -281,7 +284,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("VocabularyItemId");
 
-                    b.ToTable("AttemptAnswers", (string)null);
+                    b.ToTable("AttemptAnswers");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.AttendanceRecord", b =>
@@ -317,7 +320,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasIndex("ClassSessionId", "ClassEnrollmentId")
                         .IsUnique();
 
-                    b.ToTable("AttendanceRecords", (string)null);
+                    b.ToTable("AttendanceRecords");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.Class", b =>
@@ -369,7 +372,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("Classes", (string)null);
+                    b.ToTable("Classes");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassEnrollment", b =>
@@ -402,7 +405,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasIndex("ClassId", "StudentProfileId")
                         .IsUnique();
 
-                    b.ToTable("ClassEnrollments", (string)null);
+                    b.ToTable("ClassEnrollments");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassEnrollmentPeriod", b =>
@@ -426,7 +429,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ClassEnrollmentId");
 
-                    b.ToTable("ClassEnrollmentPeriods", (string)null);
+                    b.ToTable("ClassEnrollmentPeriods");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassLesson", b =>
@@ -461,7 +464,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("VocabularySetId");
 
-                    b.ToTable("ClassLessons", (string)null);
+                    b.ToTable("ClassLessons");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassMember", b =>
@@ -488,7 +491,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("ClassMembers", (string)null);
+                    b.ToTable("ClassMembers");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassSession", b =>
@@ -529,7 +532,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("ClassSessions", (string)null);
+                    b.ToTable("ClassSessions");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassSessionTest", b =>
@@ -556,7 +559,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasIndex("ClassSessionId", "TestId")
                         .IsUnique();
 
-                    b.ToTable("ClassSessionTests", (string)null);
+                    b.ToTable("ClassSessionTests");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassSkillSchedule", b =>
@@ -592,7 +595,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ClassId");
 
-                    b.ToTable("ClassSkillSchedules", (string)null);
+                    b.ToTable("ClassSkillSchedules");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassStaffAssignment", b =>
@@ -621,7 +624,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasIndex("ClassId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("ClassStaffAssignments", (string)null);
+                    b.ToTable("ClassStaffAssignments");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassVocabularyReviewSet", b =>
@@ -650,7 +653,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ClassId");
 
-                    b.ToTable("ClassVocabularyReviewSets", (string)null);
+                    b.ToTable("ClassVocabularyReviewSets");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ClassVocabularyReviewSetUnit", b =>
@@ -665,7 +668,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ClassLessonId");
 
-                    b.ToTable("ClassVocabularyReviewSetUnits", (string)null);
+                    b.ToTable("ClassVocabularyReviewSetUnits");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.EnrollmentSkillAssignment", b =>
@@ -719,7 +722,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("TargetClassId");
 
-                    b.ToTable("EnrollmentSkillAssignments", (string)null);
+                    b.ToTable("EnrollmentSkillAssignments");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingAcceptedAnswer", b =>
@@ -744,7 +747,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ReadingQuestionId");
 
-                    b.ToTable("ReadingAcceptedAnswers", (string)null);
+                    b.ToTable("ReadingAcceptedAnswers");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingAssignment", b =>
@@ -785,7 +788,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("ReadingAssignments", (string)null);
+                    b.ToTable("ReadingAssignments");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingAttempt", b =>
@@ -832,7 +835,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ReadingAssignmentId");
 
-                    b.ToTable("ReadingAttempts", (string)null);
+                    b.ToTable("ReadingAttempts");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingAttemptAnswer", b =>
@@ -866,7 +869,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ReadingQuestionId");
 
-                    b.ToTable("ReadingAttemptAnswers", (string)null);
+                    b.ToTable("ReadingAttemptAnswers");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingClassAssignment", b =>
@@ -895,7 +898,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ReadingAssignmentId");
 
-                    b.ToTable("ReadingClassAssignments", (string)null);
+                    b.ToTable("ReadingClassAssignments");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingPassage", b =>
@@ -918,7 +921,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasIndex("ReadingAssignmentId")
                         .IsUnique();
 
-                    b.ToTable("ReadingPassages", (string)null);
+                    b.ToTable("ReadingPassages");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingQuestion", b =>
@@ -951,7 +954,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("QuestionGroupId");
 
-                    b.ToTable("ReadingQuestions", (string)null);
+                    b.ToTable("ReadingQuestions");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.ReadingQuestionGroup", b =>
@@ -1002,7 +1005,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("ReadingAssignmentId");
 
-                    b.ToTable("ReadingQuestionGroups", (string)null);
+                    b.ToTable("ReadingQuestionGroups");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.RefreshToken", b =>
@@ -1043,7 +1046,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.StudentNotification", b =>
@@ -1085,7 +1088,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("StudentProfileId");
 
-                    b.ToTable("StudentNotifications", (string)null);
+                    b.ToTable("StudentNotifications");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.StudentProfile", b =>
@@ -1120,7 +1123,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("StudentProfiles", (string)null);
+                    b.ToTable("StudentProfiles");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.StudentScheduleRequest", b =>
@@ -1183,7 +1186,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("StudentProfileId");
 
-                    b.ToTable("StudentScheduleRequests", (string)null);
+                    b.ToTable("StudentScheduleRequests");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.StudentSessionOverride", b =>
@@ -1225,7 +1228,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("TargetSessionId");
 
-                    b.ToTable("StudentSessionOverrides", (string)null);
+                    b.ToTable("StudentSessionOverrides");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.Test", b =>
@@ -1300,7 +1303,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("VocabularySetId");
 
-                    b.ToTable("Tests", (string)null);
+                    b.ToTable("Tests");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.TestAttempt", b =>
@@ -1376,7 +1379,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("TestId");
 
-                    b.ToTable("TestAttempts", (string)null);
+                    b.ToTable("TestAttempts");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.VocabularyItem", b =>
@@ -1414,7 +1417,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("VocabularySetId");
 
-                    b.ToTable("VocabularyItems", (string)null);
+                    b.ToTable("VocabularyItems");
                 });
 
             modelBuilder.Entity("VocabWeb.Api.Models.VocabularySet", b =>
@@ -1456,7 +1459,7 @@ namespace VocabWeb.Api.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("VocabularySets", (string)null);
+                    b.ToTable("VocabularySets");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

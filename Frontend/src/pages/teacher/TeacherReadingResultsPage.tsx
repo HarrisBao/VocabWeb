@@ -37,7 +37,7 @@ export const TeacherReadingResultsPage: React.FC = () => {
   const fetchResults = async () => {
     try {
       setLoading(true)
-      const res = await api.get(`/teacher/class/${classId}/reading/${readingId}/attempts`)
+      const res = await api.get(`/teacher/reading/${readingId}/attempts?classId=${classId}`)
       const attemptsData: Attempt[] = Array.isArray(res) ? res : []
       
       const groupsMap = new Map<string, StudentGroup>()

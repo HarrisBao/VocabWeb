@@ -51,10 +51,10 @@ namespace VocabWeb.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetClassAssignments(int classId)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignments = await _db.ReadingAssignments
-                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive))
+                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status != "ARCHIVED")
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new
                 {
@@ -64,12 +64,71 @@ namespace VocabWeb.Api.Controllers
                     r.DurationMinutes,
                     r.Status,
                     r.CreatedAt,
+                    r.UpdatedAt,
                     QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count(),
                     AssignedClassesCount = r.ClassAssignments.Count(ca => ca.IsActive)
                 })
                 .ToListAsync();
 
             return Ok(assignments);
+        }
+
+        
+        [HttpPost("/api/teacher/reading")]
+        public async Task<IActionResult> CreateGlobalAssignment([FromBody] CreateOrUpdateReadingDto dto)
+        {
+            var assignment = new ReadingAssignment
+            {
+                Title = dto.Title,
+                DurationMinutes = dto.DurationMinutes,
+                Status = "DRAFT",
+                CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")
+            };
+
+            _db.ReadingAssignments.Add(assignment);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { assignment.Id });
+        }
+
+        [HttpDelete("/api/teacher/reading/{id}")]
+        public async Task<IActionResult> DeleteGlobalAssignment(int id)
+        {
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var assignment = await _db.ReadingAssignments
+                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
+
+            if (assignment == null) return NotFound();
+
+            // Archive it globally
+            assignment.Status = "ARCHIVED"; // Or use another mechanism to hide it. Since there's no IsArchived, let's use Status = "ARCHIVED"
+
+            // Deactivate all class assignments to hide from students
+            var cas = await _db.ReadingClassAssignments.Where(ca => ca.ReadingAssignmentId == id).ToListAsync();
+            foreach (var ca in cas)
+            {
+                ca.IsActive = false;
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpDelete("/api/teacher/class/{classId}/reading/{id}")]
+        public async Task<IActionResult> RemoveClassAssignment(int classId, int id)
+        {
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var assignment = await _db.ReadingClassAssignments
+                .FirstOrDefaultAsync(ca => ca.ReadingAssignmentId == id && ca.ClassId == classId);
+
+            if (assignment != null)
+            {
+                assignment.IsActive = false;
+                await _db.SaveChangesAsync();
+            }
+
+            return Ok();
         }
 
         [HttpGet("/api/teacher/reading")]
@@ -79,6 +138,7 @@ namespace VocabWeb.Api.Controllers
             var userRole = User.FindFirstValue(ClaimTypes.Role);
 
             var query = _db.ReadingAssignments
+                .Where(r => r.Status != "ARCHIVED")
                 .Include(r => r.ClassAssignments)
                 .ThenInclude(ca => ca.Class)
                 .Include(r => r.QuestionGroups)
@@ -108,6 +168,7 @@ namespace VocabWeb.Api.Controllers
                     r.DurationMinutes,
                     r.Status,
                     r.CreatedAt,
+                    r.UpdatedAt,
                     QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count(),
                     AssignedClassesCount = r.ClassAssignments.Count(ca => ca.IsActive)
                 })
@@ -119,7 +180,7 @@ namespace VocabWeb.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAssignment(int classId, [FromBody] CreateOrUpdateReadingDto dto)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = new ReadingAssignment
             {
@@ -130,19 +191,25 @@ namespace VocabWeb.Api.Controllers
                 CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")
             };
             
-            // Note: Not adding to ClassAssignments yet until Published and assigned via Giao cho lớp
-            // But we can add it to the context class if we want, but requirements say "Published only" for assignments.
-
             _db.ReadingAssignments.Add(assignment);
+            
+            var classAssignment = new ReadingClassAssignment
+            {
+                ReadingAssignment = assignment,
+                ClassId = classId,
+                IsActive = true
+            };
+            _db.ReadingClassAssignments.Add(classAssignment);
+            
             await _db.SaveChangesAsync();
 
             return Ok(new { assignment.Id });
         }
 
-        [HttpPost("{id}/upload-docx")]
-        public async Task<IActionResult> UploadDocx(int classId, int id, IFormFile file)
+        [HttpPost("/api/teacher/reading/{id}/upload-docx")]
+        public async Task<IActionResult> UploadDocx(int id, IFormFile file)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingAssignments
                 .Include(r => r.Passage)
@@ -200,10 +267,10 @@ namespace VocabWeb.Api.Controllers
             return Ok(new { message = "Đã cập nhật bài đọc thành công." });
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetDetails(int classId, int id)
+        [HttpGet("/api/teacher/reading/{id}")]
+        public async Task<IActionResult> GetDetails(int id)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingAssignments
                 .Include(r => r.Passage)
@@ -241,10 +308,10 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
-        [HttpPut("{id}/info")]
-        public async Task<IActionResult> UpdateInfo(int classId, int id, [FromBody] CreateOrUpdateReadingDto dto)
+        [HttpPut("/api/teacher/reading/{id}/info")]
+        public async Task<IActionResult> UpdateInfo(int id, [FromBody] CreateOrUpdateReadingDto dto)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var assignment = await _db.ReadingAssignments.FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == User.FindFirstValue(ClaimTypes.NameIdentifier));
             if (assignment == null) return NotFound();
 
@@ -255,10 +322,10 @@ namespace VocabWeb.Api.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/keys")]
-        public async Task<IActionResult> SaveAnswerKeys(int classId, int id, [FromBody] System.Collections.Generic.Dictionary<int, string[]> keys)
+        [HttpPut("/api/teacher/reading/{id}/keys")]
+        public async Task<IActionResult> SaveAnswerKeys(int id, [FromBody] System.Collections.Generic.Dictionary<int, string[]> keys)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingAssignments
                 .Include(r => r.QuestionGroups)
@@ -292,15 +359,22 @@ namespace VocabWeb.Api.Controllers
             return Ok();
         }
 
-        [HttpGet("{id}/attempts")]
-        public async Task<IActionResult> GetAttempts(int classId, int id)
+        [HttpGet("/api/teacher/reading/{id}/attempts")]
+        public async Task<IActionResult> GetAttempts(int id, [FromQuery] int? classId = null)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var attempts = await _db.ReadingAttempts
+            var query = _db.ReadingAttempts
                 .Include(a => a.ClassEnrollment)
                 .ThenInclude(ce => ce.StudentProfile)
-                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollment.ClassId == classId && a.SubmittedAt != null)
+                .Where(a => a.ReadingAssignmentId == id && a.SubmittedAt != null);
+
+            if (classId.HasValue)
+            {
+                query = query.Where(a => a.ClassEnrollment.ClassId == classId.Value);
+            }
+
+            var attempts = await query
                 .OrderByDescending(a => a.SubmittedAt)
                 .Select(a => new {
                     a.Id,
@@ -320,16 +394,16 @@ namespace VocabWeb.Api.Controllers
             return Ok(attempts);
         }
 
-        [HttpGet("{id}/attempts/{attemptId}")]
-        public async Task<IActionResult> GetAttemptDetails(int classId, int id, int attemptId)
+        [HttpGet("/api/teacher/reading/{id}/attempts/{attemptId}")]
+        public async Task<IActionResult> GetAttemptDetails(int id, int attemptId)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var attempt = await _db.ReadingAttempts
                 .Include(a => a.Answers)
                 .Include(a => a.ClassEnrollment)
                 .ThenInclude(ce => ce.StudentProfile)
-                .FirstOrDefaultAsync(a => a.Id == attemptId && a.ReadingAssignmentId == id && a.ClassEnrollment.ClassId == classId);
+                .FirstOrDefaultAsync(a => a.Id == attemptId && a.ReadingAssignmentId == id);
 
             if (attempt == null) return NotFound();
 
@@ -355,10 +429,10 @@ namespace VocabWeb.Api.Controllers
 
         public class InteractionTypeDto { public string Type { get; set; } = string.Empty; }
 
-        [HttpPut("{id}/groups/{groupId}/interaction")]
-        public async Task<IActionResult> UpdateGroupInteraction(int classId, int id, int groupId, [FromBody] InteractionTypeDto dto)
+        [HttpPut("/api/teacher/reading/{id}/groups/{groupId}/interaction")]
+        public async Task<IActionResult> UpdateGroupInteraction(int id, int groupId, [FromBody] InteractionTypeDto dto)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var group = await _db.ReadingQuestionGroups.FirstOrDefaultAsync(g => g.Id == groupId && g.ReadingAssignmentId == id);
             if (group == null) return NotFound();
             group.InteractionType = dto.Type;
@@ -366,10 +440,10 @@ namespace VocabWeb.Api.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}/publish")]
-        public async Task<IActionResult> Publish(int classId, int id)
+        [HttpPut("/api/teacher/reading/{id}/publish")]
+        public async Task<IActionResult> Publish(int id)
         {
-            if (!await HasAccessToClass(classId)) return Forbid();
+            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingAssignments
                 .Include(r => r.Passage)
@@ -401,7 +475,7 @@ namespace VocabWeb.Api.Controllers
                 }
             }
 
-            assignment.Status = "PUBLISHED";
+            assignment.Status = "READY";
             await _db.SaveChangesAsync();
             return Ok();
         }
@@ -441,7 +515,7 @@ namespace VocabWeb.Api.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
 
             if (assignment == null) return NotFound();
-            if (assignment.Status != "PUBLISHED") return BadRequest("Chỉ có thể giao bài đã xuất bản.");
+            if (assignment.Status != "READY") return BadRequest("Chỉ có thể giao bài đã hoàn chỉnh.");
 
             var validClasses = await _db.Classes
                 .Where(c => c.TeacherId == teacherId && classIds.Contains(c.Id))

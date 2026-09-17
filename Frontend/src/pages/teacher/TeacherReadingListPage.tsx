@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
@@ -11,6 +11,7 @@ interface ReadingAssignment {
   durationMinutes: number
   status: string
   createdAt: string
+  updatedAt: string
   questionCount: number
   assignedClassesCount: number
 }
@@ -32,6 +33,10 @@ export const TeacherReadingListPage: React.FC = () => {
   const [assignTargetId, setAssignTargetId] = useState<number | null>(null)
   const [selectedClassIds, setSelectedClassIds] = useState<number[]>([])
   const [assigningLoading, setAssigningLoading] = useState(false)
+
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [targetDeleteReading, setTargetDeleteReading] = useState<ReadingAssignment | null>(null)
 
   const navigate = useNavigate()
   
@@ -77,12 +82,11 @@ export const TeacherReadingListPage: React.FC = () => {
     
     try {
       setIsCreating(true)
-      const classId = classes.length > 0 ? classes[0].id : 0;
-      const res = await api.post(`/teacher/class/${classId}/reading`, {
+      const res = await api.post(`/teacher/reading`, {
         title: newTitle,
         durationMinutes: newDuration
       })
-      navigate(`/teacher/classes/${classId}/reading/${res.id}/edit`)
+      navigate(`/teacher/reading/${res.id}/edit`)
     } catch (err) {
       console.error(err)
       alert('Lỗi khi tạo bài Reading.')
@@ -125,6 +129,23 @@ export const TeacherReadingListPage: React.FC = () => {
     }
   }
 
+  const handleDeleteClick = (reading: ReadingAssignment) => {
+    setTargetDeleteReading(reading)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!targetDeleteReading) return
+    try {
+      await api.delete(`/teacher/reading/${targetDeleteReading.id}`)
+      setIsDeleteModalOpen(false)
+      fetchAssignments()
+    } catch (e) {
+      console.error(e)
+      alert("Lỗi khi xóa bài Reading")
+    }
+  }
+
   if (loading) return <div className="p-8 flex justify-center"><Spinner /></div>
 
   return (
@@ -153,7 +174,7 @@ export const TeacherReadingListPage: React.FC = () => {
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Trạng thái</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Cấu trúc</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Lớp được giao</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Ngày tạo</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Ngày cập nhật</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Thao tác</th>
               </tr>
             </thead>
@@ -167,8 +188,8 @@ export const TeacherReadingListPage: React.FC = () => {
                     <div className="font-bold text-gray-900 text-base">{a.title}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {a.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.status === 'READY' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {a.status === 'READY' ? 'Hoàn chỉnh' : 'Bản nháp'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
@@ -181,27 +202,66 @@ export const TeacherReadingListPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-500">
-                    {new Date(a.createdAt).toLocaleDateString('vi-VN')}
+                    {new Date(a.updatedAt || a.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2 flex justify-end">
                     <Link to={`/teacher/classes/${editClassContext}/reading/${a.id}/edit`}>
-                      <Button size="sm" variant="outline">{a.status === 'PUBLISHED' ? 'Xem / Chỉnh sửa' : 'Chỉnh sửa'}</Button>
+                      <Button size="sm" variant="outline">{a.status === 'READY' ? 'Xem / Chỉnh sửa' : 'Tiếp tục chỉnh sửa'}</Button>
                     </Link>
                     
-                    {a.status === 'PUBLISHED' && (
-                      <Button size="sm" variant="outline" onClick={() => handleOpenAssign(a.id)}>Giao cho lớp</Button>
-                    )}
+                    <Button size="sm" variant="outline" onClick={() => handleOpenAssign(a.id)}>Giao cho lớp</Button>
 
-                    {a.status === 'PUBLISHED' && (
+                    {a.status === 'READY' && (
                       <Link to={`/teacher/classes/${editClassContext}/reading/${a.id}/results`}>
                         <Button size="sm" variant="outline" className="bg-gray-100 hover:bg-gray-200 border-transparent">Kết quả</Button>
                       </Link>
                     )}
+                    
+                    <button onClick={() => handleDeleteClick(a)} className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Xóa bài">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               )})}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && targetDeleteReading && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-red-600">Xóa bài Reading?</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <span className="font-bold text-gray-900">{targetDeleteReading.title}</span>
+              </div>
+              
+              {targetDeleteReading.assignedClassesCount > 0 && (
+                <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm border border-amber-200">
+                  <span className="font-bold">Cảnh báo: </span>
+                  Bài này hiện đang được giao cho <span className="font-bold">{targetDeleteReading.assignedClassesCount} lớp</span>.
+                  Việc xóa sẽ ngừng hiển thị bài này trong các lớp hiện tại.
+                </div>
+              )}
+              
+              <p className="text-sm text-gray-600">
+                Lịch sử bài làm đã có của học sinh vẫn sẽ được giữ lại. Hành động này không thể hoàn tác.
+              </p>
+              
+              <div className="pt-4 flex justify-end space-x-3">
+                <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Hủy</Button>
+                <Button onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700 text-white border-transparent">
+                  Xóa bài
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

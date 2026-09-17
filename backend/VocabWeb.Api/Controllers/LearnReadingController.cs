@@ -37,7 +37,7 @@ namespace VocabWeb.Api.Controllers
             if (enrollment == null) return Forbid();
 
             var list = await _db.ReadingAssignments
-                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED")
+                .Where(r => r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "READY")
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new {
                     r.Id,
@@ -60,7 +60,7 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
-                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED");
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "READY");
 
             if (assignment == null) return NotFound();
 
@@ -95,7 +95,7 @@ namespace VocabWeb.Api.Controllers
             var assignment = await _db.ReadingAssignments
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
-                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "PUBLISHED");
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "READY");
 
             if (assignment == null) return NotFound();
 
@@ -192,7 +192,7 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
                 .ThenInclude(q => q.AcceptedAnswers)
-                .FirstOrDefaultAsync(r => r.Id == id && r.Status == "PUBLISHED"); // Allow submission even if unassigned later
+                .FirstOrDefaultAsync(r => r.Id == id && r.Status == "READY"); // Allow submission even if unassigned later
 
             if (assignment == null) return NotFound();
 

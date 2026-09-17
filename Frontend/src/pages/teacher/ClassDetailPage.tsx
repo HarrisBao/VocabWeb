@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Card, Badge } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -99,7 +99,26 @@ interface TestItem {
 
 export const ClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const [activeTab, setActiveTab] = useState<TabType>('lessons')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const validTabs: TabType[] = ['lessons', 'reading', 'members', 'tas', 'results', 'settings', 'attendance']
+  const urlTab = searchParams.get('tab')
+  const activeTab: TabType = (validTabs as string[]).includes(urlTab || '') ? (urlTab as TabType) : 'lessons'
+
+  useEffect(() => {
+    if (!urlTab || !(validTabs as string[]).includes(urlTab)) {
+      setSearchParams(prev => {
+        prev.set('tab', 'lessons')
+        return prev
+      }, { replace: true })
+    }
+  }, [urlTab, setSearchParams])
+
+  const setActiveTab = (tab: TabType) => {
+    setSearchParams(prev => {
+      prev.set('tab', tab)
+      return prev
+    })
+  }
   const [cls, setCls] = useState<ClassDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)

@@ -179,6 +179,7 @@ export const AppRouter = () => {
             <Route path="vocabulary/:id" element={<VocabularyDetailPage />} />
             <Route path="classes" element={<ClassListPage />} />
             <Route path="reading" element={<TeacherReadingListPage />} />
+            <Route path="reading/:readingId/edit" element={<TeacherReadingEditPage />} />
             <Route path="reading/:readingId/results" element={<TeacherReadingResultsClassSelectPage />} />
             <Route path="classes/:id" element={<ClassDetailPage />} />
             <Route path="classes/:id/activities" element={<ClassroomActivityPage />} />

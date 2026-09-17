@@ -45,6 +45,17 @@ export const TeacherReadingTab: React.FC<{ classId: string }> = ({ classId }) =>
     }
   }
 
+  const handleUnassign = async (id: number) => {
+    if (!window.confirm("Bạn có chắc muốn gỡ bài Reading này khỏi lớp?")) return;
+    try {
+      await api.delete(`/teacher/class/${classId}/reading/${id}`)
+      fetchAssignments()
+    } catch (e) {
+      console.error(e)
+      alert("Lỗi khi gỡ bài")
+    }
+  }
+
   if (loading) return <div className="py-12 flex justify-center"><Spinner /></div>
 
   return (
@@ -85,20 +96,27 @@ export const TeacherReadingTab: React.FC<{ classId: string }> = ({ classId }) =>
                     <div className="text-xs text-gray-500 mt-1">{a.durationMinutes} phút</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {a.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Bản nháp'}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${a.status === 'READY' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {a.status === 'READY' ? 'Hoàn chỉnh' : 'Bản nháp'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-500">
                     {new Date(a.createdAt).toLocaleString('vi-VN')}
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2 flex justify-end">
+                  <td className="px-6 py-4 text-right space-x-2 flex justify-end items-center">
                     <Link to={`/teacher/classes/${classId}/reading/${a.id}/edit`}>
-                      <Button size="sm" variant="outline">{a.status === 'PUBLISHED' ? 'Xem / Chỉnh sửa' : 'Chỉnh sửa'}</Button>
+                      <Button size="sm" variant="outline">{a.status === 'READY' ? 'Xem / Chỉnh sửa' : 'Chỉnh sửa'}</Button>
                     </Link>
-                    <Link to={`/teacher/classes/${classId}/reading/${a.id}/results`}>
-                      <Button size="sm" variant="outline" className="bg-gray-100 hover:bg-gray-200 border-transparent">Kết quả</Button>
-                    </Link>
+                    {a.status === 'READY' && (
+                      <Link to={`/teacher/classes/${classId}/reading/${a.id}/results`}>
+                        <Button size="sm" variant="outline" className="bg-gray-100 hover:bg-gray-200 border-transparent">Kết quả</Button>
+                      </Link>
+                    )}
+                    <button onClick={() => handleUnassign(a.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Gỡ khỏi lớp">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))}

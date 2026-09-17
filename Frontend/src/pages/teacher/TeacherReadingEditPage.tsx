@@ -25,7 +25,7 @@ export const TeacherReadingEditPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const res = await api.get(`/teacher/class/${id}/reading/${readingId}`)
+      const res = await api.get(`/teacher/reading/${readingId}`)
       setData(res)
       setTitle(res.title || '')
       setDuration(res.durationMinutes || 60)
@@ -62,7 +62,14 @@ export const TeacherReadingEditPage: React.FC = () => {
 
     try {
       setIsUploading(true)
-      await api.post(`/teacher/class/${id}/reading/${readingId}/upload-docx`, formData)
+      
+      // Auto-save Teacher metadata before upload so it isn't lost on refetch
+      await api.put(`/teacher/reading/${readingId}/info`, {
+        title,
+        durationMinutes: duration
+      })
+      await api.put(`/teacher/reading/${readingId}/keys`, keys)
+      await api.post(`/teacher/reading/${readingId}/upload-docx`, formData)
       
       alert('Upload thành công! Nội dung đã được trích xuất.')
       await fetchData()
@@ -95,7 +102,7 @@ export const TeacherReadingEditPage: React.FC = () => {
 
   const handleChangeInteractionType = async (groupId: number, newType: string) => {
     try {
-      await api.put(`/teacher/class/${id}/reading/${readingId}/groups/${groupId}/interaction`, { type: newType })
+      await api.put(`/teacher/reading/${readingId}/groups/${groupId}/interaction`, { type: newType })
       setData((prev: any) => ({
         ...prev,
         questionGroups: prev.questionGroups.map((g: any) => g.id === groupId ? { ...g, interactionType: newType } : g)
@@ -108,18 +115,18 @@ export const TeacherReadingEditPage: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       // 1. Save Info
-      await api.put(`/teacher/class/${id}/reading/${readingId}/info`, {
+      await api.put(`/teacher/reading/${readingId}/info`, {
         title,
         durationMinutes: duration
       })
       
       // 2. Save Keys
-      await api.put(`/teacher/class/${id}/reading/${readingId}/keys`, keys)
+      await api.put(`/teacher/reading/${readingId}/keys`, keys)
       
-      alert('Đã lưu bản nháp thành công!')
+      alert('Đã lưu thay đổi thành công!')
       fetchData()
     } catch (e) {
-      alert('Lỗi khi lưu bản nháp')
+      alert('Lỗi khi lưu thay đổi')
     }
   }
 
@@ -138,19 +145,23 @@ export const TeacherReadingEditPage: React.FC = () => {
       }
 
       // 1. Auto-save info and keys before publishing
-      await api.put(`/teacher/class/${id}/reading/${readingId}/info`, {
+      await api.put(`/teacher/reading/${readingId}/info`, {
         title,
         durationMinutes: duration
       })
-      await api.put(`/teacher/class/${id}/reading/${readingId}/keys`, keys)
+      await api.put(`/teacher/reading/${readingId}/keys`, keys)
       
-      // 2. Publish
-      await api.put(`/teacher/class/${id}/reading/${readingId}/publish`)
+      // 2. Publish (Ready)
+      await api.put(`/teacher/reading/${readingId}/publish`)
       
-      alert('Đã xuất bản bài tập thành công!')
-      navigate(`/teacher/classes/${id}`)
+      alert('Đã hoàn chỉnh bài tập thành công!')
+      if (id && id !== '0') {
+        navigate(`/teacher/classes/${id}`)
+      } else {
+        navigate(`/teacher/reading`)
+      }
     } catch (e: any) {
-      alert(e.message || 'Lỗi khi xuất bản. Vui lòng kiểm tra lại dữ liệu.');
+      alert(e.message || 'Lỗi. Vui lòng kiểm tra lại dữ liệu.');
     }
   }
 
@@ -160,11 +171,15 @@ export const TeacherReadingEditPage: React.FC = () => {
     <div className="p-8 max-w-7xl mx-auto min-h-screen flex flex-col bg-gray-50">
       <div className="flex justify-between items-center mb-6 shrink-0">
         <div>
-          <Link to={`/teacher/classes/${id}`} className="text-brand hover:underline text-sm mb-1 inline-block font-medium">&larr; Quay lại lớp học</Link>
+          {id && id !== '0' ? (
+            <Link to={`/teacher/classes/${id}`} className="text-brand hover:underline text-sm mb-1 inline-block font-medium">&larr; Quay lại lớp học</Link>
+          ) : (
+            <Link to={`/teacher/reading`} className="text-brand hover:underline text-sm mb-1 inline-block font-medium">&larr; Quay lại danh sách Reading</Link>
+          )}
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
             Thiết lập bài Reading
-            {data?.status === 'PUBLISHED' ? (
-              <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Đã xuất bản</span>
+            {data?.status === 'READY' ? (
+              <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Hoàn chỉnh</span>
             ) : (
               <span className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Bản nháp</span>
             )}
@@ -172,11 +187,11 @@ export const TeacherReadingEditPage: React.FC = () => {
         </div>
         <div className="space-x-4 flex items-center">
           <Button variant="outline" onClick={handleSaveDraft} disabled={isUploading}>
-            💾 Lưu bản nháp
+            💾 Lưu thay đổi
           </Button>
-          {data?.status !== 'PUBLISHED' && (
+          {data?.status !== 'READY' && (
             <Button onClick={handlePublish} disabled={isUploading}>
-              🚀 Xuất bản
+              🚀 Hoàn thành
             </Button>
           )}
         </div>
