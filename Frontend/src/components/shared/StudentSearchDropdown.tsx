@@ -93,25 +93,32 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
-              {results.map(r => (
+                            {results.map(r => (
                 <button
                   key={r.id}
                   onClick={() => {
                     if (r.membershipStatus === 'ACTIVE') return
-                    setIsOpen(false)
                     onSelect(r.id)
+                    setIsOpen(false)
                   }}
-                  className={`w-full text-left px-4 py-2 flex flex-col items-start transition-colors ${r.membershipStatus === 'ACTIVE' ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-gray-50'}`}
-                  disabled={r.membershipStatus === 'ACTIVE'}
+                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between border-b border-gray-50 last:border-0 ${r.membershipStatus === 'ACTIVE' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-medium text-gray-900">{r.fullName}</span>
-                    {r.membershipStatus === 'ACTIVE' && <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded uppercase tracking-wider">Đã có trong lớp</span>}
-                    {r.membershipStatus === 'INACTIVE' && <span className="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wider">Đã rời lớp</span>}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900">{r.fullName}</p>
+                      {r.hasAccount && (
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wider">Đã có tài khoản</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">{r.phone || 'Chưa có SĐT'}</p>
                   </div>
-                  {r.phone && <span className="text-xs text-gray-500">{r.phone}</span>}
-                  {r.membershipStatus === 'INACTIVE' && <span className="text-xs text-brand mt-1 font-semibold">Thêm lại vào lớp</span>}
-                  {(!r.membershipStatus || r.membershipStatus === 'NOT_ENROLLED') && <span className="text-xs text-brand mt-1 font-semibold">Thêm vào lớp</span>}
+                  {r.membershipStatus === 'ACTIVE' ? (
+                    <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">Đã trong lớp</span>
+                  ) : r.membershipStatus === 'INACTIVE' ? (
+                    <span className="text-xs font-bold text-brand bg-brand-light/30 px-2 py-1 rounded">Thêm lại</span>
+                  ) : (
+                    <span className="text-xs font-bold text-brand bg-brand-light/30 px-2 py-1 rounded">Thêm vào lớp</span>
+                  )}
                 </button>
               ))}
             </div>

@@ -26,6 +26,11 @@ import { StudentLayout } from '../components/layout/StudentLayout'
 import { StudentHomePage } from '../pages/student/StudentHomePage'
 import { StudentReadingPage } from '../pages/student/StudentReadingPage'
 import { StudentComingSoonPage } from '../pages/student/StudentComingSoonPage'
+import { StudentAccountDashboard } from '../pages/student/StudentAccountDashboard'
+import { StudentClassDetailPage } from '../pages/student/StudentClassDetailPage'
+import { StudentClassVocabularyPage } from '../pages/student/StudentClassVocabularyPage'
+import { StudentClassReadingPage } from '../pages/student/StudentClassReadingPage'
+import { StudentClassWritingPage } from '../pages/student/StudentClassWritingPage'
 
 // Test Access
 import { TestAccessPage } from '../pages/learn/test/TestAccessPage'
@@ -57,6 +62,27 @@ import { TaClassDetailPage } from '../pages/ta/TaClassDetailPage'
 
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
+
+
+const StudentRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const stored = localStorage.getItem('student_profile')
+  const token = localStorage.getItem('student_access_token')
+  
+  if (!stored || !token) {
+    return <Navigate to="/student/login" replace />
+  }
+
+  try {
+    const profile = JSON.parse(stored)
+    if (profile.role !== 'Student') {
+      return <Navigate to="/student/login" replace />
+    }
+  } catch {
+    return <Navigate to="/student/login" replace />
+  }
+
+  return children ? <>{children}</> : <StudentLayout />
+}
 
 const TeacherRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, isLoading } = useAuth()
@@ -128,10 +154,13 @@ export const AppRouter = () => {
             </Route>
 
             {/* Student System Shell for Account Students */}
-            <Route path="/student" element={<StudentLayout />}>
-              <Route index element={<StudentHomePage />} />
-              <Route path="reading" element={<StudentReadingPage />} />
-              <Route path=":skillId" element={<StudentComingSoonPage />} />
+            <Route path="/student" element={<StudentRoute />}>
+              <Route index element={<StudentAccountDashboard />} />
+              <Route path="classes/:id" element={<StudentClassDetailPage />} />
+              <Route path="classes/:id/vocabulary" element={<StudentClassVocabularyPage />} />
+              <Route path="classes/:id/reading" element={<StudentClassReadingPage />} />
+              <Route path="classes/:id/writing" element={<StudentClassWritingPage />} />
+              <Route path="classes/:id/:skillId" element={<StudentComingSoonPage />} />
             </Route>
 
           {/* Forgot Password */}

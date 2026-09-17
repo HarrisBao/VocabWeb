@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 
 interface Notification {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function NotificationBell({ classSlug }: Props) {
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)

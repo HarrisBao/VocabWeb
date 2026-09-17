@@ -36,7 +36,7 @@ export function StudentNavbar({ classSlug, basePath }: { classSlug?: string, bas
   }, []);
 
   const handleLogout = () => {
-    api.clearTokens();
+    api.clearStudentTokens();
     window.location.href = classSlug ? `/class/${classSlug}/portal/login` : '/';
   };
 
@@ -47,7 +47,7 @@ export function StudentNavbar({ classSlug, basePath }: { classSlug?: string, bas
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const activeSkill = SKILLS_LIST.find(s => location.pathname.startsWith(`${basePath}/${s.id}`));
+  const activeSkill = SKILLS_LIST.find(s => location.pathname.includes(`/${s.id}`));
   const isHomeActive = location.pathname === basePath;
 
   const getIcon = (id: string) => {
@@ -95,7 +95,7 @@ export function StudentNavbar({ classSlug, basePath }: { classSlug?: string, bas
                 <div className="absolute top-[calc(100%-8px)] left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50">
                   {SKILLS_LIST.map(skill => {
                     const isAvailable = skill.status === 'ACTIVE';
-                    const isActive = location.pathname.startsWith(`${basePath}/${skill.id}`);
+                    const isActive = location.pathname.includes(`/${skill.id}`);
                     
                     return (
                       <Link
@@ -223,7 +223,7 @@ export function StudentNavbar({ classSlug, basePath }: { classSlug?: string, bas
                 <div className="space-y-1">
                   {SKILLS_LIST.map(skill => {
                     const isAvailable = skill.status === 'ACTIVE';
-                    const isActive = location.pathname.startsWith(`${basePath}/${skill.id}`);
+                    const isActive = location.pathname.includes(`/${skill.id}`);
                     return (
                       <Link
                         key={skill.id}

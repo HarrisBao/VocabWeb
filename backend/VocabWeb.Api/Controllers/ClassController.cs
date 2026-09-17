@@ -356,6 +356,7 @@ public partial class ClassController : ControllerBase
                 sp.Id,
                 sp.FullName,
                 Phone = sp.NormalizedPhone,
+                sp.UserId,
                 Enrollment = sp.Enrollments.FirstOrDefault(ce => ce.ClassId == id)
             })
             .ToListAsync();
@@ -364,6 +365,7 @@ public partial class ClassController : ControllerBase
             s.Id,
             s.FullName,
             s.Phone,
+            HasAccount = s.UserId != null,
             MembershipStatus = s.Enrollment == null ? "NOT_ENROLLED" : (s.Enrollment.IsActive ? "ACTIVE" : "INACTIVE")
         });
 

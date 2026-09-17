@@ -85,4 +85,3 @@ export const StudentHomePage: React.FC = () => {
     </div>
   );
 };
-

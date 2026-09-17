@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // If profile fails, clear tokens if unauthorized
       setUser(null)
-      api.clearTokens()
+      api.clearTeacherTokens()
     }
   }
 
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Ignore network error on logout
     } finally {
-      api.clearTokens()
+      api.clearTeacherTokens()
       setUser(null)
     }
   }

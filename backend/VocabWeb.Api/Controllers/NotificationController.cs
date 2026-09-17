@@ -38,7 +38,8 @@ public class NotificationController : ControllerBase
                 n.Type,
                 n.Message,
                 n.IsRead,
-                n.CreatedAt
+                n.CreatedAt,
+                n.ClassId
             })
             .ToListAsync();
 
