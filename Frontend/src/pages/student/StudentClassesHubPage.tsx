@@ -25,10 +25,10 @@ export const StudentClassesHubPage: React.FC = () => {
         api.get('/api/studenthub/results/recent'),
         api.get('/api/studenthub/feedback/writing')
       ]);
-      setClasses(clsRes.data);
-      setActionableTests(testRes.data);
-      setRecentResults(resRes.data);
-      setWritingFeedback(fbRes.data);
+      setClasses(Array.isArray(clsRes) ? clsRes : []);
+      setActionableTests(Array.isArray(testRes) ? testRes : []);
+      setRecentResults(Array.isArray(resRes) ? resRes : []);
+      setWritingFeedback(Array.isArray(fbRes) ? fbRes : []);
     } catch (err) {
       console.error(err);
     } finally {

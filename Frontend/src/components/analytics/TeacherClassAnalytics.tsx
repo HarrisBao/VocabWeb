@@ -23,8 +23,8 @@ export const TeacherClassAnalytics = ({ classId }: { classId: number }) => {
         api.get(`/api/analytics/classes/${classId}/completion`),
         api.get(`/api/analytics/classes/${classId}/trend`)
       ]);
-      setCompletion(compRes.data);
-      setTrends(trendRes.data);
+      setCompletion(compRes || null);
+      setTrends(Array.isArray(trendRes) ? trendRes : []);
     } catch (err) {
       console.error(err);
       setError('Không thể tải dữ liệu phân tích. Hãy đảm bảo bạn có quyền truy cập lớp này.');

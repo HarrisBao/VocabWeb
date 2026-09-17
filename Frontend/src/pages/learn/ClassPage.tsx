@@ -46,7 +46,7 @@ export const ClassPage: React.FC = () => {
         
         try {
           const readingRes = await api.get<ReadingAssignmentDto[]>(`/learn/class/${data.id}/reading`);
-          setReadingData(readingRes.data);
+          setReadingData(Array.isArray(readingRes) ? readingRes : []);
         } catch(e) {
           console.error("No reading data", e);
         }
