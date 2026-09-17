@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { TaUser } from '../../types'
 import { TeacherReadingTab } from './TeacherReadingTab'
+import { StudentSearchDropdown } from '../../components/shared/StudentSearchDropdown'
 
 
 interface AvailableVocabSet {
