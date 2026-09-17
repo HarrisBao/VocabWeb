@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 
@@ -28,9 +28,6 @@ import { StudentReadingPage } from '../pages/student/StudentReadingPage'
 import { StudentComingSoonPage } from '../pages/student/StudentComingSoonPage'
 import { StudentAccountDashboard } from '../pages/student/StudentAccountDashboard'
 import { StudentClassDetailPage } from '../pages/student/StudentClassDetailPage'
-import { StudentClassVocabularyPage } from '../pages/student/StudentClassVocabularyPage'
-import { StudentClassReadingPage } from '../pages/student/StudentClassReadingPage'
-import { StudentClassWritingPage } from '../pages/student/StudentClassWritingPage'
 
 // Test Access
 import { TestAccessPage } from '../pages/learn/test/TestAccessPage'
@@ -158,9 +155,6 @@ export const AppRouter = () => {
             <Route path="/student" element={<StudentRoute />}>
               <Route index element={<StudentAccountDashboard />} />
               <Route path="classes/:id" element={<StudentClassDetailPage />} />
-              <Route path="classes/:id/vocabulary" element={<StudentClassVocabularyPage />} />
-              <Route path="classes/:id/reading" element={<StudentClassReadingPage />} />
-              <Route path="classes/:id/writing" element={<StudentClassWritingPage />} />
               <Route path="classes/:id/:skillId" element={<StudentComingSoonPage />} />
             </Route>
 

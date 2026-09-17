@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
-import { SKILLS_LIST } from '../../config/skills';
-import { Loader2, Calendar, AlertCircle, X } from 'lucide-react';
+import { Loader2, Calendar, BookOpen, Library, Edit3, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 
 interface ClassDetail {
   id: number;
@@ -13,6 +13,7 @@ interface ClassDetail {
   vocabularyCount: number;
   readingCount: number;
   writingCount: number;
+  teacherName?: string;
 }
 
 interface ScheduleItem {
@@ -22,29 +23,47 @@ interface ScheduleItem {
   endTime: string;
   className: string;
   isOverride: boolean;
-  type?: string;
+}
+
+interface VocabularyUnit {
+  id: number;
+  title: string;
+  description: string;
+  level: string;
+  wordCount: number;
+  isPinned: boolean;
+}
+
+interface ReadingAssignment {
+  id: number;
+  title: string;
+  durationMinutes: number;
+  questionCount: number;
+  attemptCount: number;
 }
 
 export const StudentClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [activeTab, setActiveTab] = useState<'overview' | 'vocabulary' | 'reading' | 'writing'>('overview');
+  
   const [cls, setCls] = useState<ClassDetail | null>(null);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal state
-  const [showReport, setShowReport] = useState(false);
-  const [reportSkill, setReportSkill] = useState('SPEAKING');
-  const [reportType, setReportType] = useState('MAKEUP');
-  const [reason, setReason] = useState('');
-  const [availability, setAvailability] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [vocabUnits, setVocabUnits] = useState<VocabularyUnit[]>([]);
+  const [loadingVocab, setLoadingVocab] = useState(false);
+  const [vocabError, setVocabError] = useState(false);
+
+  const [readings, setReadings] = useState<ReadingAssignment[]>([]);
+  const [loadingReading, setLoadingReading] = useState(false);
+  const [readingError, setReadingError] = useState(false);
 
   useEffect(() => {
     const fetchClass = async () => {
       try {
         const [clsData, schedData] = await Promise.all([
           api.get<ClassDetail>(`/student/classes/${id}`),
-          api.get<ScheduleItem[]>(`/student/classes/${id}/schedule`)
+          api.get<ScheduleItem[]>(`/student/classes/${id}/schedule`).catch(() => [])
         ]);
         setCls(clsData);
         setSchedule(schedData);
@@ -57,29 +76,34 @@ export const StudentClassDetailPage: React.FC = () => {
     fetchClass();
   }, [id]);
 
-  const handleReportSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await api.post('/student/schedule-requests', {
-        classId: parseInt(id!),
-        skill: reportSkill,
-        requestType: reportType,
-        reason,
-        availability
-      });
-      alert('Yêu cầu đã được gửi!');
-      setShowReport(false);
-    } catch (e) {
-      console.error(e);
-      alert('Lỗi khi gửi yêu cầu');
-    } finally {
-      setSubmitting(false);
+  useEffect(() => {
+    if (activeTab === 'vocabulary' && vocabUnits.length === 0 && !vocabError) {
+      setLoadingVocab(true);
+      api.get<VocabularyUnit[]>(`/student/classes/${id}/vocabulary`)
+        .then(data => setVocabUnits(data))
+        .catch(e => {
+          console.error("Lỗi tải từ vựng", e);
+          setVocabError(true);
+        })
+        .finally(() => setLoadingVocab(false));
     }
-  };
+  }, [activeTab, id, vocabUnits.length, vocabError]);
+
+  useEffect(() => {
+    if (activeTab === 'reading' && readings.length === 0 && !readingError) {
+      setLoadingReading(true);
+      api.get<ReadingAssignment[]>(`/student/classes/${id}/reading`)
+        .then(data => setReadings(data))
+        .catch(e => {
+          console.error("Lỗi tải reading", e);
+          setReadingError(true);
+        })
+        .finally(() => setLoadingReading(false));
+    }
+  }, [activeTab, id, readings.length, readingError]);
 
   if (loading) {
-    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-brand" /></div>;
+    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5F4A]" /></div>;
   }
 
   if (!cls) {
@@ -87,157 +111,278 @@ export const StudentClassDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-16 relative">
-      <div className="bg-gradient-to-br from-brand-dark to-brand p-8 rounded-2xl shadow-md text-white">
-        <Link to="/student" className="inline-flex items-center text-brand-light hover:text-white mb-4 text-sm font-medium transition-colors">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+    <div className="max-w-5xl mx-auto space-y-6 pb-16">
+      <div className="mb-4">
+        <Link to="/student" className="inline-flex items-center text-gray-500 hover:text-gray-900 font-medium text-sm transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-1" />
           Quay lại Lớp học
         </Link>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-black text-white mb-2">{cls.name}</h1>
-            <p className="text-brand-light opacity-90">{cls.description || `Lớp học ${cls.code}`}</p>
+      </div>
+
+      <div className="bg-[#0F5F4A] p-8 rounded-2xl shadow-sm text-white flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+          <Library className="w-32 h-32" />
+        </div>
+        <div className="relative z-10">
+          <div className="inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-bold tracking-wider uppercase mb-3 text-emerald-100">
+            Không gian lớp học
           </div>
-          <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white" onClick={() => setShowReport(true)}>
-            Báo bận / Đổi lịch
-          </Button>
+          <h1 className="text-3xl md:text-4xl font-black text-white mb-2">{cls.name}</h1>
+          <p className="text-emerald-100/90 flex items-center gap-2">
+            Mã lớp: {cls.code} {cls.teacherName && `• Giáo viên: ${cls.teacherName}`}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            HỌC KỸ NĂNG
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SKILLS_LIST.map(skill => {
-              const isActive = skill.status === 'ACTIVE';
-              let statText = '';
-              
-              if (skill.id === 'vocabulary') statText = `${cls.vocabularyCount} bộ từ vựng`;
-              if (skill.id === 'reading') statText = `${cls.readingCount} bài Reading`;
-              if (skill.id === 'writing') statText = `${cls.writingCount} bài Writing`;
-              
-              return (
-                <Link 
-                  key={skill.id}
-                  to={isActive ? `/student/classes/${cls.id}/${skill.id}` : '#'}
-                  className={`p-6 rounded-2xl border-2 transition-all block relative overflow-hidden group ${
-                    isActive 
-                      ? 'border-brand-light bg-surface hover:border-brand hover:shadow-md' 
-                      : 'border-surface-hover bg-surface-muted hover:bg-gray-50 opacity-80 cursor-default'
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl mb-4 ${skill.accentClass}`}>
-                    {skill.label.charAt(0)}
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{skill.label}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{skill.description}</p>
-                  
-                  {isActive ? (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {statText}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-gray-700 group-hover:text-gray-900 group-hover:translate-x-1 transition-transform">
-                        Vào học
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-400">
-                      Sắp ra mắt
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            Lịch học
-          </h2>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 space-y-4">
-            {schedule.length === 0 ? (
-              <p className="text-gray-500 text-sm">Chưa có lịch.</p>
-            ) : (
-              schedule.map((s, idx) => (
-                <div key={idx} className={`p-3 rounded-xl border ${s.isOverride ? 'border-amber-200 bg-amber-50/50' : 'border-gray-100 bg-gray-50'}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-gray-900">{s.skill}</span>
-                    {s.isOverride && <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Lịch thay thế</span>}
-                  </div>
-                  <p className="text-sm text-gray-600 font-medium">{s.dayOfWeek} • {s.startTime} - {s.endTime}</p>
-                  <p className="text-xs text-gray-500 mt-1">{s.className}</p>
-                </div>
-              ))
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'overview'
+                ? 'border-[#0F5F4A] text-[#0F5F4A]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Tổng quan
+          </button>
+          <button
+            onClick={() => setActiveTab('vocabulary')}
+            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'vocabulary'
+                ? 'border-[#1D7A61] text-[#1D7A61]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Từ vựng
+            {cls.vocabularyCount > 0 && (
+              <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.vocabularyCount}</span>
             )}
-          </div>
-        </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('reading')}
+            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'reading'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Reading
+            {cls.readingCount > 0 && (
+              <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.readingCount}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('writing')}
+            className={`pb-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'writing'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Writing
+          </button>
+        </nav>
       </div>
 
-      {showReport && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-lg text-gray-900">Báo bận / Xin đổi lịch</h2>
-              <button onClick={() => setShowReport(false)} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500"/></button>
-            </div>
-            <form onSubmit={handleReportSubmit} className="p-6 space-y-5 flex-1 overflow-y-auto">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Kỹ năng bị ảnh hưởng</label>
-                <select value={reportSkill} onChange={e => setReportSkill(e.target.value)} className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-brand focus:border-brand">
-                  <option value="READING">Reading</option>
-                  <option value="LISTENING">Listening</option>
-                  <option value="WRITING">Writing</option>
-                  <option value="SPEAKING">Speaking</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Hình thức điều chỉnh</label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="reqType" value="MAKEUP" checked={reportType === 'MAKEUP'} onChange={() => setReportType('MAKEUP')} className="text-brand focus:ring-brand" />
-                    <span className="text-sm">Tôi chỉ bận một buổi này (Học bù)</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="reqType" value="TEMPORARY_TRANSFER" checked={reportType === 'TEMPORARY_TRANSFER'} onChange={() => setReportType('TEMPORARY_TRANSFER')} className="text-brand focus:ring-brand" />
-                    <span className="text-sm">Tôi bận lịch này trong một khoảng thời gian</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="reqType" value="PERMANENT_TRANSFER" checked={reportType === 'PERMANENT_TRANSFER'} onChange={() => setReportType('PERMANENT_TRANSFER')} className="text-brand focus:ring-brand" />
-                    <span className="text-sm">Tôi muốn đổi lịch lâu dài</span>
-                  </label>
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-4">
+            
+            <div 
+              onClick={() => setActiveTab('vocabulary')}
+              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#1D7A61] hover:shadow-md transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Library className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-[#1D7A61] transition-colors uppercase">Từ vựng</h3>
+                  <p className="text-sm text-gray-500">{cls.vocabularyCount} bài học • Ôn từ và luyện tập từ vựng</p>
                 </div>
               </div>
+              <Button variant="outline" size="sm" className="group-hover:bg-[#1D7A61] group-hover:text-white group-hover:border-[#1D7A61]">
+                Xem từ vựng
+              </Button>
+            </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Lý do</label>
-                <input required type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="Vd: Có việc gia đình..." className="w-full border-gray-300 rounded-lg shadow-sm px-3 py-2 focus:ring-brand focus:border-brand" />
+            <div 
+              onClick={() => setActiveTab('reading')}
+              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors uppercase">Reading</h3>
+                  <p className="text-sm text-gray-500">{cls.readingCount > 0 ? `${cls.readingCount} bài tập` : 'Chưa có bài tập'} • Luyện kỹ năng Reading</p>
+                </div>
               </div>
+              <Button variant="outline" size="sm" className="group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600">
+                Xem Reading
+              </Button>
+            </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Thời gian có thể học bù/thay thế</label>
-                <input required type="text" value={availability} onChange={e => setAvailability(e.target.value)} placeholder="Vd: Thứ 4, 18:00 - 21:00" className="w-full border-gray-300 rounded-lg shadow-sm px-3 py-2 focus:ring-brand focus:border-brand" />
+            <div 
+              onClick={() => setActiveTab('writing')}
+              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <Edit3 className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase">Writing</h3>
+                  <p className="text-sm text-gray-500">Chưa có bài tập</p>
+                </div>
               </div>
+              <Button variant="outline" size="sm" className="group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600">
+                Xem Writing
+              </Button>
+            </div>
 
-              <div className="pt-2 flex justify-end gap-3">
-                <Button type="button" variant="ghost" onClick={() => setShowReport(false)}>Hủy</Button>
-                <Button type="submit" loading={submitting}>Gửi yêu cầu</Button>
+          </div>
+
+          <div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Lịch học</h3>
               </div>
-            </form>
+              <div className="p-4 space-y-3">
+                {schedule.length === 0 ? (
+                  <p className="text-gray-500 text-sm">Chưa có lịch.</p>
+                ) : (
+                  schedule.map((s, idx) => (
+                    <div key={idx} className={`p-3 rounded-xl border ${s.isOverride ? 'border-amber-200 bg-amber-50/50' : 'border-gray-100 bg-gray-50'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-gray-900">{s.skill}</span>
+                        {s.isOverride && <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Lịch thay thế</span>}
+                      </div>
+                      <p className="text-sm text-gray-600 font-medium">{s.dayOfWeek} • {s.startTime} - {s.endTime}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
+
+      {activeTab === 'vocabulary' && (
+        <div className="space-y-4">
+          {loadingVocab ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#1D7A61]" /></div>
+          ) : vocabError ? (
+            <div className="text-center p-12 text-red-500 font-medium">Không thể tải nội dung từ vựng.</div>
+          ) : vocabUnits.length === 0 ? (
+            <div className="bg-white border border-emerald-100 rounded-2xl p-12 text-center shadow-sm">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Library className="w-8 h-8 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có bài từ vựng nào.</h3>
+              <p className="text-gray-500 max-w-sm mx-auto">Giáo viên chưa giao từ vựng cho lớp học này.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {vocabUnits.map(u => (
+                <div key={u.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:border-[#1D7A61] hover:shadow-md transition-all flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#1D7A61]/5 rounded-bl-full -z-0"></div>
+                  <div className="flex-1 relative z-10">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{u.title}</h3>
+                    <p className="text-sm text-gray-500 mb-4 line-clamp-2">{u.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 font-medium">
+                      <span className="text-[#1D7A61]">{u.level}</span>
+                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                      <span>{u.wordCount} từ</span>
+                    </div>
+                  </div>
+                  <div className="pt-4 mt-2 relative z-10">
+                    <Link to={`/learn/vocabulary/${u.id}?classId=${id}`} className="block w-full bg-[#E8F3F0] text-[#0F5F4A] border border-[#C5E1D9] text-center py-2.5 rounded-xl text-sm font-bold hover:bg-[#1D7A61] hover:text-white transition-colors">
+                      {u.title.toLowerCase().includes('ôn tập') ? 'Bắt đầu ôn' : 'Ôn từ'}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'reading' && (
+        <div className="space-y-4">
+          {loadingReading ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>
+          ) : readingError ? (
+            <div className="text-center p-12 text-red-500 font-medium">Không thể tải nội dung Reading.</div>
+          ) : readings.length === 0 ? (
+            <div className="bg-white border border-emerald-100 rounded-2xl p-12 text-center shadow-sm">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="w-8 h-8 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có bài Reading nào được giao.</h3>
+              <p className="text-gray-500 max-w-sm mx-auto">Giáo viên chưa giao bài tập Reading cho lớp học này.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {readings.map(r => (
+                <div key={r.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:border-emerald-500 hover:shadow-md transition-all flex flex-col">
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-gray-900 line-clamp-2">{r.title}</h3>
+                      {r.attemptCount > 0 ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase">MỚI</span>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-600 mt-4">
+                      <div className="flex justify-between">
+                        <span>Thời gian:</span>
+                        <span className="font-medium">{r.durationMinutes} phút</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Số câu hỏi:</span>
+                        <span className="font-medium">{r.questionCount}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-gray-50 pt-2 mt-2">
+                        <span>Số lần làm:</span>
+                        <span className="font-medium">{r.attemptCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 mt-4">
+                    <Link to={`/student/classes/${id}/reading/${r.id}`} className={`block w-full text-center py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                      r.attemptCount > 0 
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                        : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                    }`}>
+                      {r.attemptCount > 0 ? 'Làm lại' : 'Làm bài'}
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'writing' && (
+        <div className="space-y-4">
+          <div className="bg-white border border-blue-100 rounded-2xl p-12 text-center shadow-sm">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Edit3 className="w-8 h-8 text-blue-400" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Chưa có bài Writing nào được giao cho lớp này.</h3>
+            <p className="text-gray-500 max-w-sm mx-auto">Tất cả bài tập Writing sẽ hiển thị tại đây.</p>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
