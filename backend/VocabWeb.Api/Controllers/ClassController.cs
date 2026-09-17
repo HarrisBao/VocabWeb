@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -553,6 +553,9 @@ public partial class ClassController : ControllerBase
                 ClassId = cs.ClassId,
                 SessionDate = cs.SessionDate,
                 Title = cs.Title,
+                Skill = cs.Skill,
+                StartTime = cs.StartTime,
+                EndTime = cs.EndTime,
                 AttendanceRecords = cs.AttendanceRecords.Select(ar => new AttendanceRecordDto
                 {
                     Id = ar.Id,
@@ -576,6 +579,9 @@ public partial class ClassController : ControllerBase
             ClassId = id,
             SessionDate = dto.SessionDate,
             Title = dto.Title,
+            Skill = dto.Skill,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
             CreatedById = userId,
             CreatedAt = DateTime.UtcNow
         };
@@ -703,10 +709,3 @@ public partial class ClassController : ControllerBase
         return Ok(new { message = "Đã gỡ trợ giảng khỏi lớp." });
     }
 }
-
-
-
-
-
-
-

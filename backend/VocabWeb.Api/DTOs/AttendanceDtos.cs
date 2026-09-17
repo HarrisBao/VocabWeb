@@ -6,6 +6,9 @@ public class ClassSessionDto
     public int ClassId { get; set; }
     public DateTime SessionDate { get; set; }
     public string? Title { get; set; }
+    public VocabWeb.Api.Models.IeltsSkill Skill { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
     public List<AttendanceRecordDto> AttendanceRecords { get; set; } = new();
     
     // Statistics for this session across multiple assigned tests/activities
