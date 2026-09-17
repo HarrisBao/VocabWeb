@@ -215,7 +215,8 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
-                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == User.FindFirstValue(ClaimTypes.NameIdentifier));
+                .ThenInclude(q => q.AcceptedAnswers)
+                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
 
             if (assignment == null) return NotFound();
 
@@ -263,8 +264,9 @@ namespace VocabWeb.Api.Controllers
                 assignment.QuestionGroups.Add(group);
             }
 
+            AutoUpdateStatus(assignment);
             await _db.SaveChangesAsync();
-            return Ok(new { message = "Đã cập nhật bài đọc thành công." });
+            return Ok(new { message = "Đã cập nhật bài đọc thành công.", status = assignment.Status });
         }
 
         [HttpGet("/api/teacher/reading/{id}")]
@@ -312,14 +314,21 @@ namespace VocabWeb.Api.Controllers
         public async Task<IActionResult> UpdateInfo(int id, [FromBody] CreateOrUpdateReadingDto dto)
         {
             var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var assignment = await _db.ReadingAssignments.FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var assignment = await _db.ReadingAssignments
+                .Include(r => r.Passage)
+                .Include(r => r.QuestionGroups)
+                .ThenInclude(g => g.Questions)
+                .ThenInclude(q => q.AcceptedAnswers)
+                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
+                
             if (assignment == null) return NotFound();
 
             if (!string.IsNullOrWhiteSpace(dto.Title)) assignment.Title = dto.Title;
             if (dto.DurationMinutes > 0) assignment.DurationMinutes = dto.DurationMinutes;
 
+            AutoUpdateStatus(assignment);
             await _db.SaveChangesAsync();
-            return Ok();
+            return Ok(new { status = assignment.Status });
         }
 
         [HttpPut("/api/teacher/reading/{id}/keys")]
@@ -328,10 +337,11 @@ namespace VocabWeb.Api.Controllers
             var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingAssignments
+                .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
                 .ThenInclude(q => q.AcceptedAnswers)
-                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == User.FindFirstValue(ClaimTypes.NameIdentifier));
+                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
 
             if (assignment == null) return NotFound();
 
@@ -355,8 +365,9 @@ namespace VocabWeb.Api.Controllers
                 }
             }
 
+            AutoUpdateStatus(assignment);
             await _db.SaveChangesAsync();
-            return Ok();
+            return Ok(new { status = assignment.Status });
         }
 
         [HttpGet("/api/teacher/reading/{id}/attempts")]
@@ -440,44 +451,26 @@ namespace VocabWeb.Api.Controllers
             return Ok();
         }
 
-        [HttpPut("/api/teacher/reading/{id}/publish")]
-        public async Task<IActionResult> Publish(int id)
+        private void AutoUpdateStatus(ReadingAssignment assignment)
         {
-            var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var assignment = await _db.ReadingAssignments
-                .Include(r => r.Passage)
-                .Include(r => r.QuestionGroups)
-                .ThenInclude(g => g.Questions)
-                .ThenInclude(q => q.AcceptedAnswers)
-                .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (assignment == null) return NotFound();
-
-            if (string.IsNullOrWhiteSpace(assignment.Title))
-                return BadRequest("Tên bài Reading không được để trống.");
-
-            if (assignment.DurationMinutes <= 0)
-                return BadRequest("Thời gian làm bài không hợp lệ.");
-
-            if (assignment.Passage == null || string.IsNullOrWhiteSpace(assignment.Passage.ContentHtml))
-                return BadRequest("Chưa có nội dung đoạn văn (Passage). Vui lòng tải lên file DOCX hợp lệ.");
-
+            bool isValid = true;
+            if (string.IsNullOrWhiteSpace(assignment.Title)) isValid = false;
+            if (assignment.DurationMinutes <= 0) isValid = false;
+            if (assignment.Passage == null || string.IsNullOrWhiteSpace(assignment.Passage.ContentHtml)) isValid = false;
+            
             var allQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).ToList();
-            if (!allQuestions.Any())
-                return BadRequest("Không tìm thấy câu hỏi nào. Vui lòng kiểm tra lại file Word.");
-
+            if (!allQuestions.Any()) isValid = false;
+            
             foreach (var q in allQuestions)
             {
                 if (!q.AcceptedAnswers.Any(a => !string.IsNullOrWhiteSpace(a.Answer)))
                 {
-                    return BadRequest($"Question {q.DisplayNumber} chưa có đáp án.");
+                    isValid = false;
+                    break;
                 }
             }
 
-            assignment.Status = "READY";
-            await _db.SaveChangesAsync();
-            return Ok();
+            assignment.Status = isValid ? "READY" : "DRAFT";
         }
 
         // --- NEW MULTI-CLASS ASSIGNMENT ENDPOINTS ---
@@ -515,7 +508,6 @@ namespace VocabWeb.Api.Controllers
                 .FirstOrDefaultAsync(r => r.Id == id && r.CreatedById == teacherId);
 
             if (assignment == null) return NotFound();
-            if (assignment.Status != "READY") return BadRequest("Chỉ có thể giao bài đã hoàn chỉnh.");
 
             var validClasses = await _db.Classes
                 .Where(c => c.TeacherId == teacherId && classIds.Contains(c.Id))

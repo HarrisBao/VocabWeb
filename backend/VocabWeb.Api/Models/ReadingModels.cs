@@ -127,6 +127,9 @@ namespace VocabWeb.Api.Models
         public int CorrectCount { get; set; } = 0;
         public int TotalQuestions { get; set; } = 0;
 
+        public string? QuestionSnapshotJson { get; set; }
+        public string? PassageSnapshotHtml { get; set; }
+
         public ICollection<ReadingAttemptAnswer> Answers { get; set; } = new List<ReadingAttemptAnswer>();
     }
 

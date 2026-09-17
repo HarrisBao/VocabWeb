@@ -60,17 +60,52 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
-                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "READY");
+                .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive));
 
             if (assignment == null) return NotFound();
+
+            var activeAttempt = await _db.ReadingAttempts
+                .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
+
+            // If no active attempt, it must be READY
+            if (activeAttempt == null && assignment.Status != "READY")
+            {
+                return NotFound();
+            }
+
+            var questionGroups = assignment.QuestionGroups;
+            var durationMinutes = assignment.DurationMinutes;
+            var passageHtml = assignment.Passage?.ContentHtml;
+
+            if (activeAttempt != null)
+            {
+                if (activeAttempt.AllowedDurationSecondsSnapshot > 0)
+                {
+                    durationMinutes = activeAttempt.AllowedDurationSecondsSnapshot / 60;
+                }
+                
+                if (activeAttempt.PassageSnapshotHtml != null)
+                {
+                    passageHtml = activeAttempt.PassageSnapshotHtml;
+                }
+                
+                if (!string.IsNullOrEmpty(activeAttempt.QuestionSnapshotJson))
+                {
+                    var snapshotGroups = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.ICollection<ReadingQuestionGroup>>(activeAttempt.QuestionSnapshotJson);
+                    if (snapshotGroups != null)
+                    {
+                        questionGroups = snapshotGroups;
+                    }
+                }
+            }
 
             // Do not include AcceptedAnswers!
             return Ok(new {
                 assignment.Id,
                 assignment.Title,
-                assignment.DurationMinutes,
-                Passage = assignment.Passage?.ContentHtml,
-                QuestionGroups = assignment.QuestionGroups.OrderBy(g => g.SortOrder).Select(g => new {
+                DurationMinutes = durationMinutes,
+                Passage = passageHtml,
+                QuestionGroups = questionGroups.OrderBy(g => g.SortOrder).Select(g => new {
                     g.Id,
                     g.Instruction,
                     g.InteractionType,
@@ -93,8 +128,10 @@ namespace VocabWeb.Api.Controllers
             if (enrollment == null) return Forbid();
 
             var assignment = await _db.ReadingAssignments
+                .Include(r => r.Passage)
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
+                .ThenInclude(q => q.AcceptedAnswers)
                 .FirstOrDefaultAsync(r => r.Id == id && r.ClassAssignments.Any(ca => ca.ClassId == classId && ca.IsActive) && r.Status == "READY");
 
             if (assignment == null) return NotFound();
@@ -110,6 +147,8 @@ namespace VocabWeb.Api.Controllers
 
             int attemptNumber = await _db.ReadingAttempts.CountAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id) + 1;
 
+            var snapshotJson = System.Text.Json.JsonSerializer.Serialize(assignment.QuestionGroups, new System.Text.Json.JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles });
+
             var attempt = new ReadingAttempt
             {
                 ReadingAssignmentId = id,
@@ -117,7 +156,9 @@ namespace VocabWeb.Api.Controllers
                 AttemptNumber = attemptNumber,
                 StartedAt = DateTime.UtcNow,
                 AllowedDurationSecondsSnapshot = assignment.DurationMinutes * 60,
-                TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count()
+                TotalQuestions = assignment.QuestionGroups.SelectMany(g => g.Questions).Count(),
+                QuestionSnapshotJson = snapshotJson,
+                PassageSnapshotHtml = assignment.Passage?.ContentHtml
             };
 
             _db.ReadingAttempts.Add(attempt);
@@ -192,13 +233,15 @@ namespace VocabWeb.Api.Controllers
                 .Include(r => r.QuestionGroups)
                 .ThenInclude(g => g.Questions)
                 .ThenInclude(q => q.AcceptedAnswers)
-                .FirstOrDefaultAsync(r => r.Id == id && r.Status == "READY"); // Allow submission even if unassigned later
+                .FirstOrDefaultAsync(r => r.Id == id); // Removed Status == "READY" so active attempts can submit
 
             if (assignment == null) return NotFound();
 
             var attempt = await _db.ReadingAttempts
                 .Include(a => a.Answers)
                 .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
+
+            var questionGroups = assignment.QuestionGroups;
 
             if (attempt == null)
             {
@@ -215,6 +258,15 @@ namespace VocabWeb.Api.Controllers
                 };
                 _db.ReadingAttempts.Add(attempt);
             }
+            else if (!string.IsNullOrEmpty(attempt.QuestionSnapshotJson))
+            {
+                // Use snapshot if available
+                var snapshotGroups = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.ICollection<ReadingQuestionGroup>>(attempt.QuestionSnapshotJson);
+                if (snapshotGroups != null)
+                {
+                    questionGroups = snapshotGroups;
+                }
+            }
 
             attempt.SubmittedAt = DateTime.UtcNow;
             
@@ -227,7 +279,7 @@ namespace VocabWeb.Api.Controllers
 
             int correctCount = 0;
 
-            foreach (var group in assignment.QuestionGroups)
+            foreach (var group in questionGroups)
             {
                 foreach (var q in group.Questions)
                 {

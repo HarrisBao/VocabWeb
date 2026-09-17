@@ -115,53 +115,18 @@ export const TeacherReadingEditPage: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       // 1. Save Info
-      await api.put(`/teacher/reading/${readingId}/info`, {
+      const infoRes = await api.put(`/teacher/reading/${readingId}/info`, {
         title,
         durationMinutes: duration
       })
       
       // 2. Save Keys
-      await api.put(`/teacher/reading/${readingId}/keys`, keys)
+      const keysRes = await api.put(`/teacher/reading/${readingId}/keys`, keys)
       
       alert('Đã lưu thay đổi thành công!')
       fetchData()
-    } catch (e) {
-      alert('Lỗi khi lưu thay đổi')
-    }
-  }
-
-  const handlePublish = async () => {
-    try {
-      // 0. Validate all questions have at least one answer
-      for (const group of (data?.questionGroups || [])) {
-        for (const q of (group.questions || [])) {
-          const qKeys = keys[q.id] || [];
-          const hasValidKey = qKeys.some(k => k && k.trim() !== '');
-          if (!hasValidKey) {
-            alert(`Question ${q.displayNumber} chưa có đáp án.`);
-            return;
-          }
-        }
-      }
-
-      // 1. Auto-save info and keys before publishing
-      await api.put(`/teacher/reading/${readingId}/info`, {
-        title,
-        durationMinutes: duration
-      })
-      await api.put(`/teacher/reading/${readingId}/keys`, keys)
-      
-      // 2. Publish (Ready)
-      await api.put(`/teacher/reading/${readingId}/publish`)
-      
-      alert('Đã hoàn chỉnh bài tập thành công!')
-      if (id && id !== '0') {
-        navigate(`/teacher/classes/${id}`)
-      } else {
-        navigate(`/teacher/reading`)
-      }
     } catch (e: any) {
-      alert(e.message || 'Lỗi. Vui lòng kiểm tra lại dữ liệu.');
+      alert(e.message || 'Lỗi khi lưu thay đổi')
     }
   }
 
@@ -189,11 +154,6 @@ export const TeacherReadingEditPage: React.FC = () => {
           <Button variant="outline" onClick={handleSaveDraft} disabled={isUploading}>
             💾 Lưu thay đổi
           </Button>
-          {data?.status !== 'READY' && (
-            <Button onClick={handlePublish} disabled={isUploading}>
-              🚀 Hoàn thành
-            </Button>
-          )}
         </div>
       </div>
 
