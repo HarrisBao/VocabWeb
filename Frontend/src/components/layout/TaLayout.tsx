@@ -22,6 +22,15 @@ const navItems = [
     )
   },
   {
+    label: 'Điều chỉnh lịch học',
+    href: '/ta/schedule',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
     label: 'Hồ sơ cá nhân',
     href: '/ta/profile',
     icon: (
@@ -70,7 +79,7 @@ export const TaLayout: React.FC = () => {
             <span className="text-white font-black text-sm">ITL</span>
           </div>
           <div>
-            <div className="font-bold text-gray-900 text-sm leading-tight">IELTS Thanh Lê</div>
+            <div className="font-bold text-gray-900 text-sm leading-tight">IELTS Thanh Lêêê</div>
             <div className="text-xs text-brand-text font-semibold">Cổng Trợ Giảng</div>
           </div>
         </div>

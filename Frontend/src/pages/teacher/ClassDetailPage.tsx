@@ -106,6 +106,7 @@ export const ClassDetailPage: React.FC = () => {
   const [newStudentName, setNewStudentName] = useState('')
   const [newStudentPhone, setNewStudentPhone] = useState('')
   const [isAddingStudent, setIsAddingStudent] = useState(false)
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
 
   // TA logic
   const [tas, setTas] = useState<TaUser[]>([])
@@ -329,12 +330,15 @@ export const ClassDetailPage: React.FC = () => {
     try {
       const res = await api.post(`/teacher/class/${id}/enrollments/${studentProfileId}`)
       if (res.id && cls) {
-        setCls({
-          ...cls,
-          memberCount: cls.memberCount + 1,
-          members: [...cls.members, res]
-        })
+        // Prevent duplicate insertion just in case
+        if (!cls.members.some(m => m.studentProfileId === res.studentProfileId)) {
+          setCls({
+            ...cls,
+            members: [...cls.members, res]
+          })
+        }
         setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
+        setIsAddStudentModalOpen(false)
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lỗi khi thêm học sinh.' })
@@ -720,58 +724,75 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
         </div>
       )}
 
-      {/* TAB 2: THÀNH VIÊN */}
+            {/* TAB 2: THÀNH VIÊN */}
       {activeTab === 'members' && (
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Danh sách học sinh</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Thêm học sinh không cần tài khoản bằng số điện thoại.</p>
+              <h2 className="text-lg font-black uppercase text-gray-900">Thành viên lớp {cls.name}</h2>
             </div>
+            <Button size="sm" onClick={() => setIsAddStudentModalOpen(true)} className="font-bold">
+              + Thêm học sinh
+            </Button>
           </div>
           
-          <StudentSearchDropdown classId={parseInt(id!)} onSelect={handleSelectExistingStudent} onAddNoAccount={handleAddNoAccountStudent} isAdding={isAddingStudent} />
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Danh sách học sinh</h3>
 
           {cls.members.length > 0 ? (
             <div className="divide-y divide-gray-100">
               {cls.members.map((m) => (
-                <div key={m.id} className="py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold text-xs">
+                <div key={m.id} className="py-3 flex items-center justify-between hover:bg-gray-50 -mx-6 px-6 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold text-sm">
                       {m.fullName.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900">{m.fullName}</p>
-                      <p className="text-xs text-gray-500">{m.phone || 'Chưa có SĐT'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-gray-900">{m.fullName}</p>
+                        {m.userId && (
+                          <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 font-bold uppercase tracking-wider">Tài khoản</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{m.phone || 'Chưa có SĐT'}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-  <span className="text-xs text-gray-400">Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}</span>
-  <button 
-    onClick={() => handleRemoveStudent(m.studentProfileId, m.fullName)}
-    className="text-xs text-red-600 hover:text-red-700 font-medium"
-  >
-    Xóa khỏi lớp
-  </button>
-</div>
+                    <span className="text-xs font-medium text-gray-400">Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}</span>
+                    <button 
+                      onClick={() => handleRemoveStudent(m.studentProfileId, m.fullName)}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
+                    >
+                      Xóa khỏi lớp
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-12 border-2 border-dashed border-surface-hover rounded-xl">
-              <p className="text-sm text-gray-500 mb-2">Chưa có học sinh nào tham gia lớp này</p>
-              <p className="text-xs text-gray-400 max-w-md mx-auto mb-4">
-                Bạn chỉ cần gửi link cố định của lớp cho học viên. Khi học viên truy cập, họ sẽ thấy đầy đủ danh mục bài học.
-              </p>
-              <button
-                onClick={handleCopyLink}
-                className="px-4 py-2 bg-brand-light text-brand-text border border-green-200 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
-              >
-                {copiedLink ? '✓ Đã copy link cố định' : '📋 Copy link cố định gửi học viên'}
-              </button>
+              <p className="text-sm text-gray-500 font-medium">Chưa có học sinh nào trong lớp.</p>
             </div>
           )}
         </Card>
+      )}
+
+      {/* MODAL: THÊM HỌC SINH */}
+      {isAddStudentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setIsAddStudentModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-black text-gray-900 mb-6">Thêm học sinh vào lớp {cls.name}</h2>
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-gray-700">Tìm học sinh</label>
+              <StudentSearchDropdown classId={parseInt(id!)} onSelect={handleSelectExistingStudent} isAdding={isAddingStudent} />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* TAB ATTENDANCE */}

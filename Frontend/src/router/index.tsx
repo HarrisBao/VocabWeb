@@ -59,6 +59,7 @@ import { ProfilePage } from '../pages/teacher/ProfilePage'
 import { TaLayout } from '../components/layout/TaLayout'
 import { TaDashboardPage } from '../pages/ta/TaDashboardPage'
 import { TaClassDetailPage } from '../pages/ta/TaClassDetailPage'
+import { TaScheduleManagementPage } from '../pages/ta/TaScheduleManagementPage'
 
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -203,6 +204,7 @@ export const AppRouter = () => {
             <Route path="dashboard" element={<TaDashboardPage />} />
             <Route path="classes" element={<TaDashboardPage />} />
             <Route path="classes/:id" element={<TaClassDetailPage />} />
+            <Route path="schedule" element={<TaScheduleManagementPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 

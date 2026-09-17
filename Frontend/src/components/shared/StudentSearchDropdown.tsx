@@ -1,32 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { api } from '../../services/api'
-import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 
 interface SearchResult {
   id: number
   fullName: string
   phone: string | null
+  hasAccount: boolean
   membershipStatus?: 'NOT_ENROLLED' | 'ACTIVE' | 'INACTIVE'
 }
 
 interface Props {
   classId: number
   onSelect: (studentId: number) => void
-  onAddNoAccount: (name: string, phone: string) => void
   isAdding: boolean
 }
 
-export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdding }: Props) {
+export function StudentSearchDropdown({ classId, onSelect, isAdding }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  
-  const [newName, setNewName] = useState('')
-  const [newPhone, setNewPhone] = useState('')
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -43,7 +38,6 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
 
   const handleSearch = (val: string) => {
     setQuery(val)
-    setShowCreateForm(false)
     if (val.trim().length < 2) {
       setResults([])
       setIsOpen(false)
@@ -57,19 +51,15 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
 
     timeoutRef.current = setTimeout(async () => {
       try {
-        const data = await api.get<SearchResult[]>(`/teacher/class/${classId}/students/search?q=${encodeURIComponent(val)}`)
-        setResults(data)
+        const data = await api.get<SearchResult[]>(`/teacher/class/${classId}/students/search?q=` + encodeURIComponent(val))
+        // Filter out those without account for this flow!
+        setResults(data.filter((r: SearchResult) => r.hasAccount))
       } catch (e) {
         console.error("Search failed", e)
       } finally {
         setLoading(false)
       }
     }, 300)
-  }
-
-  const handleCreateNew = (e: React.FormEvent) => {
-    e.preventDefault()
-    onAddNoAccount(newName, newPhone)
   }
 
   return (
@@ -85,7 +75,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
         />
       </div>
 
-      {isOpen && !showCreateForm && (
+      {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
           {loading ? (
             <div className="p-4 flex items-center justify-center text-gray-500">
@@ -93,7 +83,7 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
             </div>
           ) : results.length > 0 ? (
             <div className="py-2">
-                            {results.map(r => (
+              {results.map(r => (
                 <button
                   key={r.id}
                   onClick={() => {
@@ -117,53 +107,18 @@ export function StudentSearchDropdown({ classId, onSelect, onAddNoAccount, isAdd
                   ) : r.membershipStatus === 'INACTIVE' ? (
                     <span className="text-xs font-bold text-brand bg-brand-light/30 px-2 py-1 rounded">Thêm lại</span>
                   ) : (
-                    <span className="text-xs font-bold text-brand bg-brand-light/30 px-2 py-1 rounded">Thêm vào lớp</span>
+                    <span className="text-xs font-bold text-brand bg-brand-light/30 px-2 py-1 rounded">Thêm</span>
                   )}
                 </button>
               ))}
             </div>
           ) : (
             <div className="p-4 text-center">
-              <p className="text-sm text-gray-500 mb-3">Không tìm thấy học sinh phù hợp.</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  setIsOpen(false)
-                  setShowCreateForm(true)
-                  setNewName(query) // prepopulate
-                }}
-              >
-                Tạo học sinh chưa có tài khoản
-              </Button>
+              <p className="text-sm text-gray-500 mb-3">Không tìm thấy học sinh có tài khoản.</p>
             </div>
           )}
         </div>
       )}
-
-      {showCreateForm && (
-        <form onSubmit={handleCreateNew} className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
-          <h4 className="text-sm font-semibold text-gray-700">Tạo học sinh mới</h4>
-          <Input 
-            placeholder="Họ và tên *" 
-            value={newName} 
-            onChange={e => setNewName(e.target.value)} 
-            required 
-          />
-          <Input 
-            placeholder="Số điện thoại *" 
-            value={newPhone} 
-            onChange={e => setNewPhone(e.target.value)} 
-            required 
-          />
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setShowCreateForm(false)}>Hủy</Button>
-            <Button type="submit" loading={isAdding}>Thêm vào lớp</Button>
-          </div>
-        </form>
-      )}
     </div>
   )
 }
-
-

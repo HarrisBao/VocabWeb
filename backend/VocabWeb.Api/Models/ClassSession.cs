@@ -10,6 +10,10 @@ public class ClassSession
     public DateTime SessionDate { get; set; }
     public string? Title { get; set; }
     
+    public IeltsSkill Skill { get; set; } = IeltsSkill.GENERAL;
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    
     public string? CreatedById { get; set; }
     public ApplicationUser? CreatedBy { get; set; }
     

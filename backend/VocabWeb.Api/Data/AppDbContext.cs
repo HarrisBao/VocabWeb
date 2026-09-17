@@ -39,9 +39,96 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ReadingAttemptAnswer> ReadingAttemptAnswers => Set<ReadingAttemptAnswer>();
     public DbSet<ReadingClassAssignment> ReadingClassAssignments => Set<ReadingClassAssignment>();
 
-    protected override void OnModelCreating(ModelBuilder builder)
+    // Schedule Models
+    public DbSet<ClassSkillSchedule> ClassSkillSchedules => Set<ClassSkillSchedule>();
+    public DbSet<StudentScheduleRequest> StudentScheduleRequests => Set<StudentScheduleRequest>();
+    public DbSet<StudentSessionOverride> StudentSessionOverrides => Set<StudentSessionOverride>();
+    public DbSet<EnrollmentSkillAssignment> EnrollmentSkillAssignments => Set<EnrollmentSkillAssignment>();
+
+
+protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Schedule Models Configuration
+        builder.Entity<ClassSkillSchedule>()
+            .HasOne(c => c.Class)
+            .WithMany()
+            .HasForeignKey(c => c.ClassId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<StudentScheduleRequest>()
+            .HasOne(r => r.StudentProfile)
+            .WithMany()
+            .HasForeignKey(r => r.StudentProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<StudentScheduleRequest>()
+            .HasOne(r => r.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(r => r.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<StudentScheduleRequest>()
+            .HasOne(r => r.AffectedSession)
+            .WithMany()
+            .HasForeignKey(r => r.AffectedSessionId)
+            .OnDelete(DeleteBehavior.SetNull);
+            
+        builder.Entity<StudentScheduleRequest>()
+            .HasOne(r => r.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(r => r.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+            
+        builder.Entity<StudentSessionOverride>()
+            .HasOne(o => o.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(o => o.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<StudentSessionOverride>()
+            .HasOne(o => o.OriginalSession)
+            .WithMany()
+            .HasForeignKey(o => o.OriginalSessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<StudentSessionOverride>()
+            .HasOne(o => o.TargetSession)
+            .WithMany()
+            .HasForeignKey(o => o.TargetSessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<StudentSessionOverride>()
+            .HasOne(o => o.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(o => o.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+            
+        builder.Entity<EnrollmentSkillAssignment>()
+            .HasOne(e => e.ClassEnrollment)
+            .WithMany()
+            .HasForeignKey(e => e.ClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<EnrollmentSkillAssignment>()
+            .HasOne(e => e.SourceClass)
+            .WithMany()
+            .HasForeignKey(e => e.SourceClassId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<EnrollmentSkillAssignment>()
+            .HasOne(e => e.TargetClass)
+            .WithMany()
+            .HasForeignKey(e => e.TargetClassId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<EnrollmentSkillAssignment>()
+            .HasOne(e => e.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(e => e.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
 
         builder.Entity<ReadingAssignment>()
             .HasOne(r => r.Passage)
