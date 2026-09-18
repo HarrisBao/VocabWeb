@@ -40,6 +40,7 @@ interface ReadingAssignment {
   durationMinutes: number;
   questionCount: number;
   attemptCount: number;
+  latestSubmittedAttemptId?: number | null;
 }
 
 export const StudentClassDetailPage: React.FC = () => {
