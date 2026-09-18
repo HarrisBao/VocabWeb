@@ -183,12 +183,11 @@ namespace VocabWeb.Api.Controllers
             var enrollment = await GetEnrollment(classId);
             if (enrollment == null) return Forbid();
 
-            var attempts = await _db.ReadingAttempts
+            var attemptsList = await _db.ReadingAttempts
                 .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
-                .OrderByDescending(a => a.SubmittedAt)
+                .OrderBy(a => a.SubmittedAt).ThenBy(a => a.Id)
                 .Select(a => new {
                     a.Id,
-                    a.AttemptNumber,
                     a.StartedAt,
                     a.SubmittedAt,
                     a.TimeSpentSeconds,
@@ -201,7 +200,21 @@ namespace VocabWeb.Api.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(attempts);
+            var withNumber = attemptsList.Select((a, idx) => new {
+                a.Id,
+                AttemptNumber = idx + 1,
+                a.StartedAt,
+                a.SubmittedAt,
+                a.TimeSpentSeconds,
+                a.AllowedDurationSecondsSnapshot,
+                a.OvertimeSeconds,
+                a.CorrectCount,
+                a.TotalQuestions,
+                a.UnansweredCount,
+                a.IncorrectCount
+            }).OrderByDescending(a => a.SubmittedAt).ToList();
+
+            return Ok(withNumber);
         }
 
         [HttpGet("{id}/attempts/{attemptId}")]
@@ -216,6 +229,19 @@ namespace VocabWeb.Api.Controllers
 
             if (attempt == null) return NotFound();
 
+            // Calculate canonical attempt number
+            int calculatedNumber = 1;
+            if (attempt.SubmittedAt != null) {
+                calculatedNumber = await _db.ReadingAttempts
+                    .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null && (a.SubmittedAt < attempt.SubmittedAt || (a.SubmittedAt == attempt.SubmittedAt && a.Id <= attempt.Id)))
+                    .CountAsync();
+            } else {
+                // If it's an active attempt, it will become the next number
+                calculatedNumber = await _db.ReadingAttempts
+                    .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
+                    .CountAsync() + 1;
+            }
+
             object questionGroups = null;
             if (!string.IsNullOrEmpty(attempt.QuestionSnapshotJson))
             {
@@ -224,7 +250,7 @@ namespace VocabWeb.Api.Controllers
 
             return Ok(new {
                 attempt.Id,
-                attempt.AttemptNumber,
+                AttemptNumber = calculatedNumber,
                 attempt.StartedAt,
                 attempt.SubmittedAt,
                 attempt.TimeSpentSeconds,
