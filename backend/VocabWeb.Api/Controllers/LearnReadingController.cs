@@ -43,7 +43,9 @@ namespace VocabWeb.Api.Controllers
                     r.Id,
                     r.Title,
                     r.DurationMinutes,
-                    AttemptCount = r.Attempts.Count(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
+                    QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count(),
+                    AttemptCount = r.Attempts.Count(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null),
+                    LatestSubmittedAttemptId = r.Attempts.Where(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null).OrderByDescending(a => a.SubmittedAt).Select(a => (int?)a.Id).FirstOrDefault()
                 })
                 .ToListAsync();
 
