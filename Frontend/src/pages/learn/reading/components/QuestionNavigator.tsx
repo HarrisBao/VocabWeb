@@ -5,10 +5,13 @@ interface QuestionNavigatorProps {
   answers: Record<number, string>;
   currentQuestionId: number | null;
   onQuestionClick: (id: number) => void;
+  isReview?: boolean;
+  reviewAnswers?: any[];
 }
 
-export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({ questions, answers, currentQuestionId, onQuestionClick }) => {
-  // Group questions by groupId to visually separate them
+export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({ 
+  questions, answers, currentQuestionId, onQuestionClick, isReview, reviewAnswers 
+}) => {
   const groups: Record<number, typeof questions> = {};
   questions.forEach(q => {
     if (!groups[q.groupId]) groups[q.groupId] = [];
@@ -25,21 +28,36 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({ questions,
           return (
             <div key={groupId} className="flex items-center space-x-2">
               {groupQuestions.map(q => {
-                const ans = answers[q.id];
-                const isAnswered = ans !== undefined && ans.trim() !== '';
-                const isCurrent = q.id === currentQuestionId;
-                
-                let stateClass = "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"; // Unanswered
-                if (isAnswered) {
-                  stateClass = "bg-green-100 text-green-800 border-green-200"; // Answered
+                let stateClass = "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"; // Unanswered base
+                let ariaLabel = Câu , chưa trả lời;
+
+                if (isReview && reviewAnswers) {
+                  const revAns = reviewAnswers.find(a => a.questionId === q.id);
+                  if (!revAns || !revAns.studentAnswer || revAns.studentAnswer.trim() === '') {
+                    stateClass = "bg-amber-100 text-amber-900 border-amber-300";
+                    ariaLabel = Câu , chưa trả lời;
+                  } else if (revAns.isCorrect) {
+                    stateClass = "bg-green-100 text-green-900 border-green-300";
+                    ariaLabel = Câu , đúng;
+                  } else {
+                    stateClass = "bg-red-100 text-red-900 border-red-300";
+                    ariaLabel = Câu , sai;
+                  }
+                } else {
+                  const ans = answers[q.id];
+                  const isAnswered = ans !== undefined && ans.trim() !== '';
+                  if (isAnswered) {
+                    stateClass = "bg-green-100 text-green-800 border-green-200";
+                    ariaLabel = Câu , đã trả lời;
+                  }
                 }
                 
+                const isCurrent = q.id === currentQuestionId;
                 let focusClass = "border";
                 if (isCurrent) {
-                  focusClass = "border-2 border-indigo-500 ring-2 ring-indigo-200 ring-offset-1"; // Current focus ring
+                  focusClass = "border-2 border-indigo-500 ring-2 ring-indigo-200 ring-offset-1";
+                  ariaLabel += ", đang xem";
                 }
-                
-                const ariaLabel = `Câu ${q.displayNumber}, ${isAnswered ? 'đã trả lời' : 'chưa trả lời'}${isCurrent ? ', đang xem' : ''}`;
                 
                 return (
                   <button
@@ -47,7 +65,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({ questions,
                     aria-label={ariaLabel}
                     title={ariaLabel}
                     onClick={() => onQuestionClick(q.id)}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${stateClass} ${focusClass}`}
+                    className={w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all  }
                   >
                     {q.displayNumber}
                   </button>

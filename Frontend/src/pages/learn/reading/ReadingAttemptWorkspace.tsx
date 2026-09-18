@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../../../services/api';
 import { Spinner } from '../../../components/ui/Spinner';
 import { ReadingAttemptHeader } from './components/ReadingAttemptHeader';
@@ -7,14 +7,17 @@ import { ReadingPassagePanel } from './components/ReadingPassagePanel';
 import { ReadingQuestionsPanel } from './components/ReadingQuestionsPanel';
 import { QuestionNavigator } from './components/QuestionNavigator';
 
-export const ReadingAttemptWorkspace: React.FC = () => {
-  const { id, readingId } = useParams();
+export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isReview }) => {
+  const { id, readingId, attemptId } = useParams();
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(true);
   const [assignment, setAssignment] = useState<any>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   
+  // Review specific
+  const [reviewResult, setReviewResult] = useState<any>(null);
+
   // Timer & State
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [allowedDuration, setAllowedDuration] = useState<number>(0);
@@ -29,40 +32,71 @@ export const ReadingAttemptWorkspace: React.FC = () => {
 
   useEffect(() => {
     fetchDataAndStart();
-  }, [readingId, id]);
+  }, [readingId, id, attemptId, isReview]);
 
   useEffect(() => {
-    if (!startedAt) return;
+    if (isReview || !startedAt) return;
     const interval = setInterval(() => {
       const now = new Date();
       const diffSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
       setElapsed(diffSeconds > 0 ? diffSeconds : 0);
     }, 1000);
     return () => clearInterval(interval);
-  }, [startedAt]);
+  }, [startedAt, isReview]);
 
   const fetchDataAndStart = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/learn/class/${id}/reading/${readingId}`);
-      setAssignment(res);
       
-      const startRes = await api.post(`/learn/class/${id}/reading/${readingId}/start`, {});
-      setStartedAt(new Date(startRes.startedAt));
-      setAllowedDuration(startRes.allowedDurationSecondsSnapshot);
-      
-      if (res.draftAnswers) {
-        setAnswers(res.draftAnswers);
+      if (isReview) {
+        // Fetch snapshot and result for review
+        const res = await api.get(/learn/class//reading//attempts/);
+        setReviewResult(res);
+        setAssignment({
+          title: "Xem lại bài làm", // We might not have the original title in the attempt, but we can fetch it if needed. Actually we'll fetch the assignment title just in case.
+          passage: res.passage,
+          questionGroups: res.questionGroups
+        });
+        
+        // Load original assignment just to get the title
+        try {
+           const liveRes = await api.get(/learn/class//reading/);
+           setAssignment((prev: any) => ({ ...prev, title: liveRes.title }));
+        } catch(e) {}
+        
+        // Restore answers from the submitted attempt
+        const finalAnswers: Record<number, string> = {};
+        if (res.answers) {
+          res.answers.forEach((a: any) => {
+            finalAnswers[a.questionId] = a.studentAnswer;
+          });
+        }
+        setAnswers(finalAnswers);
+        
+      } else {
+        // Normal Attempt Mode
+        const res = await api.get(/learn/class//reading/);
+        setAssignment(res);
+        
+        const startRes = await api.post(/learn/class//reading//start, {});
+        setStartedAt(new Date(startRes.startedAt));
+        setAllowedDuration(startRes.allowedDurationSecondsSnapshot);
+        
+        if (res.draftAnswers) {
+          setAnswers(res.draftAnswers);
+        }
       }
       
       setLoading(false);
     } catch (e: any) {
       alert("Không thể tải bài làm: " + e.message);
-      navigate(`/learn/classes/${id}`);
+      navigate(/student/classes/);
     }
   };
 
   const handleAnswerChange = (questionId: number, answer: string) => {
+    if (isReview) return; // Prevent mutation during review
+    
     const newAnswers = { ...answers, [questionId]: answer };
     setAnswers(newAnswers);
     
@@ -72,7 +106,7 @@ export const ReadingAttemptWorkspace: React.FC = () => {
     
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await api.put(`/learn/class/${id}/reading/${readingId}/autosave`, newAnswers);
+        await api.put(/learn/class//reading//autosave, newAnswers);
         setSaveStatus('SAVED');
       } catch (e) {
         setSaveStatus('ERROR');
@@ -96,24 +130,26 @@ export const ReadingAttemptWorkspace: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (isReview) return;
+    
     const total = assignment?.questionGroups?.reduce((acc: number, g: any) => acc + g.questions.length, 0) || 0;
     const answeredCount = Object.values(answers).filter(a => a.trim() !== '').length;
     
     if (answeredCount < total) {
-      if (!window.confirm(`Bạn vẫn còn ${total - answeredCount} câu chưa trả lời. Bạn có chắc muốn nộp bài?`)) {
+      if (!window.confirm(Bạn vẫn còn  câu chưa trả lời. Bạn có chắc muốn nộp bài?)) {
         return;
       }
     } else {
-      if (!window.confirm(`Bạn đã hoàn thành tất cả câu hỏi. Bạn có chắc muốn nộp bài?`)) {
+      if (!window.confirm(Bạn đã hoàn thành tất cả câu hỏi. Bạn có chắc muốn nộp bài?)) {
         return;
       }
     }
 
     try {
       setIsSubmitting(true);
-      await api.post(`/learn/class/${id}/reading/${readingId}/submit`, answers);
+      const res = await api.post(/learn/class//reading//submit, answers);
       alert('Đã nộp bài thành công!');
-      navigate(`/learn/classes/${id}`);
+      navigate(/student/classes//reading//attempts//result);
     } catch (e: any) {
       alert('Lỗi khi nộp bài: ' + e.message);
       setIsSubmitting(false);
@@ -124,17 +160,30 @@ export const ReadingAttemptWorkspace: React.FC = () => {
     return <div className="h-screen flex items-center justify-center bg-gray-50"><Spinner /></div>;
   }
 
-  // Calculate timer
-  const remainingSeconds = allowedDuration - elapsed;
-  const isOvertime = remainingSeconds < 0;
-  const absRemaining = Math.abs(remainingSeconds);
-  const m = Math.floor(absRemaining / 60).toString().padStart(2, '0');
-  const s = (absRemaining % 60).toString().padStart(2, '0');
-  const timeStr = `${m}:${s}`;
+  // Timer logic for Attempt vs Review
+  let timeStr = "";
+  let isOvertime = false;
+  
+  if (isReview && reviewResult) {
+    const timeSpent = reviewResult.timeSpentSeconds || 0;
+    const allowed = reviewResult.allowedDurationSecondsSnapshot || 0;
+    isOvertime = timeSpent > allowed;
+    const displaySecs = isOvertime ? timeSpent - allowed : timeSpent;
+    const m = Math.floor(displaySecs / 60).toString().padStart(2, '0');
+    const s = (displaySecs % 60).toString().padStart(2, '0');
+    timeStr = ${m}:;
+  } else {
+    const remainingSeconds = allowedDuration - elapsed;
+    isOvertime = remainingSeconds < 0;
+    const absRemaining = Math.abs(remainingSeconds);
+    const m = Math.floor(absRemaining / 60).toString().padStart(2, '0');
+    const s = (absRemaining % 60).toString().padStart(2, '0');
+    timeStr = ${m}:;
+  }
 
-  const allQuestions = assignment.questionGroups.flatMap((g: any) => 
+  const allQuestions = assignment.questionGroups?.flatMap((g: any) => 
     g.questions.map((q: any) => ({ ...q, groupId: g.id }))
-  );
+  ) || [];
   
   const answeredCount = Object.values(answers).filter(a => a.trim() !== '').length;
 
@@ -143,6 +192,8 @@ export const ReadingAttemptWorkspace: React.FC = () => {
       <ReadingAttemptHeader 
         title={assignment.title}
         classId={id}
+        readingId={readingId}
+        attemptId={attemptId}
         answeredCount={answeredCount}
         totalQuestions={allQuestions.length}
         timeRemainingStr={timeStr}
@@ -150,19 +201,20 @@ export const ReadingAttemptWorkspace: React.FC = () => {
         saveStatus={saveStatus}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+        isReview={isReview}
       />
 
       {/* MOBILE TABS */}
       <div className="md:hidden flex border-b bg-white shrink-0">
         <button 
           onClick={() => setMobileTab('PASSAGE')} 
-          className={`flex-1 py-3 font-bold text-sm ${mobileTab === 'PASSAGE' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-gray-500'}`}
+          className={lex-1 py-3 font-bold text-sm }
         >
           Đoạn văn
         </button>
         <button 
           onClick={() => setMobileTab('QUESTIONS')} 
-          className={`flex-1 py-3 font-bold text-sm ${mobileTab === 'QUESTIONS' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-gray-500'}`}
+          className={lex-1 py-3 font-bold text-sm }
         >
           Câu hỏi
         </button>
@@ -170,19 +222,21 @@ export const ReadingAttemptWorkspace: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* PASSAGE PANEL */}
-        <div className={`md:flex md:w-[55%] overflow-y-auto p-4 md:p-8 lg:p-12 bg-white border-r border-gray-200 shadow-[inset_-10px_0_15px_-15px_rgba(0,0,0,0.1)] ${mobileTab === 'PASSAGE' ? 'block w-full' : 'hidden'}`}>
+        <div className={md:flex md:w-[55%] overflow-y-auto p-4 md:p-8 lg:p-12 bg-white border-r border-gray-200 shadow-[inset_-10px_0_15px_-15px_rgba(0,0,0,0.1)] }>
           <ReadingPassagePanel htmlContent={assignment.passage} />
         </div>
         
         {/* QUESTIONS PANEL */}
-        <div className={`md:flex md:w-[45%] overflow-y-auto p-4 md:p-8 lg:p-12 relative flex-col bg-[#F9FAFB] ${mobileTab === 'QUESTIONS' ? 'flex w-full' : 'hidden'}`}>
+        <div className={md:flex md:w-[45%] overflow-y-auto p-4 md:p-8 lg:p-12 relative flex-col bg-[#F9FAFB] }>
           <ReadingQuestionsPanel 
-            questionGroups={assignment.questionGroups}
+            questionGroups={assignment.questionGroups || []}
             answers={answers}
             onAnswerChange={handleAnswerChange}
             onQuestionFocus={handleQuestionFocus}
             currentQuestionId={currentQuestionId}
             questionRefs={questionRefs}
+            isReview={isReview}
+            reviewAnswers={reviewResult?.answers || []}
           />
         </div>
       </div>
@@ -192,6 +246,8 @@ export const ReadingAttemptWorkspace: React.FC = () => {
         answers={answers}
         currentQuestionId={currentQuestionId}
         onQuestionClick={handleNavigatorClick}
+        isReview={isReview}
+        reviewAnswers={reviewResult?.answers || []}
       />
     </div>
   );

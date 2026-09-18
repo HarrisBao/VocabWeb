@@ -9,6 +9,8 @@ interface QuestionGroupRendererProps {
   onQuestionFocus: (questionId: number) => void;
   currentQuestionId: number | null;
   questionRefs: React.MutableRefObject<Record<number, HTMLDivElement | null>>;
+  isReview?: boolean;
+  reviewAnswers?: any[];
 }
 
 export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
@@ -18,16 +20,16 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
   onAnswerChange,
   onQuestionFocus,
   currentQuestionId,
-  questionRefs
+  questionRefs,
+  isReview,
+  reviewAnswers
 }) => {
-  // Determine structural color based on academicQuestionType or index
   const getStructuralColor = () => {
     const type = group.academicQuestionType || '';
     if (type.includes('MATCHING_INFORMATION') || type.includes('MATCHING_HEADING')) return 'bg-blue-50 border-blue-200 text-blue-800';
     if (type.includes('MATCHING_PEOPLE') || type.includes('MATCHING_FEATURE')) return 'bg-purple-50 border-purple-200 text-purple-800';
     if (type.includes('SUMMARY_COMPLETION')) return 'bg-orange-50 border-orange-200 text-orange-800';
     
-    // Fallback colors
     const colors = [
       'bg-blue-50 border-blue-200 text-blue-800',
       'bg-purple-50 border-purple-200 text-purple-800',
@@ -41,7 +43,8 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
   const isSummary = group.academicQuestionType?.includes('SUMMARY_COMPLETION');
 
   return (
-    <div className={`rounded-2xl border-2 p-6 transition-all ${structuralClass}`}>
+    <div className={
+ounded-2xl border-2 p-6 transition-all }>
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 uppercase tracking-wide opacity-90">
           {group.academicQuestionType?.replace(/_/g, ' ') || 'QUESTIONS'}
@@ -52,19 +55,24 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
       </div>
 
       <div className={isSummary ? "prose prose-slate max-w-none text-gray-800 leading-loose text-lg bg-white/60 p-6 rounded-xl border border-white/40" : "space-y-6"}>
-        {group.questions?.map((q: any) => (
-          <QuestionRenderer 
-            key={q.id}
-            question={q}
-            group={group}
-            answer={answers[q.id] || ''}
-            onAnswerChange={(ans) => onAnswerChange(q.id, ans)}
-            onFocus={() => onQuestionFocus(q.id)}
-            isCurrent={currentQuestionId === q.id}
-            questionRefs={questionRefs}
-            isSummary={isSummary}
-          />
-        ))}
+        {group.questions?.map((q: any) => {
+          const revRes = isReview && reviewAnswers ? reviewAnswers.find(a => a.questionId === q.id) : null;
+          return (
+            <QuestionRenderer 
+              key={q.id}
+              question={q}
+              group={group}
+              answer={answers[q.id] || ''}
+              onAnswerChange={(ans) => onAnswerChange(q.id, ans)}
+              onFocus={() => onQuestionFocus(q.id)}
+              isCurrent={currentQuestionId === q.id}
+              questionRefs={questionRefs}
+              isSummary={isSummary}
+              isReview={isReview}
+              reviewResult={revRes}
+            />
+          );
+        })}
       </div>
     </div>
   );

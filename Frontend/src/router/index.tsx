@@ -20,6 +20,8 @@ import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 import { ClassPage } from '../pages/learn/ClassPage'
 import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
 import { ReadingAttemptWorkspace } from '../pages/learn/reading/ReadingAttemptWorkspace'
+import { ReadingResultSummaryPage } from '../pages/learn/reading/ReadingResultSummaryPage'
+
 
 // Student System Shell
 import { StudentLayout } from '../components/layout/StudentLayout'
@@ -156,6 +158,9 @@ export const AppRouter = () => {
               <Route index element={<StudentAccountDashboard />} />
               <Route path="classes/:id" element={<StudentClassDetailPage />} />
               <Route path="classes/:id/reading/:readingId" element={<ReadingAttemptWorkspace />} />
+              <Route path="classes/:id/reading/:readingId/attempts/:attemptId/result" element={<ReadingResultSummaryPage />} />
+              <Route path="classes/:id/reading/:readingId/attempts/:attemptId/review" element={<ReadingAttemptWorkspace isReview />} />
+
               <Route path="classes/:id/:skillId" element={<StudentComingSoonPage />} />
             </Route>
 

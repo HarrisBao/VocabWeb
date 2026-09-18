@@ -8,6 +8,8 @@ interface ReadingQuestionsPanelProps {
   onQuestionFocus: (questionId: number) => void;
   currentQuestionId: number | null;
   questionRefs: React.MutableRefObject<Record<number, HTMLDivElement | null>>;
+  isReview?: boolean;
+  reviewAnswers?: any[];
 }
 
 export const ReadingQuestionsPanel: React.FC<ReadingQuestionsPanelProps> = ({
@@ -16,7 +18,9 @@ export const ReadingQuestionsPanel: React.FC<ReadingQuestionsPanelProps> = ({
   onAnswerChange,
   onQuestionFocus,
   currentQuestionId,
-  questionRefs
+  questionRefs,
+  isReview,
+  reviewAnswers
 }) => {
   return (
     <div className="space-y-12 pb-32">
@@ -30,6 +34,8 @@ export const ReadingQuestionsPanel: React.FC<ReadingQuestionsPanelProps> = ({
           onQuestionFocus={onQuestionFocus}
           currentQuestionId={currentQuestionId}
           questionRefs={questionRefs}
+          isReview={isReview}
+          reviewAnswers={reviewAnswers}
         />
       ))}
     </div>

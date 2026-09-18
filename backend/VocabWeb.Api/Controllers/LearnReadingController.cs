@@ -212,6 +212,12 @@ namespace VocabWeb.Api.Controllers
 
             if (attempt == null) return NotFound();
 
+            object questionGroups = null;
+            if (!string.IsNullOrEmpty(attempt.QuestionSnapshotJson))
+            {
+                questionGroups = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.ICollection<ReadingQuestionGroup>>(attempt.QuestionSnapshotJson);
+            }
+
             return Ok(new {
                 attempt.Id,
                 attempt.AttemptNumber,
@@ -222,6 +228,8 @@ namespace VocabWeb.Api.Controllers
                 attempt.OvertimeSeconds,
                 attempt.CorrectCount,
                 attempt.TotalQuestions,
+                Passage = attempt.PassageSnapshotHtml,
+                QuestionGroups = questionGroups,
                 Answers = attempt.Answers.Select(a => new {
                     questionId = a.ReadingQuestionId,
                     studentAnswer = a.StudentAnswer,
