@@ -140,7 +140,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
               <div className="border-t pt-4 flex-1 flex flex-col min-h-0">
                 <h3 className="font-bold text-gray-700 mb-3 uppercase text-sm tracking-wider">Lịch sử các lần làm</h3>
                 <div className="overflow-y-auto space-y-3 pr-2" style={{ maxHeight: '350px' }}>
-                  {history.map(h => (
+                  {chronological.map(h => (
                     <div key={h.id} className={`p-4 rounded-xl border flex flex-col gap-2 transition-all ${h.id === parseInt(attemptId!) ? 'bg-brand-50 border-brand-400 ring-1 ring-brand-400 shadow-sm' : 'bg-white border-gray-200 hover:border-brand-300'}`}>
                       <div className="flex justify-between items-center">
                         <span className={`font-bold ${h.id === parseInt(attemptId!) ? 'text-brand-800' : 'text-gray-800'}`}>Lần {attemptNumberById.get(h.id) || h.attemptNumber}</span>
