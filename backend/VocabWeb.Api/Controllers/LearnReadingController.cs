@@ -65,6 +65,7 @@ namespace VocabWeb.Api.Controllers
             if (assignment == null) return NotFound();
 
             var activeAttempt = await _db.ReadingAttempts
+                .Include(a => a.Answers)
                 .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
 
             // If no active attempt, it must be READY
@@ -76,6 +77,7 @@ namespace VocabWeb.Api.Controllers
             var questionGroups = assignment.QuestionGroups;
             var durationMinutes = assignment.DurationMinutes;
             var passageHtml = assignment.Passage?.ContentHtml;
+            var draftAnswers = new System.Collections.Generic.Dictionary<int, string>();
 
             if (activeAttempt != null)
             {
@@ -97,6 +99,11 @@ namespace VocabWeb.Api.Controllers
                         questionGroups = snapshotGroups;
                     }
                 }
+
+                foreach (var ans in activeAttempt.Answers)
+                {
+                    draftAnswers[ans.ReadingQuestionId] = ans.StudentAnswer;
+                }
             }
 
             // Do not include AcceptedAnswers!
@@ -105,6 +112,7 @@ namespace VocabWeb.Api.Controllers
                 assignment.Title,
                 DurationMinutes = durationMinutes,
                 Passage = passageHtml,
+                DraftAnswers = draftAnswers,
                 QuestionGroups = questionGroups.OrderBy(g => g.SortOrder).Select(g => new {
                     g.Id,
                     g.Instruction,
@@ -305,13 +313,23 @@ namespace VocabWeb.Api.Controllers
 
                     if (isCorrect) correctCount++;
 
-                    attempt.Answers.Add(new ReadingAttemptAnswer
+                    var existingAnswer = attempt.Answers.FirstOrDefault(a => a.ReadingQuestionId == q.Id);
+                    if (existingAnswer != null)
                     {
-                        ReadingQuestionId = q.Id,
-                        StudentAnswer = ans,
-                        IsCorrect = isCorrect,
-                        CorrectAnswerSnapshot = primaryAns
-                    });
+                        existingAnswer.StudentAnswer = ans;
+                        existingAnswer.IsCorrect = isCorrect;
+                        existingAnswer.CorrectAnswerSnapshot = primaryAns;
+                    }
+                    else
+                    {
+                        attempt.Answers.Add(new ReadingAttemptAnswer
+                        {
+                            ReadingQuestionId = q.Id,
+                            StudentAnswer = ans,
+                            IsCorrect = isCorrect,
+                            CorrectAnswerSnapshot = primaryAns
+                        });
+                    }
                 }
             }
 
@@ -331,6 +349,42 @@ namespace VocabWeb.Api.Controllers
                     correctAnswer = a.CorrectAnswerSnapshot
                 })
             });
+        }
+
+        [HttpPut("{id}/autosave")]
+        public async Task<IActionResult> AutosaveAnswers(int classId, int id, [FromBody] System.Collections.Generic.Dictionary<int, string> studentAnswers)
+        {
+            var enrollment = await GetEnrollment(classId);
+            if (enrollment == null) return Forbid();
+
+            var attempt = await _db.ReadingAttempts
+                .Include(a => a.Answers)
+                .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
+
+            if (attempt == null) return NotFound("No active attempt found.");
+
+            foreach (var kvp in studentAnswers)
+            {
+                var questionId = kvp.Key;
+                var ans = kvp.Value?.Trim() ?? "";
+
+                var existingAnswer = attempt.Answers.FirstOrDefault(a => a.ReadingQuestionId == questionId);
+                if (existingAnswer != null)
+                {
+                    existingAnswer.StudentAnswer = ans;
+                }
+                else
+                {
+                    attempt.Answers.Add(new ReadingAttemptAnswer
+                    {
+                        ReadingQuestionId = questionId,
+                        StudentAnswer = ans
+                    });
+                }
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok();
         }
     }
 }

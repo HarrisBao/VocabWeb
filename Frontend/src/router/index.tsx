@@ -18,8 +18,8 @@ import { PublicLessonsPage } from '../pages/lessons/PublicLessonsPage'
 
 // Learn
 import { ClassPage } from '../pages/learn/ClassPage'
-import { StudentReadingAssignmentPage } from '../pages/learn/StudentReadingAssignmentPage'
 import { VocabularyReviewPage } from '../pages/learn/VocabularyReviewPage'
+import { ReadingAttemptWorkspace } from '../pages/learn/reading/ReadingAttemptWorkspace'
 
 // Student System Shell
 import { StudentLayout } from '../components/layout/StudentLayout'
@@ -155,6 +155,7 @@ export const AppRouter = () => {
             <Route path="/student" element={<StudentRoute />}>
               <Route index element={<StudentAccountDashboard />} />
               <Route path="classes/:id" element={<StudentClassDetailPage />} />
+              <Route path="classes/:id/reading/:readingId" element={<ReadingAttemptWorkspace />} />
               <Route path="classes/:id/:skillId" element={<StudentComingSoonPage />} />
             </Route>
 
