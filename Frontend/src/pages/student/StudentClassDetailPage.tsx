@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { Loader2, Calendar, BookOpen, Library, Edit3, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -47,7 +47,18 @@ interface ReadingAssignment {
 export const StudentClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'vocabulary' | 'reading' | 'writing'>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const validTabs = ['overview', 'vocabulary', 'reading', 'writing'];
+  const activeTab = validTabs.includes(searchParams.get('tab') as string) 
+    ? searchParams.get('tab') as 'overview' | 'vocabulary' | 'reading' | 'writing' 
+    : 'overview';
+  
+  const setActiveTab = (tab: 'overview' | 'vocabulary' | 'reading' | 'writing') => {
+    setSearchParams(prev => {
+      prev.set('tab', tab);
+      return prev;
+    });
+  };
   
   const [cls, setCls] = useState<ClassDetail | null>(null);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
