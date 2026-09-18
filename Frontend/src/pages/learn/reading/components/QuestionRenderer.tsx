@@ -53,9 +53,9 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     const correctAns = reviewResult.correctAnswer;
     
     if (isInline) {
-      let gapClass = "border-b-2 border-amber-400 bg-amber-100/50 text-amber-900"; // Blank
+      let gapClass = "border-b-2 border-amber-500 bg-amber-100 text-amber-900 shadow-sm"; // Blank
       if (!isBlank) {
-         gapClass = isCorrect ? "border-b-2 border-green-500 bg-green-100 text-green-900" : "border-b-2 border-red-500 bg-red-100 text-red-900";
+         gapClass = isCorrect ? "border-b-2 border-green-600 bg-green-100 text-green-900 shadow-sm" : "border-b-2 border-red-600 bg-red-100 text-red-900 shadow-sm";
       }
       return (
         <span className="inline-flex items-center mx-1 group/inline relative" onFocusCapture={onFocus} onClick={onFocus} ref={el => questionRefs.current[question.id] = el}>
@@ -84,11 +84,11 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             {question.content && <div className="text-gray-800 mb-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: question.content }} />}
             <div className="flex flex-col space-y-3 mt-4">
                <div>
-                 <span className="text-sm text-gray-500 font-medium block mb-1">Đáp án của bạn:</span>
+                 <span className="text-sm text-gray-700 font-bold block mb-1">Đáp án của bạn:</span>
                  {isBlank ? (
-                   <span className="inline-block px-4 py-2 bg-amber-100 text-amber-900 font-bold border border-amber-300 rounded-lg">Chưa trả lời</span>
+                   <span className="inline-block px-4 py-2 bg-amber-100 text-amber-900 font-bold border-2 border-amber-400 rounded-lg">Chưa trả lời</span>
                  ) : (
-                   <span className={`inline-block px-4 py-2 font-bold border rounded-lg ${isCorrect ? 'bg-green-100 text-green-900 border-green-300' : 'bg-red-100 text-red-900 border-red-300'}`}>
+                   <span className={`inline-block px-4 py-2 font-bold border rounded-lg ${isCorrect ? 'bg-green-100 text-green-900 font-bold border-2 border-green-400' : 'bg-red-100 text-red-900 font-bold border-2 border-red-400'}`}>
                      {reviewResult.studentAnswer}
                    </span>
                  )}
@@ -96,8 +96,8 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                
                {(!isCorrect || isBlank) && (
                  <div>
-                   <span className="text-sm text-gray-500 font-medium block mb-1">Đáp án đúng:</span>
-                   <span className="inline-block px-4 py-2 font-bold border rounded-lg bg-green-100 text-green-900 border-green-300">
+                   <span className="text-sm text-gray-700 font-bold block mb-1">Đáp án đúng:</span>
+                   <span className="inline-block px-4 py-2 font-bold border rounded-lg bg-green-100 text-green-900 font-bold border-2 border-green-400">
                      {correctAns}
                    </span>
                  </div>
@@ -121,7 +121,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         <strong className="mr-2 text-sm text-gray-500">{question.displayNumber}</strong>
         <input 
           type="text"
-          className="border-b-2 border-gray-400 bg-transparent focus:border-indigo-600 focus:outline-none px-2 py-1 min-w-[120px] text-center font-bold text-gray-800 placeholder-gray-300"
+          className="border-b-2 border-gray-400 bg-white/50 focus:bg-white focus:border-indigo-600 focus:outline-none px-2 py-1 min-w-[120px] text-center font-bold text-gray-900 placeholder-gray-400 transition-colors"
           value={answer}
           onChange={e => onAnswerChange(e.target.value)}
           placeholder="[________]"
@@ -170,7 +170,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           ) : (
             <input 
               type="text"
-              className="w-full md:w-2/3 border-2 border-gray-300 rounded-lg p-3 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none font-bold text-gray-800"
+              className="w-full md:w-2/3 border-2 border-gray-300 rounded-lg p-3 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 outline-none font-bold text-gray-900 bg-white transition-all"
               value={answer}
               onChange={e => onAnswerChange(e.target.value)}
               placeholder="Nhập câu trả lời..."

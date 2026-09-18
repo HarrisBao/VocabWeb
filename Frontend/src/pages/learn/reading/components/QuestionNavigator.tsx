@@ -28,26 +28,26 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
           return (
             <div key={groupId} className="flex items-center space-x-2">
               {groupQuestions.map(q => {
-                let stateClass = "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"; // Unanswered base
+                let stateClass = "bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200"; // Unanswered base
                 let ariaLabel = `Câu ${q.displayNumber}, chưa trả lời`;
 
                 if (isReview && reviewAnswers) {
                   const revAns = reviewAnswers.find(a => a.questionId === q.id);
                   if (!revAns || !revAns.studentAnswer || revAns.studentAnswer.trim() === '') {
-                    stateClass = "bg-amber-100 text-amber-900 border-amber-300";
+                    stateClass = "bg-amber-100 text-amber-900 border-amber-400 hover:bg-amber-200";
                     ariaLabel = `Câu ${q.displayNumber}, chưa trả lời`;
                   } else if (revAns.isCorrect) {
-                    stateClass = "bg-green-100 text-green-900 border-green-300";
+                    stateClass = "bg-green-100 text-green-900 border-green-400 hover:bg-green-200";
                     ariaLabel = `Câu ${q.displayNumber}, đúng`;
                   } else {
-                    stateClass = "bg-red-100 text-red-900 border-red-300";
+                    stateClass = "bg-red-100 text-red-900 border-red-400 hover:bg-red-200";
                     ariaLabel = `Câu ${q.displayNumber}, sai`;
                   }
                 } else {
                   const ans = answers[q.id];
                   const isAnswered = ans !== undefined && ans.trim() !== '';
                   if (isAnswered) {
-                    stateClass = "bg-green-100 text-green-800 border-green-200";
+                    stateClass = "bg-green-100 text-green-900 border-green-400 hover:bg-green-200";
                     ariaLabel = `Câu ${q.displayNumber}, đã trả lời`;
                   }
                 }
@@ -55,7 +55,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
                 const isCurrent = q.id === currentQuestionId;
                 let focusClass = "border";
                 if (isCurrent) {
-                  focusClass = "border-2 border-indigo-500 ring-2 ring-indigo-200 ring-offset-1";
+                  focusClass = "border-2 border-indigo-600 ring-4 ring-indigo-200 ring-offset-1";
                   ariaLabel += ", đang xem";
                 }
                 

@@ -26,15 +26,15 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
 }) => {
   const getStructuralColor = () => {
     const type = group.academicQuestionType || '';
-    if (type.includes('MATCHING_INFORMATION') || type.includes('MATCHING_HEADING')) return 'bg-blue-50 border-blue-200 text-blue-800';
-    if (type.includes('MATCHING_PEOPLE') || type.includes('MATCHING_FEATURE')) return 'bg-purple-50 border-purple-200 text-purple-800';
-    if (type.includes('SUMMARY_COMPLETION')) return 'bg-orange-50 border-orange-200 text-orange-800';
+    if (type.includes('MATCHING_INFORMATION') || type.includes('MATCHING_HEADING')) return 'bg-blue-50/80 border-blue-200 text-blue-900';
+    if (type.includes('MATCHING_PEOPLE') || type.includes('MATCHING_FEATURE')) return 'bg-purple-50/80 border-purple-200 text-purple-900';
+    if (type.includes('SUMMARY_COMPLETION')) return 'bg-orange-50/80 border-orange-200 text-orange-900';
     
     const colors = [
-      'bg-blue-50 border-blue-200 text-blue-800',
-      'bg-purple-50 border-purple-200 text-purple-800',
-      'bg-orange-50 border-orange-200 text-orange-800',
-      'bg-teal-50 border-teal-200 text-teal-800'
+      'bg-blue-50/80 border-blue-200 text-blue-900',
+      'bg-purple-50/80 border-purple-200 text-purple-900',
+      'bg-orange-50/80 border-orange-200 text-orange-900',
+      'bg-teal-50/80 border-teal-200 text-teal-900'
     ];
     return colors[index % colors.length];
   };
@@ -45,11 +45,11 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
   return (
     <div className={`rounded-2xl border-2 p-6 transition-all ${structuralClass}`}>
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 uppercase tracking-wide opacity-90">
+        <h3 className="text-lg font-bold mb-2 uppercase tracking-wide opacity-100">
           {group.academicQuestionType?.replace(/_/g, ' ') || 'QUESTIONS'}
         </h3>
         {group.instruction && (
-          <div className="font-medium opacity-80 mb-4" dangerouslySetInnerHTML={{ __html: group.instruction }} />
+          <div className="font-medium opacity-90 text-gray-800 mb-4" dangerouslySetInnerHTML={{ __html: group.instruction }} />
         )}
       </div>
 

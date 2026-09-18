@@ -68,9 +68,9 @@ export const ReadingResultSummaryPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Main Score Card */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 border-brand-500">
-            <h2 className="text-gray-500 font-bold uppercase tracking-wider mb-2">Điểm</h2>
+            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-2">Điểm</h2>
             <div className="text-6xl font-black text-brand-600 mb-6">
-              {score} <span className="text-2xl text-gray-400">/ 10</span>
+              {score} <span className="text-2xl text-gray-500">/ 10</span>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center bg-green-50 px-4 py-3 rounded-xl border border-green-100">
@@ -91,7 +91,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
           {/* Time & Actions Card */}
           <div className="flex flex-col gap-8">
             <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 border-indigo-400">
-              <h2 className="text-gray-500 font-bold uppercase tracking-wider mb-6">Thời gian</h2>
+              <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-6">Thời gian</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center border-b pb-3">
                   <span className="text-gray-600 font-medium">Thời gian làm</span>
@@ -104,7 +104,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
                 {result.overtimeSeconds > 0 && (
                   <div className="flex justify-between items-center pt-2">
                     <span className="text-red-600 font-bold">Quá giờ</span>
-                    <span className="text-xl font-bold text-red-600 bg-red-100 px-3 py-1 rounded-lg">
+                    <span className="text-xl font-bold text-red-600 bg-red-100 text-red-700 px-3 py-1 rounded-lg">
                       {Math.floor(result.overtimeSeconds / 60).toString().padStart(2, '0')}:{(result.overtimeSeconds % 60).toString().padStart(2, '0')}
                     </span>
                   </div>
@@ -113,13 +113,13 @@ export const ReadingResultSummaryPage: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col gap-3">
-              <Button onClick={() => navigate(`/student/classes/${id}/reading/${readingId}/attempts/${attemptId}/review`)} className="w-full bg-brand-50 text-brand-700 hover:bg-brand-100 font-bold py-3 text-lg rounded-xl shadow-sm border border-brand-200">
+              <Button onClick={() => navigate(`/student/classes/${id}/reading/${readingId}/attempts/${attemptId}/review`)} className="w-full bg-brand-600 text-white hover:bg-brand-700 font-bold py-3 text-lg rounded-xl shadow-md transition-all">
                 Xem lại bài làm
               </Button>
-              <Button onClick={handleRetake} className="w-full bg-white text-gray-700 hover:bg-gray-50 font-bold py-3 text-lg rounded-xl shadow-sm border border-gray-300">
+              <Button onClick={handleRetake} className="w-full bg-white text-gray-800 hover:bg-gray-50 font-bold py-3 text-lg rounded-xl shadow-sm border-2 border-gray-200 transition-all">
                 Làm lại
               </Button>
-              <Button onClick={() => navigate(`/student/classes/${id}`)} className="w-full bg-white text-gray-500 hover:text-gray-700 font-bold py-2 hover:bg-transparent">
+              <Button onClick={() => navigate(`/student/classes/${id}`)} className="w-full bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-200 font-bold py-2 rounded-lg transition-all">
                 Về lớp
               </Button>
             </div>
@@ -129,7 +129,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
         {/* Breakdown */}
         {result.questionGroups && (
           <div className="bg-white rounded-2xl p-8 shadow-sm">
-            <h2 className="text-gray-500 font-bold uppercase tracking-wider mb-6">Chi tiết từng phần</h2>
+            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-6">Chi tiết từng phần</h2>
             <div className="space-y-4">
               {result.questionGroups.map((g: any, idx: number) => {
                 const groupQuestionIds = g.questions.map((q: any) => q.id);

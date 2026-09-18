@@ -50,12 +50,12 @@ export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
       
       <div className="flex items-center space-x-6 flex-shrink-0">
         {!isReview && (
-          <div className="text-sm font-medium text-gray-600 hidden md:block">
+          <div className="text-sm font-medium text-gray-700 hidden md:block">
             Đã trả lời {answeredCount}/{totalQuestions}
           </div>
         )}
         
-        <div className={`text-sm font-bold px-3 py-1.5 rounded-md ${isOvertime ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+        <div className={`text-sm font-bold px-3 py-1.5 rounded-md ${isOvertime ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-gray-100 text-gray-800 border border-gray-200'}`}>
           {isOvertime ? 'Quá giờ ' : (isReview ? 'Thời gian làm ' : '')}{timeRemainingStr}
         </div>
         
@@ -68,11 +68,11 @@ export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
         )}
         
         {!isReview ? (
-          <Button onClick={onSubmit} disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2 shadow-sm rounded-lg transition-all active:scale-95">
+          <Button onClick={onSubmit} disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-bold px-6 py-2 shadow-sm rounded-lg transition-all active:scale-95">
             {isSubmitting ? 'Đang nộp...' : 'Nộp bài'}
           </Button>
         ) : (
-          <Button onClick={() => navigate(`/student/classes/${classId}/reading/${readingId}/attempts/${attemptId}/result`)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-6 py-2 shadow-sm rounded-lg transition-all">
+          <Button onClick={() => navigate(`/student/classes/${classId}/reading/${readingId}/attempts/${attemptId}/result`)} className="bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-800 font-bold px-6 py-2 shadow-sm rounded-lg transition-all">
             Quay lại kết quả
           </Button>
         )}
