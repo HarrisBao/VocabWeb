@@ -144,7 +144,9 @@ public class StudentController : ControllerBase
                 DurationMinutes = r.DurationMinutes,
                 QuestionCount = r.QuestionGroups.SelectMany(g => g.Questions).Count(),
                 // Count attempts from this specific student
-                AttemptCount = r.Attempts.Count(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null)
+                AttemptCount = r.Attempts.Count(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null),
+                LatestSubmittedAttemptId = r.Attempts.Where(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt != null).OrderByDescending(a => a.SubmittedAt).Select(a => (int?)a.Id).FirstOrDefault(),
+                ActiveAttemptId = r.Attempts.Where(a => a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null).OrderByDescending(a => a.StartedAt).Select(a => (int?)a.Id).FirstOrDefault()
             })
             .ToListAsync();
 
