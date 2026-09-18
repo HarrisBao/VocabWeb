@@ -28,6 +28,8 @@ interface ReadingAssignmentDto {
   title: string;
   durationMinutes: number;
   attemptCount: number;
+    latestSubmittedAttemptId?: number | null;
+    activeAttemptId?: number | null;
 }
 
 export const ClassPage: React.FC = () => {
@@ -134,10 +136,51 @@ export const ClassPage: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">{r.title}</h3>
                   <div className="mt-auto">
-                    <Link to={`/learn/classes/${classData.id}/reading/${r.id}`}>
-                      <Button className="w-full">{r.attemptCount > 0 ? 'Làm lại' : 'Làm bài'}</Button>
-                    </Link>
-                  </div>
+                      {(() => {
+                        const hasSubmittedAttempt = r.attemptCount > 0 && r.latestSubmittedAttemptId != null;
+                        const hasActiveAttempt = r.activeAttemptId != null;
+
+                        if (hasSubmittedAttempt && !hasActiveAttempt) {
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Link to={`/learn/classes/${classData.id}/reading/${r.id}/attempts/${r.latestSubmittedAttemptId}/result`} className="flex-1">
+                                <Button variant="outline" className="w-full">Xem kết quả</Button>
+                              </Link>
+                              <Link to={`/learn/classes/${classData.id}/reading/${r.id}`} className="flex-1">
+                                <Button className="w-full">Làm lại</Button>
+                              </Link>
+                            </div>
+                          );
+                        }
+
+                        if (hasSubmittedAttempt && hasActiveAttempt) {
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Link to={`/learn/classes/${classData.id}/reading/${r.id}/attempts/${r.latestSubmittedAttemptId}/result`} className="flex-1">
+                                <Button variant="outline" className="w-full">Xem kết quả</Button>
+                              </Link>
+                              <Link to={`/learn/classes/${classData.id}/reading/${r.id}`} className="flex-1">
+                                <Button className="w-full">Tiếp tục</Button>
+                              </Link>
+                            </div>
+                          );
+                        }
+
+                        if (!hasSubmittedAttempt && hasActiveAttempt) {
+                          return (
+                            <Link to={`/learn/classes/${classData.id}/reading/${r.id}`}>
+                              <Button className="w-full">Tiếp tục</Button>
+                            </Link>
+                          );
+                        }
+
+                        return (
+                          <Link to={`/learn/classes/${classData.id}/reading/${r.id}`}>
+                            <Button className="w-full">Làm bài</Button>
+                          </Link>
+                        );
+                      })()}
+                    </div>
                 </div>
               ))}
             </div>

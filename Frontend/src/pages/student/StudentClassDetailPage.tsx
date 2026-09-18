@@ -41,6 +41,7 @@ interface ReadingAssignment {
   questionCount: number;
   attemptCount: number;
   latestSubmittedAttemptId?: number | null;
+    activeAttemptId?: number | null;
 }
 
 export const StudentClassDetailPage: React.FC = () => {
@@ -357,20 +358,51 @@ export const StudentClassDetailPage: React.FC = () => {
                   </div>
                   
                   <div className="pt-4 mt-4">
-                    {r.attemptCount > 0 && r.latestSubmittedAttemptId ? (
-                      <div className="flex items-center gap-2">
-                        <Link to={`/student/classes/${id}/reading/${r.id}/attempts/${r.latestSubmittedAttemptId}/result`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300">
-                          Xem kết quả
+                    {(() => {
+                      const hasSubmittedAttempt = r.attemptCount > 0 && r.latestSubmittedAttemptId != null;
+                      const hasActiveAttempt = r.activeAttemptId != null;
+
+                      if (hasSubmittedAttempt && !hasActiveAttempt) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Link to={`/student/classes/${id}/reading/${r.id}/attempts/${r.latestSubmittedAttemptId}/result`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300">
+                              Xem kết quả
+                            </Link>
+                            <Link to={`/student/classes/${id}/reading/${r.id}`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-brand-50 text-brand-700 hover:bg-brand-100 border-2 border-transparent">
+                              Làm lại
+                            </Link>
+                          </div>
+                        );
+                      }
+
+                      if (hasSubmittedAttempt && hasActiveAttempt) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Link to={`/student/classes/${id}/reading/${r.id}/attempts/${r.latestSubmittedAttemptId}/result`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300">
+                              Xem kết quả
+                            </Link>
+                            <Link to={`/student/classes/${id}/reading/${r.id}`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-brand-50 text-brand-700 hover:bg-brand-100 border-2 border-transparent">
+                              Tiếp tục làm bài
+                            </Link>
+                          </div>
+                        );
+                      }
+
+                      if (!hasSubmittedAttempt && hasActiveAttempt) {
+                        return (
+                          <Link to={`/student/classes/${id}/reading/${r.id}`} className="block w-full text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-emerald-500 text-white hover:bg-emerald-600 border-2 border-transparent">
+                            Tiếp tục làm bài
+                          </Link>
+                        );
+                      }
+
+                      // NO SUBMITTED + NO ACTIVE
+                      return (
+                        <Link to={`/student/classes/${id}/reading/${r.id}`} className="block w-full text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-emerald-500 text-white hover:bg-emerald-600 border-2 border-transparent">
+                          Làm bài
                         </Link>
-                        <Link to={`/student/classes/${id}/reading/${r.id}`} className="flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-brand-50 text-brand-700 hover:bg-brand-100 border-2 border-transparent">
-                          Làm lại
-                        </Link>
-                      </div>
-                    ) : (
-                      <Link to={`/student/classes/${id}/reading/${r.id}`} className="block w-full text-center py-2.5 rounded-xl text-sm font-bold transition-colors bg-emerald-500 text-white hover:bg-emerald-600 border-2 border-transparent">
-                        Làm bài
-                      </Link>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
