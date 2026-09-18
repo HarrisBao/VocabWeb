@@ -54,6 +54,15 @@ export const ReadingResultSummaryPage: React.FC = () => {
     return <div className="h-screen flex items-center justify-center bg-gray-50"><Spinner /></div>;
   }
 
+  const chronological = [...history].sort((a, b) => {
+    const timeDiff = new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id - b.id;
+  });
+  const attemptNumberById = new Map(chronological.map((att, index) => [att.id, index + 1]));
+
+  const currentAttemptNum = attemptNumberById.get(result.id) || result.attemptNumber || 1;
+
   const score = result.totalQuestions > 0 ? ((result.correctCount / result.totalQuestions) * 10).toFixed(2) : "0.00";
   const unansweredCount = result.answers.filter((a: any) => !a.studentAnswer || a.studentAnswer.trim() === '').length;
   const incorrectCount = result.totalQuestions - result.correctCount - unansweredCount;
@@ -76,7 +85,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Main Score Card */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 border-brand-500">
-            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-2">Điểm (Lần {result.attemptNumber})</h2>
+            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-2">Điểm (Lần {currentAttemptNum})</h2>
             <div className="text-6xl font-black text-brand-600 mb-6">
               {score} <span className="text-2xl text-gray-500">/ 10</span>
             </div>
@@ -134,7 +143,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
                   {history.map(h => (
                     <div key={h.id} className={`p-4 rounded-xl border flex flex-col gap-2 transition-all ${h.id === parseInt(attemptId!) ? 'bg-brand-50 border-brand-400 ring-1 ring-brand-400 shadow-sm' : 'bg-white border-gray-200 hover:border-brand-300'}`}>
                       <div className="flex justify-between items-center">
-                        <span className={`font-bold ${h.id === parseInt(attemptId!) ? 'text-brand-800' : 'text-gray-800'}`}>Lần {h.attemptNumber}</span>
+                        <span className={`font-bold ${h.id === parseInt(attemptId!) ? 'text-brand-800' : 'text-gray-800'}`}>Lần {attemptNumberById.get(h.id) || h.attemptNumber}</span>
                         <span className={`text-sm font-bold px-2 py-1 rounded-md ${h.id === parseInt(attemptId!) ? 'bg-brand-200 text-brand-900' : 'bg-gray-100 text-gray-700'}`}>
                           {h.totalQuestions > 0 ? ((h.correctCount / h.totalQuestions) * 10).toFixed(2) : "0.00"} / 10
                         </span>
@@ -174,7 +183,7 @@ export const ReadingResultSummaryPage: React.FC = () => {
         {/* Breakdown */}
         {result.questionGroups && (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-6">Chi tiết từng phần (Lần {result.attemptNumber})</h2>
+            <h2 className="text-gray-600 font-bold uppercase tracking-wider mb-6">Chi tiết từng phần (Lần {currentAttemptNum})</h2>
             <div className="space-y-4">
               {result.questionGroups.map((g: any, idx: number) => {
                 const groupQuestionIds = g.questions.map((q: any) => q.id);
