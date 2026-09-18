@@ -195,7 +195,9 @@ namespace VocabWeb.Api.Controllers
                     a.AllowedDurationSecondsSnapshot,
                     a.OvertimeSeconds,
                     a.CorrectCount,
-                    a.TotalQuestions
+                    a.TotalQuestions,
+                    UnansweredCount = a.Answers.Count(ans => ans.StudentAnswer == "" || ans.StudentAnswer == null),
+                    IncorrectCount = a.Answers.Count(ans => !ans.IsCorrect && ans.StudentAnswer != "" && ans.StudentAnswer != null)
                 })
                 .ToListAsync();
 
