@@ -43,8 +43,7 @@ export const QuestionGroupRenderer: React.FC<QuestionGroupRendererProps> = ({
   const isSummary = group.academicQuestionType?.includes('SUMMARY_COMPLETION');
 
   return (
-    <div className={
-ounded-2xl border-2 p-6 transition-all }>
+    <div className={`rounded-2xl border-2 p-6 transition-all ${structuralClass}`}>
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 uppercase tracking-wide opacity-90">
           {group.academicQuestionType?.replace(/_/g, ' ') || 'QUESTIONS'}

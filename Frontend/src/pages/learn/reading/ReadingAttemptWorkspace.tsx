@@ -50,7 +50,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
       
       if (isReview) {
         // Fetch snapshot and result for review
-        const res = await api.get(/learn/class//reading//attempts/);
+        const res = await api.get(`/learn/class/${id}/reading/${readingId}/attempts/${attemptId}`);
         setReviewResult(res);
         setAssignment({
           title: "Xem lại bài làm", // We might not have the original title in the attempt, but we can fetch it if needed. Actually we'll fetch the assignment title just in case.
@@ -60,7 +60,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
         
         // Load original assignment just to get the title
         try {
-           const liveRes = await api.get(/learn/class//reading/);
+           const liveRes = await api.get(`/learn/class/${id}/reading/${readingId}`);
            setAssignment((prev: any) => ({ ...prev, title: liveRes.title }));
         } catch(e) {}
         
@@ -75,10 +75,10 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
         
       } else {
         // Normal Attempt Mode
-        const res = await api.get(/learn/class//reading/);
+        const res = await api.get(`/learn/class/${id}/reading/${readingId}`);
         setAssignment(res);
         
-        const startRes = await api.post(/learn/class//reading//start, {});
+        const startRes = await api.post(`/learn/class/${id}/reading/${readingId}/start`, {});
         setStartedAt(new Date(startRes.startedAt));
         setAllowedDuration(startRes.allowedDurationSecondsSnapshot);
         
@@ -90,7 +90,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
       setLoading(false);
     } catch (e: any) {
       alert("Không thể tải bài làm: " + e.message);
-      navigate(/student/classes/);
+      navigate(`/student/classes/${id}`);
     }
   };
 
@@ -106,7 +106,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
     
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        await api.put(/learn/class//reading//autosave, newAnswers);
+        await api.put(`/learn/class/${id}/reading/${readingId}/autosave`, newAnswers);
         setSaveStatus('SAVED');
       } catch (e) {
         setSaveStatus('ERROR');
@@ -136,20 +136,20 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
     const answeredCount = Object.values(answers).filter(a => a.trim() !== '').length;
     
     if (answeredCount < total) {
-      if (!window.confirm(Bạn vẫn còn  câu chưa trả lời. Bạn có chắc muốn nộp bài?)) {
+      if (!window.confirm(`Bạn vẫn còn ${total - answeredCount} câu chưa trả lời. Bạn có chắc muốn nộp bài?`)) {
         return;
       }
     } else {
-      if (!window.confirm(Bạn đã hoàn thành tất cả câu hỏi. Bạn có chắc muốn nộp bài?)) {
+      if (!window.confirm(`Bạn đã hoàn thành tất cả câu hỏi. Bạn có chắc muốn nộp bài?`)) {
         return;
       }
     }
 
     try {
       setIsSubmitting(true);
-      const res = await api.post(/learn/class//reading//submit, answers);
+      const res = await api.post(`/learn/class/${id}/reading/${readingId}/submit`, answers);
       alert('Đã nộp bài thành công!');
-      navigate(/student/classes//reading//attempts//result);
+      navigate(`/student/classes/${id}/reading/${readingId}/attempts/${res.attemptId}/result`);
     } catch (e: any) {
       alert('Lỗi khi nộp bài: ' + e.message);
       setIsSubmitting(false);
@@ -171,14 +171,14 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
     const displaySecs = isOvertime ? timeSpent - allowed : timeSpent;
     const m = Math.floor(displaySecs / 60).toString().padStart(2, '0');
     const s = (displaySecs % 60).toString().padStart(2, '0');
-    timeStr = ${m}:;
+    timeStr = `${m}:${s}`;
   } else {
     const remainingSeconds = allowedDuration - elapsed;
     isOvertime = remainingSeconds < 0;
     const absRemaining = Math.abs(remainingSeconds);
     const m = Math.floor(absRemaining / 60).toString().padStart(2, '0');
     const s = (absRemaining % 60).toString().padStart(2, '0');
-    timeStr = ${m}:;
+    timeStr = `${m}:${s}`;
   }
 
   const allQuestions = assignment.questionGroups?.flatMap((g: any) => 
@@ -208,13 +208,13 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
       <div className="md:hidden flex border-b bg-white shrink-0">
         <button 
           onClick={() => setMobileTab('PASSAGE')} 
-          className={lex-1 py-3 font-bold text-sm }
+          className={`flex-1 py-3 font-bold text-sm ${mobileTab === 'PASSAGE' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-gray-500'}`}
         >
           Đoạn văn
         </button>
         <button 
           onClick={() => setMobileTab('QUESTIONS')} 
-          className={lex-1 py-3 font-bold text-sm }
+          className={`flex-1 py-3 font-bold text-sm ${mobileTab === 'QUESTIONS' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-gray-500'}`}
         >
           Câu hỏi
         </button>
@@ -222,12 +222,12 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
 
       <div className="flex-1 flex overflow-hidden">
         {/* PASSAGE PANEL */}
-        <div className={md:flex md:w-[55%] overflow-y-auto p-4 md:p-8 lg:p-12 bg-white border-r border-gray-200 shadow-[inset_-10px_0_15px_-15px_rgba(0,0,0,0.1)] }>
+        <div className={`md:flex md:w-[55%] overflow-y-auto p-4 md:p-8 lg:p-12 bg-white border-r border-gray-200 shadow-[inset_-10px_0_15px_-15px_rgba(0,0,0,0.1)] ${mobileTab === 'PASSAGE' ? 'block w-full' : 'hidden'}`}>
           <ReadingPassagePanel htmlContent={assignment.passage} />
         </div>
         
         {/* QUESTIONS PANEL */}
-        <div className={md:flex md:w-[45%] overflow-y-auto p-4 md:p-8 lg:p-12 relative flex-col bg-[#F9FAFB] }>
+        <div className={`md:flex md:w-[45%] overflow-y-auto p-4 md:p-8 lg:p-12 relative flex-col bg-[#F9FAFB] ${mobileTab === 'QUESTIONS' ? 'flex w-full' : 'hidden'}`}>
           <ReadingQuestionsPanel 
             questionGroups={assignment.questionGroups || []}
             answers={answers}

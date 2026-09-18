@@ -60,7 +60,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       return (
         <span className="inline-flex items-center mx-1 group/inline relative" onFocusCapture={onFocus} onClick={onFocus} ref={el => questionRefs.current[question.id] = el}>
           <strong className="mr-1 text-xs text-gray-500">{question.displayNumber}</strong>
-          <span className={px-3 py-1 font-bold rounded-md  }>
+          <span className={`px-3 py-1 font-bold rounded-md ${gapClass} ${isCurrent ? 'ring-2 ring-indigo-400' : ''}`}>
             {isBlank ? 'Chưa trả lời' : reviewResult.studentAnswer}
           </span>
           {(!isCorrect || isBlank) && (
@@ -77,7 +77,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     
     // Block review
     return (
-      <div ref={el => questionRefs.current[question.id] = el} className={p-4 rounded-xl border transition-all duration-200  } onClick={onFocus}>
+      <div ref={el => questionRefs.current[question.id] = el} className={`p-4 rounded-xl border transition-all duration-200 ${baseContainerClass} ${currentClass}`} onClick={onFocus}>
         <div className="flex gap-4">
           <div className="font-bold text-gray-700 w-8 flex-shrink-0 text-right mt-1.5">{question.displayNumber}.</div>
           <div className="flex-1">
@@ -88,7 +88,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                  {isBlank ? (
                    <span className="inline-block px-4 py-2 bg-amber-100 text-amber-900 font-bold border border-amber-300 rounded-lg">Chưa trả lời</span>
                  ) : (
-                   <span className={inline-block px-4 py-2 font-bold border rounded-lg }>
+                   <span className={`inline-block px-4 py-2 font-bold border rounded-lg ${isCorrect ? 'bg-green-100 text-green-900 border-green-300' : 'bg-red-100 text-red-900 border-red-300'}`}>
                      {reviewResult.studentAnswer}
                    </span>
                  )}
@@ -114,7 +114,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     return (
       <span 
         ref={el => questionRefs.current[question.id] = el}
-        className={inline-flex items-center mx-1 transition-all rounded-md px-1 }
+        className={`inline-flex items-center mx-1 transition-all rounded-md px-1 ${isCurrent ? 'ring-2 ring-indigo-400 bg-indigo-50' : ''}`}
         onFocusCapture={onFocus}
         onClick={onFocus}
       >
@@ -134,7 +134,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   return (
     <div 
       ref={el => questionRefs.current[question.id] = el}
-      className={p-4 rounded-xl border transition-all duration-200  }
+      className={`p-4 rounded-xl border transition-all duration-200 ${baseContainerClass} ${currentClass}`}
       onFocusCapture={onFocus}
       onClick={onFocus}
     >
@@ -152,7 +152,11 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                   key={opt}
                   onClick={() => onAnswerChange(opt)}
                   disabled={isReview}
-                  className={px-4 py-2 rounded-lg font-bold text-sm border-2 transition-colors }
+                  className={`px-4 py-2 rounded-lg font-bold text-sm border-2 transition-colors ${
+                    answer.toUpperCase() === opt 
+                      ? 'bg-brand-600 border-brand-600 text-white shadow-md' 
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-brand-400 hover:bg-brand-50'
+                  }`}
                 >
                   {opt}
                 </button>

@@ -29,26 +29,26 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
             <div key={groupId} className="flex items-center space-x-2">
               {groupQuestions.map(q => {
                 let stateClass = "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"; // Unanswered base
-                let ariaLabel = Câu , chưa trả lời;
+                let ariaLabel = `Câu ${q.displayNumber}, chưa trả lời`;
 
                 if (isReview && reviewAnswers) {
                   const revAns = reviewAnswers.find(a => a.questionId === q.id);
                   if (!revAns || !revAns.studentAnswer || revAns.studentAnswer.trim() === '') {
                     stateClass = "bg-amber-100 text-amber-900 border-amber-300";
-                    ariaLabel = Câu , chưa trả lời;
+                    ariaLabel = `Câu ${q.displayNumber}, chưa trả lời`;
                   } else if (revAns.isCorrect) {
                     stateClass = "bg-green-100 text-green-900 border-green-300";
-                    ariaLabel = Câu , đúng;
+                    ariaLabel = `Câu ${q.displayNumber}, đúng`;
                   } else {
                     stateClass = "bg-red-100 text-red-900 border-red-300";
-                    ariaLabel = Câu , sai;
+                    ariaLabel = `Câu ${q.displayNumber}, sai`;
                   }
                 } else {
                   const ans = answers[q.id];
                   const isAnswered = ans !== undefined && ans.trim() !== '';
                   if (isAnswered) {
                     stateClass = "bg-green-100 text-green-800 border-green-200";
-                    ariaLabel = Câu , đã trả lời;
+                    ariaLabel = `Câu ${q.displayNumber}, đã trả lời`;
                   }
                 }
                 
@@ -65,7 +65,7 @@ export const QuestionNavigator: React.FC<QuestionNavigatorProps> = ({
                     aria-label={ariaLabel}
                     title={ariaLabel}
                     onClick={() => onQuestionClick(q.id)}
-                    className={w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all  }
+                    className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${stateClass} ${focusClass}`}
                   >
                     {q.displayNumber}
                   </button>
