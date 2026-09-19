@@ -218,13 +218,13 @@ export const TeacherReadingEditPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:overflow-hidden lg:h-[calc(100vh-250px)] lg:min-h-[500px]">
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 lg:overflow-hidden lg:h-[calc(100vh-250px)]">
           {/* Passage Area */}
             <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm min-h-0">
               <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
                 <span>Nội dung đoạn văn (Passage)</span>
               </div>
-              <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center gap-2 flex-wrap shrink-0">
+              <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center gap-2 flex-wrap shrink-0 sticky top-0 z-10">
                 <button onClick={() => document.execCommand('bold')} className="p-1 hover:bg-gray-200 rounded font-bold w-8 h-8 flex items-center justify-center transition-colors">B</button>
                 <button onClick={() => document.execCommand('italic')} className="p-1 hover:bg-gray-200 rounded italic w-8 h-8 flex items-center justify-center transition-colors">I</button>
                 <button onClick={() => document.execCommand('underline')} className="p-1 hover:bg-gray-200 rounded underline w-8 h-8 flex items-center justify-center transition-colors">U</button>
@@ -243,7 +243,7 @@ export const TeacherReadingEditPage: React.FC = () => {
                 ref={passageRef}
                 contentEditable
                 suppressContentEditableWarning={true}
-                className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed text-justify outline-none flex-1 custom-scrollbar min-h-0" 
+                className="p-8 overflow-y-scroll prose prose-brand max-w-none text-base leading-relaxed text-justify outline-none flex-1 custom-scrollbar min-h-0" 
                 dangerouslySetInnerHTML={{ __html: data.passage }}
               ></div>
             </div>
@@ -253,7 +253,7 @@ export const TeacherReadingEditPage: React.FC = () => {
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
               <span className="font-bold text-gray-800 uppercase tracking-wide">Cấu hình câu hỏi & Đáp án</span>
             </div>
-            <div className="p-6 overflow-y-auto space-y-10 custom-scrollbar flex-1 min-h-0">
+            <div className="p-6 overflow-y-scroll space-y-10 custom-scrollbar flex-1 min-h-0">
               {data.questionGroups?.map((g: any) => {
                 const isSummary = g.academicQuestionType === 'SUMMARY_COMPLETION';
                 let parsedRefItems: any[] = [];
