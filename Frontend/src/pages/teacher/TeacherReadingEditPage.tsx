@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../../services/api'
 import { Button } from '../../components/ui/Button'
@@ -17,6 +17,18 @@ export const TeacherReadingEditPage: React.FC = () => {
   // Answer keys
   const [keys, setKeys] = useState<Record<number, string[]>>({})
   const [isUploading, setIsUploading] = useState(false)
+
+  const passageRef = useRef<HTMLDivElement>(null)
+
+  const changeFontSize = (sizePx: string) => {
+    if (!sizePx) return;
+    document.execCommand('fontSize', false, '7');
+    const fonts = passageRef.current?.querySelectorAll('font[size="7"]');
+    fonts?.forEach(f => {
+      f.removeAttribute('size');
+      f.style.fontSize = `${sizePx}px`;
+    });
+  };
 
   useEffect(() => {
     fetchData()
@@ -117,7 +129,8 @@ export const TeacherReadingEditPage: React.FC = () => {
       // 1. Save Info
       const infoRes = await api.put(`/teacher/reading/${readingId}/info`, {
         title,
-        durationMinutes: duration
+        durationMinutes: duration,
+        passageHtml: passageRef.current?.innerHTML
       })
       
       // 2. Save Keys
@@ -207,12 +220,33 @@ export const TeacherReadingEditPage: React.FC = () => {
       ) : (
         <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
           {/* Passage Area */}
-          <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
-            <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
-              <span>Nội dung đoạn văn (Passage)</span>
+            <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
+              <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
+                <span>Nội dung đoạn văn (Passage)</span>
+              </div>
+              <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center gap-2 flex-wrap shrink-0">
+                <button onClick={() => document.execCommand('bold')} className="p-1 hover:bg-gray-200 rounded font-bold w-8 h-8 flex items-center justify-center transition-colors">B</button>
+                <button onClick={() => document.execCommand('italic')} className="p-1 hover:bg-gray-200 rounded italic w-8 h-8 flex items-center justify-center transition-colors">I</button>
+                <button onClick={() => document.execCommand('underline')} className="p-1 hover:bg-gray-200 rounded underline w-8 h-8 flex items-center justify-center transition-colors">U</button>
+                <div className="h-5 w-px bg-gray-300 mx-2"></div>
+                <select onChange={(e) => { changeFontSize(e.target.value); e.target.value = ''; }} className="border border-gray-300 rounded px-2 py-1 text-sm bg-white outline-none focus:border-brand cursor-pointer" defaultValue="">
+                   <option value="" disabled>Cỡ chữ</option>
+                   {[12, 14, 16, 18, 20, 24].map(s => <option key={s} value={s}>{s}px</option>)}
+                </select>
+                <div className="h-5 w-px bg-gray-300 mx-2"></div>
+                <button onClick={() => document.execCommand('justifyLeft')} className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-semibold transition-colors" title="Căn trái">Left</button>
+                <button onClick={() => document.execCommand('justifyCenter')} className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-semibold transition-colors" title="Căn giữa">Center</button>
+                <button onClick={() => document.execCommand('justifyRight')} className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-semibold transition-colors" title="Căn phải">Right</button>
+                <button onClick={() => document.execCommand('justifyFull')} className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-semibold transition-colors" title="Căn đều">Justify</button>
+              </div>
+              <div 
+                ref={passageRef}
+                contentEditable
+                suppressContentEditableWarning={true}
+                className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed text-justify outline-none flex-1" 
+                dangerouslySetInnerHTML={{ __html: data.passage }}
+              ></div>
             </div>
-            <div className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed" dangerouslySetInnerHTML={{ __html: data.passage }}></div>
-          </div>
 
           {/* Questions Area */}
           <div className="w-full lg:w-[500px] bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm shrink-0">

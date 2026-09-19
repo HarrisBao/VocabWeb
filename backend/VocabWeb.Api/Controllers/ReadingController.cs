@@ -16,6 +16,7 @@ namespace VocabWeb.Api.Controllers
     {
         public string Title { get; set; } = string.Empty;
         public int DurationMinutes { get; set; }
+        public string? PassageHtml { get; set; }
     }
 
     [ApiController]
@@ -325,6 +326,10 @@ namespace VocabWeb.Api.Controllers
 
             if (!string.IsNullOrWhiteSpace(dto.Title)) assignment.Title = dto.Title;
             if (dto.DurationMinutes > 0) assignment.DurationMinutes = dto.DurationMinutes;
+            if (dto.PassageHtml != null && assignment.Passage != null)
+            {
+                assignment.Passage.ContentHtml = dto.PassageHtml;
+            }
 
             AutoUpdateStatus(assignment);
             await _db.SaveChangesAsync();

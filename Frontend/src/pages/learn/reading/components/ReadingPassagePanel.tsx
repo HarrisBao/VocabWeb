@@ -8,7 +8,7 @@ export const ReadingPassagePanel: React.FC<ReadingPassagePanelProps> = ({ htmlCo
   return (
     <div className="prose prose-slate max-w-none pb-32">
       <div 
-        className="reading-passage-content text-gray-800 leading-relaxed text-[1.1rem]"
+        className="reading-passage-content text-gray-800 leading-relaxed text-[1.1rem] text-justify"
         dangerouslySetInnerHTML={{ __html: htmlContent }} 
       />
     </div>
