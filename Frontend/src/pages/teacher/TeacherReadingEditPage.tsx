@@ -218,7 +218,7 @@ export const TeacherReadingEditPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:overflow-hidden lg:h-[calc(100vh-250px)] lg:min-h-[500px]">
           {/* Passage Area */}
             <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
               <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
@@ -231,7 +231,7 @@ export const TeacherReadingEditPage: React.FC = () => {
                 <div className="h-5 w-px bg-gray-300 mx-2"></div>
                 <select onChange={(e) => { changeFontSize(e.target.value); e.target.value = ''; }} className="border border-gray-300 rounded px-2 py-1 text-sm bg-white outline-none focus:border-brand cursor-pointer" defaultValue="">
                    <option value="" disabled>Cỡ chữ</option>
-                   {[12, 14, 16, 18, 20, 24].map(s => <option key={s} value={s}>{s}px</option>)}
+                   {[12, 13, 14, 15, 16, 18, 20, 24].map(s => <option key={s} value={s}>{s}px</option>)}
                 </select>
                 <div className="h-5 w-px bg-gray-300 mx-2"></div>
                 <button onClick={() => document.execCommand('justifyLeft')} className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-semibold transition-colors" title="Căn trái">Left</button>
@@ -243,7 +243,7 @@ export const TeacherReadingEditPage: React.FC = () => {
                 ref={passageRef}
                 contentEditable
                 suppressContentEditableWarning={true}
-                className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed text-justify outline-none flex-1" 
+                className="p-8 overflow-y-auto prose prose-brand max-w-none text-base leading-relaxed text-justify outline-none flex-1 custom-scrollbar" 
                 dangerouslySetInnerHTML={{ __html: data.passage }}
               ></div>
             </div>
