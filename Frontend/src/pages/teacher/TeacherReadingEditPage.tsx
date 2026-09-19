@@ -218,9 +218,9 @@ export const TeacherReadingEditPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 lg:overflow-hidden lg:h-[calc(100vh-250px)]">
+        <div className="flex min-h-0 flex-col lg:flex-row gap-6 overflow-hidden h-[calc(100vh-250px)] min-h-[650px]">
           {/* Passage Area */}
-            <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm min-h-0">
+            <div className="flex-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm min-h-0 h-full">
               <div className="p-4 bg-gray-50 border-b border-gray-200 font-bold shrink-0 text-gray-800 uppercase tracking-wide flex items-center justify-between">
                 <span>Nội dung đoạn văn (Passage)</span>
               </div>
@@ -249,7 +249,7 @@ export const TeacherReadingEditPage: React.FC = () => {
             </div>
 
           {/* Questions Area */}
-          <div className="w-full lg:w-[500px] bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm shrink-0 min-h-0">
+          <div className="w-full lg:w-[500px] h-full bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm shrink-0 min-h-0">
             <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
               <span className="font-bold text-gray-800 uppercase tracking-wide">Cấu hình câu hỏi & Đáp án</span>
             </div>
