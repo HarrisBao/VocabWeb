@@ -150,14 +150,12 @@ namespace VocabWeb.Api.Data.Migrations
                         name: "FK_StudentSkillFeedbacks_AspNetUsers_TaUserId",
                         column: x => x.TaUserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_StudentSkillFeedbacks_AspNetUsers_TeacherUserId",
                         column: x => x.TeacherUserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_StudentSkillFeedbacks_ClassEnrollments_HomeClassEnrollmentId",
                         column: x => x.HomeClassEnrollmentId,
@@ -168,8 +166,7 @@ namespace VocabWeb.Api.Data.Migrations
                         name: "FK_StudentSkillFeedbacks_ClassSkillOfferings_HostClassSkillOfferingId",
                         column: x => x.HostClassSkillOfferingId,
                         principalTable: "ClassSkillOfferings",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_StudentSkillFeedbacks_FeedbackCycles_FeedbackCycleId",
                         column: x => x.FeedbackCycleId,
@@ -180,8 +177,7 @@ namespace VocabWeb.Api.Data.Migrations
                         name: "FK_StudentSkillFeedbacks_FeedbackTemplates_FeedbackTemplateId",
                         column: x => x.FeedbackTemplateId,
                         principalTable: "FeedbackTemplates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_StudentSkillFeedbacks_StudentProfiles_StudentProfileId",
                         column: x => x.StudentProfileId,

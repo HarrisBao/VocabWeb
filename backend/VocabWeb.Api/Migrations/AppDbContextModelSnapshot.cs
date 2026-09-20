@@ -2423,7 +2423,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasOne("VocabWeb.Api.Models.FeedbackTemplate", "FeedbackTemplate")
                         .WithMany()
                         .HasForeignKey("FeedbackTemplateId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.ClassEnrollment", "HomeClassEnrollment")
                         .WithMany()
@@ -2434,7 +2434,7 @@ namespace VocabWeb.Api.Migrations
                     b.HasOne("VocabWeb.Api.Models.ClassSkillOffering", "HostClassSkillOffering")
                         .WithMany()
                         .HasForeignKey("HostClassSkillOfferingId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.StudentProfile", "StudentProfile")
                         .WithMany()
@@ -2445,12 +2445,12 @@ namespace VocabWeb.Api.Migrations
                     b.HasOne("VocabWeb.Api.Models.ApplicationUser", "TaUser")
                         .WithMany()
                         .HasForeignKey("TaUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.ApplicationUser", "TeacherUser")
                         .WithMany()
                         .HasForeignKey("TeacherUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("FeedbackCycle");
 

@@ -12,7 +12,7 @@ using VocabWeb.Api.Data;
 namespace VocabWeb.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260920040044_AddSkillOfferingFeedbackProgress")]
+    [Migration("20260920045036_AddSkillOfferingFeedbackProgress")]
     partial class AddSkillOfferingFeedbackProgress
     {
         /// <inheritdoc />
@@ -2426,7 +2426,7 @@ namespace VocabWeb.Api.Data.Migrations
                     b.HasOne("VocabWeb.Api.Models.FeedbackTemplate", "FeedbackTemplate")
                         .WithMany()
                         .HasForeignKey("FeedbackTemplateId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.ClassEnrollment", "HomeClassEnrollment")
                         .WithMany()
@@ -2437,7 +2437,7 @@ namespace VocabWeb.Api.Data.Migrations
                     b.HasOne("VocabWeb.Api.Models.ClassSkillOffering", "HostClassSkillOffering")
                         .WithMany()
                         .HasForeignKey("HostClassSkillOfferingId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.StudentProfile", "StudentProfile")
                         .WithMany()
@@ -2448,12 +2448,12 @@ namespace VocabWeb.Api.Data.Migrations
                     b.HasOne("VocabWeb.Api.Models.ApplicationUser", "TaUser")
                         .WithMany()
                         .HasForeignKey("TaUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VocabWeb.Api.Models.ApplicationUser", "TeacherUser")
                         .WithMany()
                         .HasForeignKey("TeacherUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("FeedbackCycle");
 

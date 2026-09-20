@@ -483,7 +483,7 @@ protected override void OnModelCreating(ModelBuilder builder)
             .HasOne(f => f.HostClassSkillOffering)
             .WithMany()
             .HasForeignKey(f => f.HostClassSkillOfferingId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<StudentSkillFeedback>()
             .HasOne(f => f.FeedbackCycle)
@@ -495,19 +495,19 @@ protected override void OnModelCreating(ModelBuilder builder)
             .HasOne(f => f.FeedbackTemplate)
             .WithMany()
             .HasForeignKey(f => f.FeedbackTemplateId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<StudentSkillFeedback>()
             .HasOne(f => f.TaUser)
             .WithMany()
             .HasForeignKey(f => f.TaUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<StudentSkillFeedback>()
             .HasOne(f => f.TeacherUser)
             .WithMany()
             .HasForeignKey(f => f.TeacherUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<StudentSkillFeedbackScore>()
             .HasOne(s => s.StudentSkillFeedback)

@@ -249,9 +249,16 @@ public class FeedbackController : ControllerBase
         if (offering.TeacherId != userId && offering.Class.TeacherId != userId)
             return Forbid();
 
-        // Get home class students + cross-class students placed here
+        // Exclude students who are permanently assigned to a different class for this skill
+        var awayEnrollmentIds = await _db.EnrollmentSkillAssignments
+            .Where(a => a.SourceClassId == offering.ClassId &&
+                        a.Skill == offering.Skill &&
+                        a.IsActive)
+            .Select(a => a.ClassEnrollmentId)
+            .ToListAsync();
+
         var homeEnrollments = await _db.ClassEnrollments
-            .Where(e => e.ClassId == offering.ClassId && e.IsActive)
+            .Where(e => e.ClassId == offering.ClassId && e.IsActive && !awayEnrollmentIds.Contains(e.Id))
             .Include(e => e.StudentProfile)
             .ToListAsync();
 
