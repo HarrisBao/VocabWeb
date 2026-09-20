@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { TaUser } from '../../types'
 import { TeacherReadingTab } from './TeacherReadingTab'
-import { StudentSearchDropdown } from '../../components/shared/StudentSearchDropdown'
 
 
 interface AvailableVocabSet {
@@ -123,12 +122,6 @@ export const ClassDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const [newStudentName, setNewStudentName] = useState('')
-  const [newStudentPhone, setNewStudentPhone] = useState('')
-  const [isAddingStudent, setIsAddingStudent] = useState(false)
-  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false)
-
-  // TA logic
   const [tas, setTas] = useState<TaUser[]>([])
   const [newTaEmail, setNewTaEmail] = useState('')
   const [isAddingTa, setIsAddingTa] = useState(false)
@@ -342,71 +335,6 @@ export const ClassDetailPage: React.FC = () => {
       setMessage({ type: 'error', text: err.message || 'Cập nhật thất bại.' })
     } finally {
       setSavingSettings(false)
-    }
-  }
-
-    const handleSelectExistingStudent = async (studentProfileId: number) => {
-    setIsAddingStudent(true)
-    try {
-      const res = await api.post(`/teacher/class/${id}/enrollments/${studentProfileId}`)
-      if (res.id && cls) {
-        // Prevent duplicate insertion just in case
-        if (!cls.members.some(m => m.studentProfileId === res.studentProfileId)) {
-          setCls({
-            ...cls,
-            members: [...cls.members, res]
-          })
-        }
-        setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
-        setIsAddStudentModalOpen(false)
-      }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lỗi khi thêm học sinh.' })
-    } finally {
-      setIsAddingStudent(false)
-    }
-  }
-
-  const handleAddNoAccountStudent = async (name: string, phone: string) => {
-    setIsAddingStudent(true)
-    try {
-      const res = await api.post(`/teacher/class/${id}/students/no-account`, {
-        fullName: name,
-        phone: phone
-      })
-      if (res.id && cls) {
-        setCls({
-          ...cls,
-          memberCount: cls.memberCount + 1,
-          members: [...cls.members, res]
-        })
-        setMessage({ type: 'success', text: 'Đã thêm học sinh vào lớp.' })
-      }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || err.message || 'Lỗi khi thêm học sinh.' })
-    } finally {
-      setIsAddingStudent(false)
-    }
-  }
-
-  const handleRemoveStudent = async (studentProfileId: number, studentName: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${studentName} khỏi lớp ${cls?.name}?
-
-Lịch sử học tập và kết quả trước đây vẫn được giữ lại.`)) return
-    
-    try {
-      await api.delete(`/teacher/class/${id}/enrollments/${studentProfileId}`)
-      if (cls) {
-        // Refetch or update local state
-        setCls({
-          ...cls,
-          memberCount: cls.memberCount - 1,
-          members: cls.members.filter(m => m.studentProfileId !== studentProfileId)
-        })
-        setMessage({ type: 'success', text: 'Đã xóa học sinh khỏi lớp.' })
-      }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: 'Lỗi khi xóa học sinh.' })
     }
   }
 
@@ -763,13 +691,11 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg font-black uppercase text-gray-900">Thành viên lớp {cls.name}</h2>
+              <p className="text-xs text-gray-500 mt-1">Việc thêm/xóa học sinh được quản lý bởi Admin/TA.</p>
             </div>
-            <Button size="sm" onClick={() => setIsAddStudentModalOpen(true)} className="font-bold">
-              + Thêm học sinh
-            </Button>
           </div>
           
-          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Danh sách học sinh</h3>
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Danh sách học sinh chính thức</h3>
 
           {cls.members.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -791,12 +717,6 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-xs font-medium text-gray-400">Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}</span>
-                    <button 
-                      onClick={() => handleRemoveStudent(m.studentProfileId, m.fullName)}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
-                    >
-                      Xóa khỏi lớp
-                    </button>
                   </div>
                 </div>
               ))}
@@ -807,25 +727,6 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
             </div>
           )}
         </Card>
-      )}
-
-      {/* MODAL: THÊM HỌC SINH */}
-      {isAddStudentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setIsAddStudentModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              ✕
-            </button>
-            <h2 className="text-xl font-black text-gray-900 mb-6">Thêm học sinh vào lớp {cls.name}</h2>
-            <div className="space-y-4">
-              <label className="block text-sm font-bold text-gray-700">Tìm học sinh</label>
-              <StudentSearchDropdown classId={parseInt(id!)} onSelect={handleSelectExistingStudent} isAdding={isAddingStudent} />
-            </div>
-          </div>
-        </div>
       )}
 
       {/* TAB ATTENDANCE */}

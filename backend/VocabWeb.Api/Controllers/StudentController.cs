@@ -283,5 +283,53 @@ public class StudentController : ControllerBase
 
         return Ok(effective);
     }
+
+    /// <summary>
+    /// Returns effective skill placement context for each IELTS skill.
+    /// Used by Student UI to show host class badges on tabs.
+    /// </summary>
+    [HttpGet("classes/{classId}/skill-context")]
+    [Authorize]
+    public async Task<IActionResult> GetSkillContext(int classId)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var profile = await _db.StudentProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        if (profile == null) return Unauthorized();
+
+        var enrollment = await _db.ClassEnrollments
+            .Include(e => e.Class)
+            .FirstOrDefaultAsync(e => e.ClassId == classId &&
+                                      e.StudentProfileId == profile.Id &&
+                                      e.IsActive);
+        if (enrollment == null) return NotFound("Học sinh chưa ghi danh vào lớp này.");
+
+        var skills = new[] { IeltsSkill.READING, IeltsSkill.LISTENING, IeltsSkill.WRITING, IeltsSkill.SPEAKING };
+
+        // Get all active skill assignments for this enrollment
+        var assignments = await _db.EnrollmentSkillAssignments
+            .Where(a => a.ClassEnrollmentId == enrollment.Id && a.IsActive)
+            .Include(a => a.TargetClass)
+            .ToListAsync();
+
+        var result = skills.Select(skill =>
+        {
+            var assignment = assignments.FirstOrDefault(a => a.Skill == skill);
+            return new
+            {
+                Skill = skill.ToString(),
+                IsHosted = assignment != null,
+                HomeClassId = classId,
+                HomeClassName = enrollment.Class.Name,
+                HostClassId = assignment?.TargetClassId,
+                HostClassName = assignment?.TargetClass?.Name,
+                AssignmentType = assignment?.AssignmentType.ToString()
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
 }
+
 

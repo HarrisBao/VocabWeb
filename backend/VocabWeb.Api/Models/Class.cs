@@ -22,4 +22,5 @@ public class Class
     public ICollection<ClassLesson> Lessons { get; set; } = new List<ClassLesson>();
     public ICollection<ClassMember> Members { get; set; } = new List<ClassMember>();
     public ICollection<Test> Tests { get; set; } = new List<Test>();
+    public ICollection<ClassSkillOffering> SkillOfferings { get; set; } = new List<ClassSkillOffering>();
 }

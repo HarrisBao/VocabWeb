@@ -41,7 +41,17 @@ interface ReadingAssignment {
   questionCount: number;
   attemptCount: number;
   latestSubmittedAttemptId?: number | null;
-    activeAttemptId?: number | null;
+  activeAttemptId?: number | null;
+}
+
+interface SkillContext {
+  skill: string;
+  isHosted: boolean;
+  homeClassId: number;
+  homeClassName: string;
+  hostClassId?: number;
+  hostClassName?: string;
+  assignmentType?: string;
 }
 
 export const StudentClassDetailPage: React.FC = () => {
@@ -62,6 +72,7 @@ export const StudentClassDetailPage: React.FC = () => {
   
   const [cls, setCls] = useState<ClassDetail | null>(null);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [skillContexts, setSkillContexts] = useState<SkillContext[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [vocabUnits, setVocabUnits] = useState<VocabularyUnit[]>([]);
@@ -75,12 +86,14 @@ export const StudentClassDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchClass = async () => {
       try {
-        const [clsData, schedData] = await Promise.all([
+        const [clsData, schedData, contextData] = await Promise.all([
           api.get<ClassDetail>(`/student/classes/${id}`),
-          api.get<ScheduleItem[]>(`/student/classes/${id}/schedule`).catch(() => [])
+          api.get<ScheduleItem[]>(`/student/classes/${id}/schedule`).catch(() => []),
+          api.get<SkillContext[]>(`/student/classes/${id}/skill-context`).catch(() => [])
         ]);
         setCls(clsData);
         setSchedule(schedData);
+        setSkillContexts(contextData);
       } catch (e) {
         console.error("Lỗi tải lớp học", e);
       } finally {
@@ -185,6 +198,11 @@ export const StudentClassDetailPage: React.FC = () => {
             {cls.readingCount > 0 && (
               <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{cls.readingCount}</span>
             )}
+            {skillContexts.find(c => c.skill === 'READING')?.isHosted && (
+              <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded ml-1 font-semibold uppercase">
+                {skillContexts.find(c => c.skill === 'READING')?.hostClassName}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('writing')}
@@ -195,6 +213,11 @@ export const StudentClassDetailPage: React.FC = () => {
             }`}
           >
             Writing
+            {skillContexts.find(c => c.skill === 'WRITING')?.isHosted && (
+              <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded ml-1 font-semibold uppercase">
+                {skillContexts.find(c => c.skill === 'WRITING')?.hostClassName}
+              </span>
+            )}
           </button>
         </nav>
       </div>

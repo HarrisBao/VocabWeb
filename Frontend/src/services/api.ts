@@ -11,14 +11,19 @@ class ApiService {
   private refreshSubscribers: ((token: string) => void)[] = []
 
   private getAccessToken(): string | null {
-    // Priority to teacher token if both exist (though unlikely in same profile)
-    return localStorage.getItem('teacher_access_token') || localStorage.getItem('student_access_token')
+    // Priority: teacher > admin > student
+    return localStorage.getItem('teacher_access_token')
+      || localStorage.getItem('admin_access_token')
+      || localStorage.getItem('student_access_token')
   }
 
   private getRefreshToken(): string | null {
     // If we have a teacher access token, try its refresh token
     if (localStorage.getItem('teacher_access_token')) {
       return localStorage.getItem('teacher_refresh_token')
+    }
+    if (localStorage.getItem('admin_access_token')) {
+      return localStorage.getItem('admin_refresh_token')
     }
     // Otherwise try student refresh token
     return localStorage.getItem('student_refresh_token')
@@ -29,6 +34,11 @@ class ApiService {
     localStorage.setItem('teacher_refresh_token', refreshToken)
   }
 
+  public setAdminTokens(accessToken: string, refreshToken: string) {
+    localStorage.setItem('admin_access_token', accessToken)
+    localStorage.setItem('admin_refresh_token', refreshToken)
+  }
+
   public setStudentTokens(accessToken: string, refreshToken: string) {
     localStorage.setItem('student_access_token', accessToken)
     if (refreshToken) localStorage.setItem('student_refresh_token', refreshToken)
@@ -36,6 +46,7 @@ class ApiService {
 
   public clearTokens() {
     this.clearTeacherTokens()
+    this.clearAdminTokens()
     this.clearStudentTokens()
     localStorage.removeItem('recentClassSlug')
   }
@@ -44,6 +55,12 @@ class ApiService {
     localStorage.removeItem('teacher_access_token')
     localStorage.removeItem('teacher_refresh_token')
     localStorage.removeItem('teacher_user_profile')
+  }
+
+  public clearAdminTokens() {
+    localStorage.removeItem('admin_access_token')
+    localStorage.removeItem('admin_refresh_token')
+    localStorage.removeItem('admin_user_profile')
   }
 
   public clearStudentTokens() {

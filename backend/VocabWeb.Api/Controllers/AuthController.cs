@@ -158,6 +158,52 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("admin/login")]
+    public async Task<IActionResult> AdminLogin([FromBody] TeacherLoginDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        var user = await _userManager.FindByEmailAsync(normalizedEmail);
+        if (user == null || !user.IsActive)
+            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+
+        var passCheck = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        if (!passCheck.Succeeded)
+            return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
+
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+        if (!isAdmin)
+            return StatusCode(403, new { message = "Tài khoản không có quyền Admin." });
+
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var accessToken = _tokenService.GenerateAccessToken(user, "Admin");
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ip);
+
+        _db.RefreshTokens.Add(refreshToken);
+        await _db.SaveChangesAsync();
+
+        return Ok(new TokenResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken.Token,
+            ExpiresAt = DateTime.UtcNow.AddHours(8),
+            User = new UserProfileDto
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl,
+                Specialization = user.Specialization,
+                Role = "Admin",
+                CreatedAt = user.CreatedAt
+            }
+        });
+    }
+
     [HttpPost("teacher/google")]
     public async Task<IActionResult> TeacherGoogleLogin([FromBody] GoogleLoginDto dto)
     {

@@ -60,9 +60,27 @@ import { TaDashboardPage } from '../pages/ta/TaDashboardPage'
 import { TaClassDetailPage } from '../pages/ta/TaClassDetailPage'
 import { TaScheduleManagementPage } from '../pages/ta/TaScheduleManagementPage'
 
+// Admin System
+import AdminLoginPage from '../pages/admin/AdminLoginPage'
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage'
+import AdminClassDetailPage from '../pages/admin/AdminClassDetailPage'
+import AdminFeedbackCyclesPage from '../pages/admin/AdminFeedbackCyclesPage'
+
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
 
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const token = localStorage.getItem('admin_access_token')
+  const profile = (() => {
+    try { return JSON.parse(localStorage.getItem('admin_user_profile') ?? '{}') } catch { return {} }
+  })()
+
+  if (!token || profile?.role !== 'Admin') {
+    return <Navigate to="/admin/login" replace />
+  }
+  return <>{children}</>
+}
 
 const StudentRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const stored = localStorage.getItem('student_profile')
@@ -208,6 +226,13 @@ export const AppRouter = () => {
             <Route path="schedule" element={<TaScheduleManagementPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
+
+          {/* Admin Area */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+          <Route path="/admin/classes/:id" element={<AdminRoute><AdminClassDetailPage /></AdminRoute>} />
+          <Route path="/admin/feedback" element={<AdminRoute><AdminFeedbackCyclesPage /></AdminRoute>} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
           {/* 404 */}
           <Route path="*" element={<NotFoundPage />} />

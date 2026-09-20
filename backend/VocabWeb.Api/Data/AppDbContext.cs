@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VocabWeb.Api.Models;
 
@@ -44,6 +44,21 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentScheduleRequest> StudentScheduleRequests => Set<StudentScheduleRequest>();
     public DbSet<StudentSessionOverride> StudentSessionOverrides => Set<StudentSessionOverride>();
     public DbSet<EnrollmentSkillAssignment> EnrollmentSkillAssignments => Set<EnrollmentSkillAssignment>();
+
+    // Skill Offering
+    public DbSet<ClassSkillOffering> ClassSkillOfferings => Set<ClassSkillOffering>();
+
+    // Feedback Models
+    public DbSet<FeedbackCycle> FeedbackCycles => Set<FeedbackCycle>();
+    public DbSet<FeedbackTemplate> FeedbackTemplates => Set<FeedbackTemplate>();
+    public DbSet<FeedbackTemplateCriterion> FeedbackTemplateCriteria => Set<FeedbackTemplateCriterion>();
+    public DbSet<StudentSkillFeedback> StudentSkillFeedbacks => Set<StudentSkillFeedback>();
+    public DbSet<StudentSkillFeedbackScore> StudentSkillFeedbackScores => Set<StudentSkillFeedbackScore>();
+
+    // Progress Models
+    public DbSet<ClassLearningStage> ClassLearningStages => Set<ClassLearningStage>();
+    public DbSet<LearningMilestone> LearningMilestones => Set<LearningMilestone>();
+    public DbSet<StudentMilestoneProgress> StudentMilestoneProgresses => Set<StudentMilestoneProgress>();
 
 
 protected override void OnModelCreating(ModelBuilder builder)
@@ -423,6 +438,131 @@ protected override void OnModelCreating(ModelBuilder builder)
             .WithMany()
             .HasForeignKey(sn => sn.ActorUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // ========================
+        // ClassSkillOffering
+        // ========================
+        builder.Entity<ClassSkillOffering>()
+            .HasOne(o => o.Class)
+            .WithMany(c => c.SkillOfferings)
+            .HasForeignKey(o => o.ClassId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ClassSkillOffering>()
+            .HasOne(o => o.Teacher)
+            .WithMany()
+            .HasForeignKey(o => o.TeacherId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<ClassSkillOffering>()
+            .HasIndex(o => new { o.ClassId, o.Skill })
+            .IsUnique();
+
+        // ========================
+        // Feedback Models
+        // ========================
+        builder.Entity<FeedbackTemplateCriterion>()
+            .HasOne(c => c.FeedbackTemplate)
+            .WithMany(t => t.Criteria)
+            .HasForeignKey(c => c.FeedbackTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.StudentProfile)
+            .WithMany()
+            .HasForeignKey(f => f.StudentProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.HomeClassEnrollment)
+            .WithMany()
+            .HasForeignKey(f => f.HomeClassEnrollmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.HostClassSkillOffering)
+            .WithMany()
+            .HasForeignKey(f => f.HostClassSkillOfferingId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.FeedbackCycle)
+            .WithMany()
+            .HasForeignKey(f => f.FeedbackCycleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.FeedbackTemplate)
+            .WithMany()
+            .HasForeignKey(f => f.FeedbackTemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.TaUser)
+            .WithMany()
+            .HasForeignKey(f => f.TaUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentSkillFeedback>()
+            .HasOne(f => f.TeacherUser)
+            .WithMany()
+            .HasForeignKey(f => f.TeacherUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentSkillFeedbackScore>()
+            .HasOne(s => s.StudentSkillFeedback)
+            .WithMany(f => f.Scores)
+            .HasForeignKey(s => s.StudentSkillFeedbackId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<StudentSkillFeedbackScore>()
+            .HasOne(s => s.FeedbackTemplateCriterion)
+            .WithMany()
+            .HasForeignKey(s => s.FeedbackTemplateCriterionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ========================
+        // Progress Models
+        // ========================
+        builder.Entity<ClassLearningStage>()
+            .HasOne(s => s.ClassSkillOffering)
+            .WithMany()
+            .HasForeignKey(s => s.ClassSkillOfferingId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<LearningMilestone>()
+            .HasOne(m => m.ClassLearningStage)
+            .WithMany(s => s.Milestones)
+            .HasForeignKey(m => m.ClassLearningStageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<StudentMilestoneProgress>()
+            .HasOne(p => p.StudentProfile)
+            .WithMany()
+            .HasForeignKey(p => p.StudentProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentMilestoneProgress>()
+            .HasOne(p => p.LearningMilestone)
+            .WithMany()
+            .HasForeignKey(p => p.LearningMilestoneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentMilestoneProgress>()
+            .HasOne(p => p.ClassSkillOffering)
+            .WithMany()
+            .HasForeignKey(p => p.ClassSkillOfferingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<StudentMilestoneProgress>()
+            .HasOne(p => p.MarkedByUser)
+            .WithMany()
+            .HasForeignKey(p => p.MarkedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<StudentMilestoneProgress>()
+            .HasIndex(p => new { p.StudentProfileId, p.LearningMilestoneId, p.ClassSkillOfferingId })
+            .IsUnique();
     }
 }
 
