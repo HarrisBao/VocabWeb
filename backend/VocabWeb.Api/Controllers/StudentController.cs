@@ -134,8 +134,17 @@ public class StudentController : ControllerBase
 
         if (enrollment == null) return Forbid();
 
+        // Check if student is hosted elsewhere for READING
+        var effectiveClassId = id;
+        var hostAssignment = await _db.EnrollmentSkillAssignments
+            .FirstOrDefaultAsync(a => a.ClassEnrollmentId == enrollment.Id && a.Skill == IeltsSkill.READING && a.IsActive);
+        if (hostAssignment != null)
+        {
+            effectiveClassId = hostAssignment.TargetClassId;
+        }
+
         var readings = await _db.ReadingAssignments
-            .Where(r => r.Status == "READY" && r.ClassAssignments.Any(ca => ca.ClassId == id && ca.IsActive))
+            .Where(r => r.Status == "READY" && r.ClassAssignments.Any(ca => ca.ClassId == effectiveClassId && ca.IsActive))
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new 
             {

@@ -387,7 +387,19 @@ namespace VocabWeb.Api.Controllers
 
             if (classId.HasValue)
             {
-                query = query.Where(a => a.ClassEnrollment.ClassId == classId.Value);
+                // Find all enrollments placed here for Reading
+                var crossClassEnrollmentIds = _db.EnrollmentSkillAssignments
+                    .Where(e => e.TargetClassId == classId.Value && e.Skill == IeltsSkill.READING && e.IsActive)
+                    .Select(e => e.ClassEnrollmentId);
+
+                // Find all enrollments placed away from here for Reading
+                var awayEnrollmentIds = _db.EnrollmentSkillAssignments
+                    .Where(e => e.SourceClassId == classId.Value && e.Skill == IeltsSkill.READING && e.IsActive)
+                    .Select(e => e.ClassEnrollmentId);
+
+                query = query.Where(a => 
+                    (a.ClassEnrollment.ClassId == classId.Value && !awayEnrollmentIds.Contains(a.ClassEnrollmentId)) 
+                    || crossClassEnrollmentIds.Contains(a.ClassEnrollmentId));
             }
 
             var attempts = await query

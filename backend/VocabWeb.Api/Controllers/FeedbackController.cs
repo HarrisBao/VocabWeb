@@ -124,38 +124,95 @@ public class FeedbackController : ControllerBase
         var isTeacher = await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == userId);
         if (!hasAccess && !isTeacher) return Forbid();
 
-        var enrollments = await _db.ClassEnrollments
+        // Home enrollments
+        var homeEnrollments = await _db.ClassEnrollments
             .Where(e => e.ClassId == classId && e.IsActive)
             .Include(e => e.StudentProfile)
             .OrderBy(e => e.StudentProfile.FullName)
             .ToListAsync();
 
-        // Fetch ALL 4 skills for each student (READING, LISTENING, WRITING, SPEAKING)
-        var skills = new[] { IeltsSkill.READING, IeltsSkill.LISTENING, IeltsSkill.WRITING, IeltsSkill.SPEAKING };
-        var studentIds = enrollments.Select(e => e.StudentProfileId).ToList();
-
-        var existingFeedbacks = await _db.StudentSkillFeedbacks
-            .Where(f => studentIds.Contains(f.StudentProfileId) && f.FeedbackCycleId == cycleId)
+        // Cross enrollments (hosted here)
+        var crossClassAssignments = await _db.EnrollmentSkillAssignments
+            .Where(a => a.TargetClassId == classId && a.IsActive)
+            .Include(a => a.ClassEnrollment)
+            .ThenInclude(e => e.StudentProfile)
+            .ToListAsync();
+            
+        // Away assignments
+        var awayAssignments = await _db.EnrollmentSkillAssignments
+            .Where(a => a.SourceClassId == classId && a.IsActive)
             .ToListAsync();
 
-        var result = enrollments.Select(e => new
-        {
-            EnrollmentId = e.Id,
-            StudentProfileId = e.StudentProfileId,
-            StudentName = e.StudentProfile.FullName,
-            FeedbackBySkill = skills.ToDictionary(
-                s => s.ToString(),
-                s =>
-                {
-                    var fb = existingFeedbacks.FirstOrDefault(f =>
-                        f.StudentProfileId == e.StudentProfileId && f.Skill == s);
-                    return fb == null
-                        ? (object)new { Status = "NOT_STARTED", FeedbackId = (int?)null }
-                        : new { Status = fb.Status.ToString(), FeedbackId = (int?)fb.Id };
-                })
-        }).ToList();
+        // Fetch ALL 4 skills for each student
+        var skills = new[] { IeltsSkill.READING, IeltsSkill.LISTENING, IeltsSkill.WRITING, IeltsSkill.SPEAKING };
+        var homeStudentIds = homeEnrollments.Select(e => e.StudentProfileId).ToList();
+        var crossStudentIds = crossClassAssignments.Select(a => a.ClassEnrollment.StudentProfileId).ToList();
+        var allStudentIds = homeStudentIds.Concat(crossStudentIds).Distinct().ToList();
 
-        return Ok(result);
+        var existingFeedbacks = await _db.StudentSkillFeedbacks
+            .Where(f => allStudentIds.Contains(f.StudentProfileId) && f.FeedbackCycleId == cycleId)
+            .ToListAsync();
+
+        var result = new List<object>();
+
+        foreach (var e in homeEnrollments)
+        {
+            var studentAwayAssignments = awayAssignments.Where(a => a.ClassEnrollmentId == e.Id).ToList();
+            
+            result.Add(new
+            {
+                EnrollmentId = e.Id,
+                StudentProfileId = e.StudentProfileId,
+                StudentName = e.StudentProfile.FullName,
+                Type = "HOME",
+                FeedbackBySkill = skills.ToDictionary(
+                    s => s.ToString(),
+                    s =>
+                    {
+                        if (studentAwayAssignments.Any(a => a.Skill == s))
+                        {
+                            return (object)new { Status = "HOSTED_AWAY", FeedbackId = (int?)null };
+                        }
+                        
+                        var fb = existingFeedbacks.FirstOrDefault(f => f.StudentProfileId == e.StudentProfileId && f.Skill == s);
+                        return fb == null
+                            ? new { Status = "NOT_STARTED", FeedbackId = (int?)null }
+                            : new { Status = fb.Status.ToString(), FeedbackId = (int?)fb.Id };
+                    })
+            });
+        }
+        
+        // Group cross assignments by enrollment
+        var crossGrouped = crossClassAssignments.GroupBy(a => a.ClassEnrollmentId);
+        foreach (var g in crossGrouped)
+        {
+            var e = g.First().ClassEnrollment;
+            var hostedSkills = g.Select(a => a.Skill).ToHashSet();
+            
+            result.Add(new
+            {
+                EnrollmentId = e.Id,
+                StudentProfileId = e.StudentProfileId,
+                StudentName = e.StudentProfile.FullName + $" (Từ lớp {e.Class?.Name ?? "khác"})",
+                Type = "CROSS",
+                FeedbackBySkill = skills.ToDictionary(
+                    s => s.ToString(),
+                    s =>
+                    {
+                        if (!hostedSkills.Contains(s))
+                        {
+                            return (object)new { Status = "NOT_APPLICABLE", FeedbackId = (int?)null };
+                        }
+                        
+                        var fb = existingFeedbacks.FirstOrDefault(f => f.StudentProfileId == e.StudentProfileId && f.Skill == s);
+                        return fb == null
+                            ? new { Status = "NOT_STARTED", FeedbackId = (int?)null }
+                            : new { Status = fb.Status.ToString(), FeedbackId = (int?)fb.Id };
+                    })
+            });
+        }
+
+        return Ok(result.OrderBy(r => ((dynamic)r).StudentName));
     }
 
     /// <summary>TA: get or create a feedback record, then save TA draft</summary>
