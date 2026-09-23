@@ -108,6 +108,19 @@ export const TestSessionPage: React.FC = () => {
 
     const handleCancelExit = () => setShowExitConfirm(false);
 
+    
+    useEffect(() => {
+      const handlePopState = (event: PopStateEvent) => {
+        window.history.pushState(null, '', window.location.href);
+        setShowExitConfirm(true);
+      };
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }, []);
+
     const loadCurrentStage = async () => {
     if (!publicCode) return;
     setLoading(true)

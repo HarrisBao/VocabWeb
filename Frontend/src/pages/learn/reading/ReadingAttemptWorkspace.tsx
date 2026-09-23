@@ -28,6 +28,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
+    const [activeAttemptId, setActiveAttemptId] = useState<string | undefined>(attemptId);
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<'PASSAGE' | 'QUESTIONS'>('QUESTIONS');
   
@@ -93,6 +94,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
         setAssignment(res);
         
         const startRes = await api.post(`/learn/class/${id}/reading/${readingId}/start`, {});
+        setActiveAttemptId(startRes.attemptId?.toString());
         setStartedAt(new Date(startRes.startedAt));
         setAllowedDuration(startRes.allowedDurationSecondsSnapshot);
         
@@ -120,7 +122,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
 
     // 2. perform discard
     try {
-      await api.delete(`/learn/class/${id}/reading/${readingId}/attempts/${attemptId}/discard`);
+      await api.delete(`/learn/class/${id}/reading/${readingId}/attempts/${activeAttemptId || attemptId}/discard`);
     } catch (e) {
       console.error('Failed to discard attempt', e);
     }
@@ -249,7 +251,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
         title={assignment.title}
         classId={id}
         readingId={readingId}
-        attemptId={attemptId}
+        attemptId={activeAttemptId || attemptId}
         answeredCount={answeredCount}
         totalQuestions={allQuestions.length}
         timeRemainingStr={timeStr}
