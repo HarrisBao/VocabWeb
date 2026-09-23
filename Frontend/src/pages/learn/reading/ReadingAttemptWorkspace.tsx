@@ -26,6 +26,8 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
   const [elapsed, setElapsed] = useState<number>(0);
   const [saveStatus, setSaveStatus] = useState<'IDLE' | 'SAVING' | 'SAVED' | 'ERROR'>('IDLE');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isDiscarding, setIsDiscarding] = useState(false);
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null);
   const [mobileTab, setMobileTab] = useState<'PASSAGE' | 'QUESTIONS'>('QUESTIONS');
   
@@ -47,7 +49,7 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
   }, [readingId, id, attemptId, isReview]);
 
   useEffect(() => {
-    if (isReview || !startedAt) return;
+    if (isReview || !startedAt || isDiscarding) return;
     const interval = setInterval(() => {
       const now = new Date();
       const diffSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
@@ -104,6 +106,31 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
       alert("Không thể tải bài làm: " + e.message);
       navigate(`/student/classes/${id}`);
     }
+  };
+
+    const handleExitClick = () => {
+    setShowExitConfirm(true);
+  };
+
+  const handleConfirmExit = async () => {
+    // 1. block further editing & stop autosave
+    setIsDiscarding(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    setSaveStatus('SAVED'); // fake success to clear errors
+
+    // 2. perform discard
+    try {
+      await api.delete(`/learn/class/${id}/reading/${readingId}/attempts/${attemptId}/discard`);
+    } catch (e) {
+      console.error('Failed to discard attempt', e);
+    }
+    
+    // 3. navigate away
+    navigate(`/student/classes/${id}?tab=reading`);
+  };
+
+  const handleCancelExit = () => {
+    setShowExitConfirm(false);
   };
 
   const handleAnswerChange = (questionId: number, answer: string) => {

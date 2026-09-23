@@ -242,6 +242,27 @@ public class LearnTestSessionController : ControllerBase
         });
     }
 
+    [HttpDelete("{attemptId}/discard")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DiscardAttempt(int attemptId, [FromHeader(Name = "X-Access-Ticket")] string ticket)
+    {
+        var attempt = await ValidateAndGetAttempt(attemptId, ticket);
+        if (attempt == null) return Unauthorized(new { message = "Không có quyền truy cập lượt làm bài này." });
+
+        if (attempt.Status != "IN_PROGRESS")
+            return BadRequest(new { message = "Không thể hủy lượt làm bài đã kết thúc hoặc đã nộp." });
+
+        // Remove answers
+        _context.AttemptAnswers.RemoveRange(attempt.Answers);
+
+        // Remove attempt
+        _context.TestAttempts.Remove(attempt);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Đã hủy bài kiểm tra hiện tại." });
+    }
+
     [HttpPost("{attemptId}/submit")]
     [AllowAnonymous]
     public async Task<IActionResult> SubmitTest(int attemptId, [FromHeader(Name = "X-Access-Ticket")] string ticket)
