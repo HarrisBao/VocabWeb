@@ -66,6 +66,11 @@ import AdminDashboardPage from '../pages/admin/AdminDashboardPage'
 import AdminClassDetailPage from '../pages/admin/AdminClassDetailPage'
 import AdminFeedbackCyclesPage from '../pages/admin/AdminFeedbackCyclesPage'
 
+// Feedback Pages
+import TaFeedbackPage from '../pages/ta/TaFeedbackPage'
+import TeacherFeedbackPage from '../pages/teacher/TeacherFeedbackPage'
+import { StudentFeedbackPage } from '../pages/student/StudentFeedbackPage'
+
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
 
@@ -174,6 +179,7 @@ export const AppRouter = () => {
             {/* Student System Shell for Account Students */}
             <Route path="/student" element={<StudentRoute />}>
               <Route index element={<StudentAccountDashboard />} />
+              <Route path="feedback" element={<StudentFeedbackPage />} />
               <Route path="classes/:id" element={<StudentClassDetailPage />} />
               <Route path="classes/:id/reading/:readingId" element={<ReadingAttemptWorkspace />} />
               <Route path="classes/:id/reading/:readingId/attempts/:attemptId/result" element={<ReadingResultSummaryPage />} />
@@ -213,6 +219,7 @@ export const AppRouter = () => {
             <Route path="tests/new" element={<TestCreatePage />} />
             <Route path="tests/:id" element={<TestDetailPage />} />
             <Route path="tests/:id/results" element={<ClassTestResultsPage />} />
+            <Route path="feedback" element={<TeacherFeedbackPage />} />
             <Route path="results" element={<Navigate to="/teacher/classes" replace />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
@@ -223,6 +230,7 @@ export const AppRouter = () => {
             <Route path="dashboard" element={<TaDashboardPage />} />
             <Route path="classes" element={<TaDashboardPage />} />
             <Route path="classes/:id" element={<TaClassDetailPage />} />
+            <Route path="feedback" element={<TaFeedbackPage />} />
             <Route path="schedule" element={<TaScheduleManagementPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

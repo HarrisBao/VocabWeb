@@ -49,6 +49,15 @@ const navItems = [
       </svg>
     )
   },
+  {
+    label: 'Đánh giá',
+    href: '/teacher/feedback',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    )
+  },
 
   {
     label: 'Hồ sơ cá nhân',
@@ -61,11 +70,18 @@ const navItems = [
   }
 ]
 
-export const TeacherLayout: React.FC = () => {
+const TeacherLayoutContext = React.createContext<boolean>(false)
+
+export const TeacherLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const isInsideLayout = React.useContext(TeacherLayoutContext)
   const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+
+  if (isInsideLayout) {
+    return <>{children}</>
+  }
 
   const handleLogout = async () => {
     await logout()
@@ -77,6 +93,7 @@ export const TeacherLayout: React.FC = () => {
     : 'GV'
 
   return (
+    <TeacherLayoutContext.Provider value={true}>
     <div className="min-h-screen bg-page-teacher flex">
       {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
@@ -206,9 +223,10 @@ export const TeacherLayout: React.FC = () => {
 
         {/* Page View Body */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>
+    </TeacherLayoutContext.Provider>
   )
 }

@@ -102,7 +102,10 @@ class ApiService {
       }
     }
 
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
+    const normalizedEndpoint = API_BASE_URL.endsWith('/api') && endpoint.startsWith('/api/')
+      ? endpoint.slice(4)
+      : endpoint
+    const url = normalizedEndpoint.startsWith('http') ? normalizedEndpoint : `${API_BASE_URL}${normalizedEndpoint.startsWith('/') ? '' : '/'}${normalizedEndpoint}`
 
     let response = await fetch(url, {
       ...rest,
