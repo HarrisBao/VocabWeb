@@ -71,6 +71,9 @@ import TaFeedbackPage from '../pages/ta/TaFeedbackPage'
 import TeacherFeedbackPage from '../pages/teacher/TeacherFeedbackPage'
 import { StudentFeedbackPage } from '../pages/student/StudentFeedbackPage'
 
+// Progress Pages
+import { TeacherProgressPage } from '../pages/teacher/TeacherProgressPage'
+
 // 404
 import { NotFoundPage } from '../pages/NotFoundPage'
 
@@ -220,6 +223,7 @@ export const AppRouter = () => {
             <Route path="tests/:id" element={<TestDetailPage />} />
             <Route path="tests/:id/results" element={<ClassTestResultsPage />} />
             <Route path="feedback" element={<TeacherFeedbackPage />} />
+            <Route path="progress" element={<TeacherProgressPage />} />
             <Route path="results" element={<Navigate to="/teacher/classes" replace />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

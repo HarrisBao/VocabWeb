@@ -1,7 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
-import { Loader2, Calendar, BookOpen, Library, Edit3, CheckCircle, ArrowLeft } from 'lucide-react';
+import { 
+  Loader2, 
+  Calendar, 
+  BookOpen, 
+  Library, 
+  Edit3, 
+  CheckCircle, 
+  ArrowLeft,
+  Headphones,
+  MessageCircle,
+  Compass,
+  ChevronRight,
+  X,
+  CheckCircle2,
+  Circle,
+  CircleDot,
+  Clock
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
@@ -53,6 +70,167 @@ interface SkillContext {
   hostClassName?: string;
   assignmentType?: string;
 }
+
+interface RawMilestone {
+  id?: number;
+  Id?: number;
+  name?: string;
+  Name?: string;
+  description?: string;
+  Description?: string;
+  sortOrder?: number;
+  SortOrder?: number;
+  isCompleted?: boolean;
+  IsCompleted?: boolean;
+  completedAt?: string | null;
+  CompletedAt?: string | null;
+}
+
+interface RawStage {
+  id?: number;
+  Id?: number;
+  name?: string;
+  Name?: string;
+  description?: string;
+  Description?: string;
+  sortOrder?: number;
+  SortOrder?: number;
+  totalMilestones?: number;
+  TotalMilestones?: number;
+  completedMilestones?: number;
+  CompletedMilestones?: number;
+  isCurrentStage?: boolean;
+  IsCurrentStage?: boolean;
+  milestones?: RawMilestone[];
+  Milestones?: RawMilestone[];
+}
+
+interface RawProgressResponse {
+  hasStages?: boolean;
+  HasStages?: boolean;
+  offeringId?: number;
+  OfferingId?: number;
+  skill?: string;
+  Skill?: string;
+  className?: string;
+  ClassName?: string;
+  isHostClass?: boolean;
+  IsHostClass?: boolean;
+  totalMilestones?: number;
+  TotalMilestones?: number;
+  completedMilestones?: number;
+  CompletedMilestones?: number;
+  progressPercent?: number;
+  ProgressPercent?: number;
+  currentStage?: {
+    id?: number;
+    Id?: number;
+    name?: string;
+    Name?: string;
+    sortOrder?: number;
+    SortOrder?: number;
+  } | null;
+  CurrentStage?: {
+    id?: number;
+    Id?: number;
+    name?: string;
+    Name?: string;
+    sortOrder?: number;
+    SortOrder?: number;
+  } | null;
+  stages?: RawStage[];
+  Stages?: RawStage[];
+  message?: string;
+  Message?: string;
+}
+
+interface NormalizedMilestone {
+  id: number;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  isCompleted: boolean;
+  completedAt?: string | null;
+}
+
+interface NormalizedStage {
+  id: number;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  totalMilestones: number;
+  completedMilestones: number;
+  isCurrentStage: boolean;
+  milestones: NormalizedMilestone[];
+}
+
+interface NormalizedRoadmapData {
+  hasStages: boolean;
+  skill: string;
+  className: string;
+  isHostClass: boolean;
+  totalMilestones: number;
+  completedMilestones: number;
+  progressPercent: number;
+  currentStage: {
+    id: number;
+    name: string;
+    sortOrder: number;
+  } | null;
+  stages: NormalizedStage[];
+}
+
+type RoadmapSkillType = 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
+
+const ROADMAP_SKILLS: { key: RoadmapSkillType; label: string; icon: React.FC<{ className?: string }> }[] = [
+  { key: 'READING', label: 'Reading', icon: BookOpen },
+  { key: 'LISTENING', label: 'Listening', icon: Headphones },
+  { key: 'WRITING', label: 'Writing', icon: Edit3 },
+  { key: 'SPEAKING', label: 'Speaking', icon: MessageCircle },
+];
+
+function normalizeRoadmapProgress(raw: RawProgressResponse | null): NormalizedRoadmapData | null {
+  if (!raw) return null;
+  const currentStageRaw = raw.currentStage || raw.CurrentStage;
+  const stagesRaw = raw.stages || raw.Stages || [];
+
+  return {
+    hasStages: Boolean(raw.hasStages ?? raw.HasStages),
+    skill: raw.skill || raw.Skill || '',
+    className: raw.className || raw.ClassName || '',
+    isHostClass: Boolean(raw.isHostClass ?? raw.IsHostClass),
+    totalMilestones: raw.totalMilestones ?? raw.TotalMilestones ?? 0,
+    completedMilestones: raw.completedMilestones ?? raw.CompletedMilestones ?? 0,
+    progressPercent: raw.progressPercent ?? raw.ProgressPercent ?? 0,
+    currentStage: currentStageRaw ? {
+      id: currentStageRaw.id ?? currentStageRaw.Id ?? 0,
+      name: currentStageRaw.name ?? currentStageRaw.Name ?? '',
+      sortOrder: currentStageRaw.sortOrder ?? currentStageRaw.SortOrder ?? 0,
+    } : null,
+    stages: stagesRaw.map(s => {
+      const ms = s.milestones || s.Milestones || [];
+      return {
+        id: s.id ?? s.Id ?? 0,
+        name: s.name ?? s.Name ?? '',
+        description: s.description ?? s.Description,
+        sortOrder: s.sortOrder ?? s.SortOrder ?? 0,
+        totalMilestones: s.totalMilestones ?? s.TotalMilestones ?? ms.length,
+        completedMilestones: s.completedMilestones ?? s.CompletedMilestones ?? ms.filter(m => Boolean(m.isCompleted ?? m.IsCompleted)).length,
+        isCurrentStage: Boolean(s.isCurrentStage ?? s.IsCurrentStage),
+        milestones: ms.map(m => ({
+          id: m.id ?? m.Id ?? 0,
+          name: m.name ?? m.Name ?? '',
+          description: m.description ?? m.Description,
+          sortOrder: m.sortOrder ?? m.SortOrder ?? 0,
+          isCompleted: Boolean(m.isCompleted ?? m.IsCompleted),
+          completedAt: m.completedAt ?? m.CompletedAt ?? null,
+        }))
+      };
+    })
+  };
+}
+
+import { StudentProgressWidget } from '../../components/progress/StudentProgressWidget';
 
 export const StudentClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -223,8 +401,10 @@ export const StudentClassDetailPage: React.FC = () => {
       </div>
 
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
+        <div className="space-y-6">
+          <StudentProgressWidget classId={id || ''} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
             
             <div 
               onClick={() => setActiveTab('vocabulary')}
@@ -303,6 +483,7 @@ export const StudentClassDetailPage: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
             </div>
           </div>
         </div>
