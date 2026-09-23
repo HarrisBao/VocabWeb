@@ -70,6 +70,7 @@ import AdminFeedbackCyclesPage from '../pages/admin/AdminFeedbackCyclesPage'
 import TaFeedbackPage from '../pages/ta/TaFeedbackPage'
 import TeacherFeedbackPage from '../pages/teacher/TeacherFeedbackPage'
 import { StudentFeedbackPage } from '../pages/student/StudentFeedbackPage'
+import { StudentVocabularyHubPage } from '../pages/student/StudentVocabularyHubPage'
 
 // Progress Pages
 import { TeacherProgressPage } from '../pages/teacher/TeacherProgressPage'
@@ -188,6 +189,7 @@ export const AppRouter = () => {
               <Route path="classes/:id/reading/:readingId/attempts/:attemptId/result" element={<ReadingResultSummaryPage />} />
               <Route path="classes/:id/reading/:readingId/attempts/:attemptId/review" element={<ReadingAttemptWorkspace isReview />} />
 
+              <Route path="classes/:id/:skill-vocabulary" element={<StudentVocabularyHubPage />} />
               <Route path="classes/:id/:skillId" element={<StudentComingSoonPage />} />
             </Route>
 

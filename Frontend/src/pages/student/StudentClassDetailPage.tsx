@@ -306,7 +306,9 @@ export const StudentClassDetailPage: React.FC = () => {
   useEffect(() => {
     if (['reading', 'listening'].includes(activeTab) && vocabUnits.length === 0 && !vocabError) {
       setLoadingVocab(true);
-      api.get<VocabularyUnit[]>(`/student/classes/${id}/vocabulary`)
+      const activeCtx = skillContexts.find(c => c.skill === activeTab.toUpperCase());
+      const targetClassId = activeCtx?.hostClassId || id;
+      api.get<VocabularyUnit[]>(`/student/classes/${targetClassId}/vocabulary`)
         .then(data => setVocabUnits(data))
         .catch(e => {
           console.error("Lỗi tải từ vựng", e);
@@ -314,7 +316,7 @@ export const StudentClassDetailPage: React.FC = () => {
         })
         .finally(() => setLoadingVocab(false));
     }
-  }, [activeTab, id, vocabUnits.length, vocabError]);
+  }, [activeTab, id, vocabUnits.length, vocabError, skillContexts]);
 
   useEffect(() => {
     if (['overview', 'reading'].includes(activeTab) && readings.length === 0 && !readingError) {
