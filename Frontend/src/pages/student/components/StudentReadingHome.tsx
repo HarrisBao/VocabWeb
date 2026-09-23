@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
-import { Button } from '../../../components/ui/Button';
+import { SkillBanner } from './SkillBanner';
 
 interface ReadingHomeProps {
   classId: string;
@@ -15,16 +15,15 @@ export const StudentReadingHome: React.FC<ReadingHomeProps> = ({ classId, readin
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
-      {/* Header */}
-      <div className="bg-[#1E7A57] rounded-3xl p-8 relative overflow-hidden shadow-sm">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <BookOpen className="w-48 h-48 text-white" />
-        </div>
-        <div className="relative z-10 text-white">
-          <h1 className="text-3xl font-black mb-2">Reading</h1>
-          <p className="text-emerald-100 font-medium">Luyện tập kỹ năng Đọc hiểu</p>
-        </div>
-      </div>
+      <SkillBanner
+        title="Reading"
+        subtitle="Luyện tập kỹ năng Đọc hiểu"
+        icon={BookOpen}
+        bgGradient={['#DDF4EA', '#CDEEE2']}
+        titleColor="#135C40"
+        subtitleColor="#1E7A57"
+        iconColor="#1E7A57"
+      />
 
       {/* TỪ VỰNG CỦA BÀI */}
       <section className="space-y-4">

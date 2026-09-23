@@ -1,34 +1,36 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { SkillBanner } from './SkillBanner';
 
 interface EmptySkillHomeProps {
   title: string;
   subtitle: string;
   icon: LucideIcon;
-  colorClass: string;
-  bgClass: string;
+  bgGradient: [string, string];
+  titleColor: string;
+  subtitleColor: string;
+  iconColor: string;
   message?: string;
   vocabUnits?: any[];
 }
 
 export const StudentEmptySkillHome: React.FC<EmptySkillHomeProps> = ({ 
-  title, subtitle, icon: Icon, colorClass, bgClass, 
+  title, subtitle, icon: Icon, bgGradient, titleColor, subtitleColor, iconColor,
   message = "Chưa có nội dung học trong kỹ năng này.",
   vocabUnits = [] 
 }) => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
-      {/* Header */}
-      <div className={`${colorClass.replace('text-', 'bg-').replace('[', 'bg-[')} rounded-3xl p-8 relative overflow-hidden shadow-sm`}>
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <Icon className="w-48 h-48 text-white" />
-        </div>
-        <div className="relative z-10 text-white">
-          <h1 className="text-3xl font-black mb-2">{title}</h1>
-          <p className="opacity-90 font-medium">{subtitle}</p>
-        </div>
-      </div>
+      <SkillBanner
+        title={title}
+        subtitle={subtitle}
+        icon={Icon}
+        bgGradient={bgGradient}
+        titleColor={titleColor}
+        subtitleColor={subtitleColor}
+        iconColor={iconColor}
+      />
 
       {vocabUnits.length > 0 && (
         <section className="space-y-4">
@@ -48,8 +50,8 @@ export const StudentEmptySkillHome: React.FC<EmptySkillHomeProps> = ({
 
       {/* Empty State */}
       <div className="bg-white border border-gray-100 rounded-3xl p-12 text-center shadow-sm flex flex-col items-center justify-center">
-        <div className={`w-20 h-20 rounded-full ${bgClass} ${colorClass} flex items-center justify-center mb-6`}>
-          <Icon className="w-10 h-10" />
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: bgGradient[0] }}>
+          <Icon className="w-10 h-10" style={{ color: iconColor }} />
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">Đang cập nhật</h3>
         <p className="text-gray-500 font-medium">{message}</p>

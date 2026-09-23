@@ -379,8 +379,10 @@ export const StudentClassDetailPage: React.FC = () => {
               title="Writing"
               subtitle="Luyện tập kỹ năng Viết"
               icon={Edit3}
-              colorClass="text-[#3B82C4]"
-              bgClass="bg-[#E6F0FB]"
+              bgGradient={['#E6F0FB', '#D8E9FA']}
+                titleColor="#255B8C"
+                subtitleColor="#3B82C4"
+                iconColor="#3B82C4"
             />
           )}
 
@@ -389,8 +391,10 @@ export const StudentClassDetailPage: React.FC = () => {
               title="Listening"
               subtitle="Luyện tập kỹ năng Nghe"
               icon={Headphones}
-              colorClass="text-[#7C5CC4]"
-              bgClass="bg-[#EEE7FB]"
+              bgGradient={['#EEE7FB', '#DED1F7']}
+                titleColor="#5A3D99"
+                subtitleColor="#7C5CC4"
+                iconColor="#7C5CC4"
               vocabUnits={vocabUnits}
             />
           )}
@@ -400,8 +404,10 @@ export const StudentClassDetailPage: React.FC = () => {
               title="Speaking"
               subtitle="Luyện tập kỹ năng Nói"
               icon={MessageCircle}
-              colorClass="text-[#C96A2E]"
-              bgClass="bg-[#FBEEDC]"
+              bgGradient={['#FBEEDC', '#F8DFC2']}
+                titleColor="#9E4F1F"
+                subtitleColor="#C96A2E"
+                iconColor="#C96A2E"
             />
           )}
         </div>
