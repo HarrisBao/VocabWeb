@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
 import { Button } from '../../../components/ui/Button';
+import { useAssessmentEnvironmentCheck } from '../../../components/assessment/useAssessmentEnvironmentCheck';
+import { EnvironmentWarningModal } from '../../../components/assessment/EnvironmentWarningModal';
 
 interface PublicTestMetadata {
   publicCode: string;
@@ -24,6 +26,8 @@ export const TestIntroPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  
+  const { detectionResult, runCheck } = useAssessmentEnvironmentCheck('TEST');
   
   const ticket = sessionStorage.getItem(`ielts_ticket_${publicCode}`);
   // Extract participant name from local storage or context if needed, 
@@ -52,6 +56,11 @@ export const TestIntroPage: React.FC = () => {
 
   const handleStart = async () => {
     if (!ticket || !metadata) return;
+    
+    const result = runCheck();
+    if (result.status !== 'CLEAN') {
+      return; // Stop and show warning
+    }
     
     setStarting(true);
     setError(null);
@@ -170,6 +179,13 @@ export const TestIntroPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {detectionResult && (
+        <EnvironmentWarningModal
+          mode="TEST"
+          result={detectionResult}
+          onRetry={handleStart}
+        />
+      )}
     </div>
   );
 };

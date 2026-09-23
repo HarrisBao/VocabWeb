@@ -4,6 +4,8 @@ import { TestSessionApi } from '../../../services/testSession'
 import type { CurrentStageDto, ActivityResultDto, StudentAnswerSubmissionDto, TestFinalResultDto } from '../../../services/testSession'
 import { StudentActivityRenderer } from '../../../components/learn/test/StudentActivityRenderer'
 import { ActivityResultScreen } from '../../../components/learn/test/ActivityResultScreen'
+import { useAssessmentEnvironmentCheck } from '../../../components/assessment/useAssessmentEnvironmentCheck'
+import { EnvironmentWarningModal } from '../../../components/assessment/EnvironmentWarningModal'
 
 const TestTimer: React.FC<{ startedAt: string; timeLimitMinutes: number | null }> = ({ startedAt, timeLimitMinutes }) => {
   const [elapsed, setElapsed] = useState(0)
@@ -55,6 +57,8 @@ export const TestSessionPage: React.FC = () => {
   
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  const { workspaceRef, detectionResult, startMonitoring, stopMonitoring, runCheck } = useAssessmentEnvironmentCheck('TEST');
   const [stage, setStage] = useState<CurrentStageDto | null>(null)
   const [activityResult, setActivityResult] = useState<ActivityResultDto | null>(null)
   const [finalResult, setFinalResult] = useState<TestFinalResultDto | null>(null)
@@ -96,6 +100,14 @@ export const TestSessionPage: React.FC = () => {
       loadCurrentStage()
     }
   }, [attemptId])
+
+  useEffect(() => {
+    if (stage && !finalResult && !activityResult) {
+      startMonitoring();
+    } else {
+      stopMonitoring();
+    }
+  }, [stage, finalResult, activityResult, startMonitoring, stopMonitoring]);
 
   const handleStageComplete = async (answers: StudentAnswerSubmissionDto[]) => {
     if (!stage || !publicCode) return
@@ -185,17 +197,30 @@ export const TestSessionPage: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-4xl mx-auto py-6">
+      <main ref={workspaceRef} className="max-w-4xl mx-auto py-6">
         {loading && <div className="text-center py-12 text-gray-400">Đang xử lý...</div>}
         
         {!loading && activityResult && (
           <ActivityResultScreen result={activityResult} onNext={handleNextActivity} />
         )}
-        
+
         {!loading && !activityResult && stage && (
           <StudentActivityRenderer stage={stage} onComplete={handleStageComplete} />
         )}
       </main>
+      
+      {detectionResult && (
+        <EnvironmentWarningModal
+          mode="TEST"
+          result={detectionResult}
+          onRetry={() => {
+            const res = runCheck();
+            if (res.status === 'CLEAN') {
+              startMonitoring();
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

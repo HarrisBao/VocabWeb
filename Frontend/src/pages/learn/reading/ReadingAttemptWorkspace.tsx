@@ -6,6 +6,8 @@ import { ReadingAttemptHeader } from './components/ReadingAttemptHeader';
 import { ReadingPassagePanel } from './components/ReadingPassagePanel';
 import { ReadingQuestionsPanel } from './components/ReadingQuestionsPanel';
 import { QuestionNavigator } from './components/QuestionNavigator';
+import { useAssessmentEnvironmentCheck } from '../../../components/assessment/useAssessmentEnvironmentCheck';
+import { EnvironmentWarningModal } from '../../../components/assessment/EnvironmentWarningModal';
 
 export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isReview }) => {
   const { id, readingId, attemptId } = useParams();
@@ -30,8 +32,18 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
   const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const saveTimeoutRef = useRef<any>(null);
 
+  const { isClean, detectionResult, runCheck } = useAssessmentEnvironmentCheck('HOMEWORK');
+
   useEffect(() => {
-    fetchDataAndStart();
+    if (isReview) {
+      fetchDataAndStart();
+      return;
+    }
+
+    const result = runCheck();
+    if (result.status === 'CLEAN') {
+      fetchDataAndStart();
+    }
   }, [readingId, id, attemptId, isReview]);
 
   useEffect(() => {
@@ -155,6 +167,23 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
       setIsSubmitting(false);
     }
   };
+
+  if (!isClean && !isReview && detectionResult) {
+    return (
+      <div className="h-screen bg-gray-50 flex items-center justify-center">
+        <EnvironmentWarningModal 
+          mode="HOMEWORK" 
+          result={detectionResult} 
+          onRetry={() => {
+            const res = runCheck();
+            if (res.status === 'CLEAN') {
+              fetchDataAndStart();
+            }
+          }} 
+        />
+      </div>
+    );
+  }
 
   if (loading || !assignment) {
     return <div className="h-screen flex items-center justify-center bg-gray-50"><Spinner /></div>;
