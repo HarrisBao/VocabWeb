@@ -15,6 +15,7 @@ interface ReadingAttemptHeaderProps {
   onSubmit: () => void;
   isSubmitting: boolean;
   isReview?: boolean;
+  onExit?: () => void;
 }
 
 export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
@@ -29,7 +30,8 @@ export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
   saveStatus,
   onSubmit,
   isSubmitting,
-  isReview
+  isReview,
+  onExit
 }) => {
   const navigate = useNavigate();
 
@@ -40,7 +42,8 @@ export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
             if (isReview) {
               navigate(`/student/classes/${classId}/reading/${readingId}/attempts/${attemptId}/result`);
             } else {
-              navigate(`/student/classes/${classId}`);
+              if (onExit) onExit();
+              else navigate(`/student/classes/${classId}?tab=reading`);
             }
           }} className="text-gray-500 hover:text-gray-800 transition-colors flex-shrink-0">
           {isReview ? (

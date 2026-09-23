@@ -37,6 +37,20 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
 
   const { isClean, detectionResult, runCheck } = useAssessmentEnvironmentCheck('HOMEWORK');
 
+  
+  useEffect(() => {
+    if (isReview) return;
+    const handlePopState = (event) => {
+      window.history.pushState(null, '', window.location.href);
+      setShowExitConfirm(true);
+    };
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isReview]);
+
   useEffect(() => {
     if (isReview) {
       fetchDataAndStart();
