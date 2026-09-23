@@ -68,6 +68,7 @@ namespace VocabWeb.Api.Controllers
 
             var activeAttempt = await _db.ReadingAttempts
                 .Include(a => a.Answers)
+                .OrderByDescending(a => a.StartedAt)
                 .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
 
             // If no active attempt, it must be READY
@@ -131,28 +132,32 @@ namespace VocabWeb.Api.Controllers
             });
         }
 
-        [HttpDelete("{id}/attempts/{attemptId}/discard")]
+                [HttpDelete("{id}/attempts/{attemptId}/discard")]
         public async Task<IActionResult> DiscardAttempt(int classId, int id, int attemptId)
         {
             var enrollment = await GetEnrollment(classId);
             if (enrollment == null) return Forbid();
 
-            var attempt = await _db.ReadingAttempts
+            // Fetch ALL unsubmitted attempts to wipe out any ghost attempts caused by previous bugs
+            var ghostAttempts = await _db.ReadingAttempts
                 .Include(a => a.Answers)
-                .FirstOrDefaultAsync(a => a.Id == attemptId && a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id);
+                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null)
+                .ToListAsync();
 
-            if (attempt == null) return NotFound("Không tìm thấy lượt làm bài.");
-            if (attempt.SubmittedAt != null) return BadRequest("Không thể hủy lượt làm bài đã nộp.");
+            if (!ghostAttempts.Any()) return NotFound("Khong tim thay luot lam bai.");
 
             // Remove answers first
-            _db.ReadingAttemptAnswers.RemoveRange(attempt.Answers);
+            foreach (var ghost in ghostAttempts)
+            {
+                _db.ReadingAttemptAnswers.RemoveRange(ghost.Answers);
+            }
             
-            // Remove the attempt itself
-            _db.ReadingAttempts.Remove(attempt);
+            // Remove the attempts themselves
+            _db.ReadingAttempts.RemoveRange(ghostAttempts);
 
             await _db.SaveChangesAsync();
 
-            return Ok(new { message = "Đã hủy lượt làm bài hiện tại." });
+            return Ok(new { message = "Da huy luot lam bai hien tai." });
         }
 
         [HttpPost("{id}/start")]
@@ -172,6 +177,7 @@ namespace VocabWeb.Api.Controllers
 
             // Check if there is an active unsubmitted attempt
             var activeAttempt = await _db.ReadingAttempts
+                .OrderByDescending(a => a.StartedAt)
                 .FirstOrDefaultAsync(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null);
 
             if (activeAttempt != null)
