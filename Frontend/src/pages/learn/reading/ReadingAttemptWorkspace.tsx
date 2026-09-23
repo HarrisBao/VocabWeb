@@ -129,20 +129,33 @@ export const ReadingAttemptWorkspace: React.FC<{ isReview?: boolean }> = ({ isRe
   };
 
   const handleConfirmExit = async () => {
-    // 1. block further editing & stop autosave
     setIsDiscarding(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    setSaveStatus('SAVED'); // fake success to clear errors
+    setSaveStatus('SAVED');
 
-    // 2. perform discard
     try {
-      await api.delete(`/learn/class/${id}/reading/${readingId}/attempts/${activeAttemptId || attemptId}/discard`);
-    } catch (e) {
-      console.error('Failed to discard attempt', e);
+      console.log("[READING DISCARD] start", { classId: id, readingId, attemptId: activeAttemptId || attemptId });
+      console.log("[READING DISCARD] calling API");
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await api.delete(`/learn/class/${id}/reading/${readingId}/attempts/${activeAttemptId || attemptId}/discard`, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      console.log("[READING DISCARD] success", response);
+
+      navigate(`/student/classes/${id}?tab=reading`);
+    } catch (e: any) {
+      console.error("[READING DISCARD] failed", e);
+      alert('Không thể thoát khỏi bài lúc này. Vui lòng thử lại.');
+      setShowExitConfirm(false);
+    } finally {
+      console.log("[READING DISCARD] finished");
+      setIsDiscarding(false);
     }
-    
-    // 3. navigate away
-    navigate(`/student/classes/${id}?tab=reading`);
   };
 
   const handleCancelExit = () => {

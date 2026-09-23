@@ -138,26 +138,33 @@ namespace VocabWeb.Api.Controllers
             var enrollment = await GetEnrollment(classId);
             if (enrollment == null) return Forbid();
 
-            // Fetch ALL unsubmitted attempts to wipe out any ghost attempts caused by previous bugs
-            var ghostAttempts = await _db.ReadingAttempts
-                .Include(a => a.Answers)
-                .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null)
-                .ToListAsync();
-
-            if (!ghostAttempts.Any()) return NotFound("Khong tim thay luot lam bai.");
-
-            // Remove answers first
-            foreach (var ghost in ghostAttempts)
+            using var transaction = await _db.Database.BeginTransactionAsync();
+            try
             {
-                _db.ReadingAttemptAnswers.RemoveRange(ghost.Answers);
+                var activeAttempts = await _db.ReadingAttempts
+                    .Where(a => a.ReadingAssignmentId == id && a.ClassEnrollmentId == enrollment.Id && a.SubmittedAt == null)
+                    .ToListAsync();
+
+                if (!activeAttempts.Any()) return NotFound("Khong tim thay luot lam bai.");
+
+                var attemptIds = activeAttempts.Select(a => a.Id).ToList();
+                var answers = await _db.ReadingAttemptAnswers
+                    .Where(a => attemptIds.Contains(a.ReadingAttemptId))
+                    .ToListAsync();
+
+                _db.ReadingAttemptAnswers.RemoveRange(answers);
+                _db.ReadingAttempts.RemoveRange(activeAttempts);
+
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Da huy luot lam bai hien tai." });
             }
-            
-            // Remove the attempts themselves
-            _db.ReadingAttempts.RemoveRange(ghostAttempts);
-
-            await _db.SaveChangesAsync();
-
-            return Ok(new { message = "Da huy luot lam bai hien tai." });
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Lỗi hệ thống khi hủy bài." });
+            }
         }
 
         [HttpPost("{id}/start")]

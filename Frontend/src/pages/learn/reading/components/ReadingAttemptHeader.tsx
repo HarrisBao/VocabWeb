@@ -39,6 +39,7 @@ export const ReadingAttemptHeader: React.FC<ReadingAttemptHeaderProps> = ({
     <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-4 overflow-hidden flex-1">
         <button onClick={() => {
+            console.log("LIVE_READING_EXIT_BUTTON", { attemptId, isReview, hasOnExit: !!onExit });
             if (isReview) {
               navigate(`/student/classes/${classId}/reading/${readingId}/attempts/${attemptId}/result`);
             } else {
