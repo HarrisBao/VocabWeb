@@ -232,21 +232,36 @@ function normalizeRoadmapProgress(raw: RawProgressResponse | null): NormalizedRo
 
 import { StudentProgressWidget } from '../../components/progress/StudentProgressWidget';
 
+const STUDENT_CLASS_TABS = ['overview', 'vocabulary', 'reading', 'writing'] as const;
+type StudentClassTab = typeof STUDENT_CLASS_TABS[number];
+
 export const StudentClassDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const validTabs = ['overview', 'vocabulary', 'reading', 'writing'];
-  const activeTab = validTabs.includes(searchParams.get('tab') as string) 
-    ? searchParams.get('tab') as 'overview' | 'vocabulary' | 'reading' | 'writing' 
+  
+  const currentTabParam = searchParams.get('tab');
+  const activeTab: StudentClassTab = STUDENT_CLASS_TABS.includes(currentTabParam as any) 
+    ? (currentTabParam as StudentClassTab)
     : 'overview';
   
-  const setActiveTab = (tab: 'overview' | 'vocabulary' | 'reading' | 'writing') => {
+  const setActiveTab = (tab: StudentClassTab) => {
     setSearchParams(prev => {
-      prev.set('tab', tab);
-      return prev;
+      const next = new URLSearchParams(prev);
+      next.set('tab', tab);
+      return next;
     });
   };
+
+  useEffect(() => {
+    if (!currentTabParam || !STUDENT_CLASS_TABS.includes(currentTabParam as any)) {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('tab', 'overview');
+        return next;
+      }, { replace: true });
+    }
+  }, [currentTabParam, setSearchParams]);
   
   const [cls, setCls] = useState<ClassDetail | null>(null);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
