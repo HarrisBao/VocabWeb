@@ -76,7 +76,7 @@ export const ClassListPage: React.FC = () => {
           {classes.map((cls, idx) => (
             <div 
               key={cls.id}
-              className="opacity-0 translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-300 fill-mode-forwards"
+              className="transition-all"
               style={{ animationDelay: `${idx * 60}ms` }}
             >
               <Card 
