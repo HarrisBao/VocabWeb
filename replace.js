@@ -1,175 +1,52 @@
 const fs = require('fs');
-let content = fs.readFileSync('Frontend/src/pages/student/StudentClassDetailPage.tsx', 'utf8');
+const path = require('path');
 
-// Also add the imports
-content = content.replace("import { StudentProgressWidget } from '../../components/progress/StudentProgressWidget';", `
-import { StudentSidebar } from './components/StudentSidebar';
-import { StudentLearningHome } from './components/StudentLearningHome';
-import { StudentReadingHome } from './components/StudentReadingHome';
-import { StudentEmptySkillHome } from './components/StudentEmptySkillHome';
-`);
+const files = [
+    'backend/VocabWeb.Api/Controllers/ClassController.cs',
+    'backend/VocabWeb.Api/Controllers/ReadingController.cs',
+    'backend/VocabWeb.Api/Controllers/ProgressController.cs',
+    'backend/VocabWeb.Api/Controllers/FeedbackController.cs'
+];
 
+for (const file of files) {
+    let content = fs.readFileSync(file, 'utf8');
 
-const searchString = '  return (\r\n    <div className="max-w-5xl mx-auto space-y-6 pb-16">';
-const returnIndex = content.indexOf(searchString);
+    // 1. ClassController: Remove c.TeacherId == teacherId from GetClasses
+    content = content.replace(
+        /.Where\(c => !c.IsArchived && \(allowedClassIds.Contains\(c.Id\) \|\| c.TeacherId == teacherId \|\| _db.ClassStaffAssignments.Any\(sa => sa.ClassId == c.Id && sa.UserId == teacherId\)\)\)/g,
+        '.Where(c => !c.IsArchived && (allowedClassIds.Contains(c.Id) || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))'
+    );
 
-if(returnIndex === -1) {
-  // try linux line endings
-  const searchString2 = '  return (\n    <div className="max-w-5xl mx-auto space-y-6 pb-16">';
-  const returnIndex2 = content.indexOf(searchString2);
-  if (returnIndex2 === -1) {
-    console.log('not found');
-    process.exit(1);
-  }
-  
-  const top = content.substring(0, returnIndex2);
-  const bottom = `  return (
-    <div className="max-w-[1400px] mx-auto pb-16 pt-6">
-      <div className="mb-6 px-4 md:px-8">
-        <Link to="/student" className="inline-flex items-center text-gray-500 hover:text-gray-900 font-bold text-sm transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Quay lại Lớp học
-        </Link>
-      </div>
+    // 2. ClassController: Remove cls.TeacherId == teacherId from GetClass
+    content = content.replace(
+        /var hasAccess = skills.Any\(\) \|\| cls.TeacherId == teacherId \|\| await _db.ClassStaffAssignments.AnyAsync\(sa => sa.ClassId == id && sa.UserId == teacherId\);/g,
+        'var hasAccess = skills.Any() || await _db.ClassStaffAssignments.AnyAsync(sa => sa.ClassId == id && sa.UserId == teacherId);'
+    );
+    
+    // 3. ReadingController: HasAccessToClass requireOwnership
+    content = content.replace(
+        /return await _db.Classes.AnyAsync\(c => c.Id == classId && c.TeacherId == teacherId\);/g,
+        'return await _db.ClassSkillOfferings.AnyAsync(o => o.ClassId == classId && o.TeacherId == teacherId && o.Skill == IeltsSkill.READING && o.IsActive);'
+    );
 
-      <div className="flex flex-col md:flex-row gap-6 px-4 md:px-8 items-start">
-        {/* Left Sidebar */}
-        <StudentSidebar 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          skillContexts={skillContexts} 
-        />
+    // 4. ReadingController: GetAssignedClasses allTeacherClasses
+    content = content.replace(
+        /var allTeacherClasses = await _db.Classes\s*\n\s*\.Where\(c => c.TeacherId == teacherId\)/g,
+        'var allTeacherClasses = await _db.Classes\n                .Where(c => _db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive))'
+    );
+    
+    // 5. ReadingController: AssignToClasses validClasses
+    content = content.replace(
+        /var validClasses = await _db.Classes\s*\n\s*\.Where\(c => c.TeacherId == teacherId && classIds.Contains\(c.Id\)\)/g,
+        'var validClasses = await _db.Classes\n                .Where(c => classIds.Contains(c.Id) && _db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive))'
+    );
 
-        {/* Main Content Area */}
-        <div className="flex-1 w-full min-w-0">
-          {activeTab === 'overview' && (
-            <StudentLearningHome 
-              cls={cls} 
-              classId={id || ''}
-              skillContexts={skillContexts}
-              setActiveTab={setActiveTab}
-            />
-          )}
+    // 6. FeedbackController: hasAccess
+    content = content.replace(
+        /if \(offering.TeacherId != userId && offering.Class.TeacherId != userId\)/g,
+        'if (offering.TeacherId != userId)'
+    );
 
-          {activeTab === 'reading' && (
-            <StudentReadingHome 
-              classId={id || ''}
-              readings={readings}
-              vocabUnits={vocabUnits}
-            />
-          )}
-
-          {activeTab === 'writing' && (
-            <StudentEmptySkillHome
-              title="Writing"
-              subtitle="Luyện tập kỹ năng Viết"
-              icon={Edit3}
-              colorClass="text-[#3B82C4]"
-              bgClass="bg-[#E6F0FB]"
-            />
-          )}
-
-          {activeTab === 'listening' && (
-            <StudentEmptySkillHome
-              title="Listening"
-              subtitle="Luyện tập kỹ năng Nghe"
-              icon={Headphones}
-              colorClass="text-[#7C5CC4]"
-              bgClass="bg-[#EEE7FB]"
-              vocabUnits={vocabUnits}
-            />
-          )}
-          
-          {activeTab === 'speaking' && (
-            <StudentEmptySkillHome
-              title="Speaking"
-              subtitle="Luyện tập kỹ năng Nói"
-              icon={MessageCircle}
-              colorClass="text-[#C96A2E]"
-              bgClass="bg-[#FBEEDC]"
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-`;
-  fs.writeFileSync('Frontend/src/pages/student/StudentClassDetailPage.tsx', top + bottom);
-} else {
-  const top = content.substring(0, returnIndex);
-  const bottom = `  return (
-    <div className="max-w-[1400px] mx-auto pb-16 pt-6">
-      <div className="mb-6 px-4 md:px-8">
-        <Link to="/student" className="inline-flex items-center text-gray-500 hover:text-gray-900 font-bold text-sm transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Quay lại Lớp học
-        </Link>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6 px-4 md:px-8 items-start">
-        {/* Left Sidebar */}
-        <StudentSidebar 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          skillContexts={skillContexts} 
-        />
-
-        {/* Main Content Area */}
-        <div className="flex-1 w-full min-w-0">
-          {activeTab === 'overview' && (
-            <StudentLearningHome 
-              cls={cls} 
-              classId={id || ''}
-              skillContexts={skillContexts}
-              setActiveTab={setActiveTab}
-            />
-          )}
-
-          {activeTab === 'reading' && (
-            <StudentReadingHome 
-              classId={id || ''}
-              readings={readings}
-              vocabUnits={vocabUnits}
-            />
-          )}
-
-          {activeTab === 'writing' && (
-            <StudentEmptySkillHome
-              title="Writing"
-              subtitle="Luyện tập kỹ năng Viết"
-              icon={Edit3}
-              colorClass="text-[#3B82C4]"
-              bgClass="bg-[#E6F0FB]"
-            />
-          )}
-
-          {activeTab === 'listening' && (
-            <StudentEmptySkillHome
-              title="Listening"
-              subtitle="Luyện tập kỹ năng Nghe"
-              icon={Headphones}
-              colorClass="text-[#7C5CC4]"
-              bgClass="bg-[#EEE7FB]"
-              vocabUnits={vocabUnits}
-            />
-          )}
-          
-          {activeTab === 'speaking' && (
-            <StudentEmptySkillHome
-              title="Speaking"
-              subtitle="Luyện tập kỹ năng Nói"
-              icon={MessageCircle}
-              colorClass="text-[#C96A2E]"
-              bgClass="bg-[#FBEEDC]"
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-`;
-  fs.writeFileSync('Frontend/src/pages/student/StudentClassDetailPage.tsx', top + bottom);
+    fs.writeFileSync(file, content);
 }
-console.log('Replaced');
+console.log('Replacements complete');

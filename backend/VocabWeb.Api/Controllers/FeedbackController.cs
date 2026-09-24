@@ -303,7 +303,7 @@ public class FeedbackController : ControllerBase
             .Include(o => o.Class)
             .FirstOrDefaultAsync(o => o.Id == offeringId);
         if (offering == null) return NotFound("Không tìm thấy skill offering.");
-        if (offering.TeacherId != userId && offering.Class.TeacherId != userId)
+        if (offering.TeacherId != userId)
             return Forbid();
 
         // Exclude students who are permanently assigned to a different class for this skill

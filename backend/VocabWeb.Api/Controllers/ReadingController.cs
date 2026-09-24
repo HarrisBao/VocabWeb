@@ -40,7 +40,7 @@ namespace VocabWeb.Api.Controllers
             
             if (requireOwnership) 
             {
-                return await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == teacherId);
+                return await _db.ClassSkillOfferings.AnyAsync(o => o.ClassId == classId && o.TeacherId == teacherId && o.Skill == IeltsSkill.READING && o.IsActive);
             }
 
             // A Teacher must be assigned to READING for this class to access it.
@@ -158,7 +158,7 @@ namespace VocabWeb.Api.Controllers
 
             if (userRole == "Teacher")
             {
-                query = query.Where(r => r.CreatedById == userId || r.ClassAssignments.Any(ca => ca.Class.TeacherId == userId));
+                query = query.Where(r => r.CreatedById == userId || r.ClassAssignments.Any(ca => false));
             }
             else if (userRole == "TA")
             {
@@ -516,7 +516,7 @@ namespace VocabWeb.Api.Controllers
             if (assignment == null) return NotFound();
 
             var allTeacherClasses = await _db.Classes
-                .Where(c => c.TeacherId == teacherId)
+                .Where(c => _db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive))
                 .Select(c => new { c.Id, c.Name, c.Code })
                 .ToListAsync();
 
@@ -539,7 +539,7 @@ namespace VocabWeb.Api.Controllers
             if (assignment == null) return NotFound();
 
             var validClasses = await _db.Classes
-                .Where(c => c.TeacherId == teacherId && classIds.Contains(c.Id))
+                .Where(c => classIds.Contains(c.Id) && _db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive))
                 .Select(c => c.Id)
                 .ToListAsync();
 

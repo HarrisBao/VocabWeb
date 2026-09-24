@@ -27,10 +27,10 @@ public partial class ClassController : ControllerBase
         
         if (requireOwnership) 
         {
-            return await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == teacherId);
+            return await _db.ClassSkillOfferings.AnyAsync(o => o.ClassId == classId && o.TeacherId == teacherId && o.Skill == IeltsSkill.READING && o.IsActive);
         }
 
-        return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
+        return await _db.Classes.AnyAsync(c => c.Id == classId && (_db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive) || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
     }
 
     private string? GetTeacherId() =>
@@ -49,7 +49,7 @@ public partial class ClassController : ControllerBase
         var allowedClassIds = offerings.Select(o => o.ClassId).Distinct().ToList();
 
         var list = await _db.Classes
-            .Where(c => !c.IsArchived && (allowedClassIds.Contains(c.Id) || c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
+            .Where(c => !c.IsArchived && (allowedClassIds.Contains(c.Id) || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
             .Include(c => c.Lessons)
             .Include(c => c.Members)
             .OrderByDescending(c => c.CreatedAt)
@@ -86,7 +86,7 @@ public partial class ClassController : ControllerBase
             .ToListAsync();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && !c.IsArchived && (skills.Any() || c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
+            .Where(c => c.Id == id && !c.IsArchived && (skills.Any() || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
             .Include(c => c.Lessons)
                 .ThenInclude(l => l.VocabularySet)
                     .ThenInclude(vs => vs.Items)
@@ -132,7 +132,7 @@ public partial class ClassController : ControllerBase
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
         var cls = await _db.Classes
-            .Where(c => c.Id == id && c.TeacherId == teacherId && !c.IsArchived)
+            .Where(c => c.Id == id && _db.ClassSkillOfferings.Any(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive) && !c.IsArchived)
             .FirstOrDefaultAsync();
 
         if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
