@@ -66,7 +66,7 @@ export const TaDashboardPage: React.FC = () => {
 
                 <h3 className="font-bold text-lg text-gray-900 line-clamp-1 mb-1">{cls.name}</h3>
                 <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                  {cls.description || 'Lớp học luyện thi từ vựng IELTS Thanh Lê.'}
+                  {cls.description || 'Lớp học luyện thi từ vựng tại MLC.'}
                 </p>
 
                 <p className="text-xs text-gray-600 mb-4 font-semibold">

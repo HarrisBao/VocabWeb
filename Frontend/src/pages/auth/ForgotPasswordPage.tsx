@@ -102,7 +102,7 @@ export const ForgotPasswordPage: React.FC = () => {
             <p className="text-sm text-green-800 font-semibold mb-2">📧 Hướng dẫn tiếp theo:</p>
             <ol className="text-sm text-green-700 space-y-1.5 list-decimal list-inside">
               <li>Mở hộp thư email của bạn</li>
-              <li>Tìm email từ IELTS Thanh Lê Learning</li>
+              <li>Tìm email từ MLC - Magical Linguistic Center</li>
               <li>Click vào link "Đặt lại mật khẩu"</li>
               <li>Link có hiệu lực trong <strong>30 phút</strong></li>
             </ol>

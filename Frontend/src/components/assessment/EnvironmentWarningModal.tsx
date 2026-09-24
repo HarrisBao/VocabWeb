@@ -22,7 +22,7 @@ export const EnvironmentWarningModal: React.FC<EnvironmentWarningModalProps> = (
     message = 'Một tiện ích hỗ trợ AI, viết, dịch hoặc kiểm tra ngữ pháp đang tương tác với trang làm bài.';
   }
 
-  const instructions = 'Để tránh ảnh hưởng đến quá trình nhập và lưu bài, vui lòng tạm tắt tiện ích này trên trang IELTS Thanh Lê trước khi tiếp tục.';
+  const instructions = 'Để tránh ảnh hưởng đến quá trình nhập và lưu bài, vui lòng tạm tắt tiện ích này trên trang MLC trước khi tiếp tục.';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">

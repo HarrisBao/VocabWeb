@@ -43,11 +43,11 @@ export const Navbar: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:bg-green-700 transition-colors">
-              <span className="text-white font-black text-sm">ITL</span>
+              <span className="text-white font-black text-[13px] tracking-wide">MLC</span>
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-bold text-green-900 text-sm">IELTS Thanh Lê</span>
-              <span className="text-green-600 text-xs font-medium">Learning Platform</span>
+              <span className="font-bold text-green-900 text-sm hidden sm:block">TRUNG TÂM ANH NGỮ THANH LÊ</span><span className="font-bold text-green-900 text-sm sm:hidden">MLC</span>
+              <span className="text-green-600 text-[10px] sm:text-xs font-bold tracking-wide hidden sm:block">MLC - Magical Linguistic Center</span>
             </div>
           </Link>
 

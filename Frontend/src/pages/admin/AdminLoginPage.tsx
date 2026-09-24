@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
             <ShieldCheck className="w-6 h-6 text-emerald-700" />
           </div>
           <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-          <p className="text-sm text-gray-500 mt-1">IELTS Thanh Lê Learning</p>
+          <p className="text-sm text-gray-500 mt-1">TRUNG TÂM ANH NGỮ THANH LÊ (MLC)</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">

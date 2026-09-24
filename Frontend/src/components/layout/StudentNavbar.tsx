@@ -66,8 +66,10 @@ export function StudentNavbar({ classSlug, basePath }: { classSlug?: string, bas
         
         {/* LEFT CLUSTER */}
         <div className="flex items-center gap-6 h-full">
-          <Link to={basePath} className="font-black text-xl text-brand tracking-tight flex-shrink-0">
-            IELTS Thanh Lê
+          <Link to={basePath} className="flex flex-col flex-shrink-0">
+            <span className="font-black text-brand tracking-tight leading-tight hidden md:block">TRUNG TÂM ANH NGỮ THANH LÊ</span>
+            <span className="font-black text-brand tracking-tight leading-tight md:hidden text-xl">MLC</span>
+            <span className="text-[10px] font-bold text-gray-500 tracking-wider hidden md:block uppercase mt-0.5">MLC - Magical Linguistic Center</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-2 h-full">

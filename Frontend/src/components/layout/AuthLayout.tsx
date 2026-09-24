@@ -27,12 +27,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
 
         {/* Logo */}
         <Link to="/" className="relative flex items-center gap-3 group">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-            <span className="text-green-700 font-black text-lg">ITL</span>
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow shrink-0">
+            <span className="text-green-700 font-black text-lg">MLC</span>
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="font-bold text-white text-base">IELTS Thanh Lê</span>
-            <span className="text-green-200 text-sm">Learning Platform</span>
+            <span className="font-bold text-white text-base">Magical Linguistic Center</span>
+            <span className="text-green-200 text-sm font-medium">TRUNG TÂM ANH NGỮ THANH LÊ</span>
           </div>
         </Link>
 
@@ -92,10 +92,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         {/* Mobile Logo */}
         <div className="lg:hidden mb-8">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-black text-sm">ITL</span>
+            <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-sm">MLC</span>
             </div>
-            <span className="font-bold text-green-900">IELTS Thanh Lê</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-green-900">Magical Linguistic Center</span>
+              <span className="text-green-700 text-xs">TRUNG TÂM ANH NGỮ THANH LÊ</span>
+            </div>
           </Link>
         </div>
 

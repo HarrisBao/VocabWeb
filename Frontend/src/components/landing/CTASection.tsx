@@ -18,7 +18,7 @@ export const CTASection: React.FC = () => {
 
         <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 leading-tight">
           Sẵn sàng chinh phục<br />
-          <span className="text-green-200">IELTS cùng Thanh Lê?</span>
+          <span className="text-green-200">IELTS cùng MLC?</span>
         </h2>
 
         <p className="text-green-100 text-lg mb-10 max-w-xl mx-auto">

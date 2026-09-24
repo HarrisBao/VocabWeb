@@ -1180,7 +1180,7 @@ export function TeacherFeedbackPage() {
               <span>
                 Hiển thị <strong>{gridData.students.length}</strong> học viên
               </span>
-              <span>Hệ thống chấm điểm định kỳ IELTS Thanh Lê</span>
+              <span>Hệ thống chấm điểm định kỳ MLC</span>
             </div>
           </div>
         )}

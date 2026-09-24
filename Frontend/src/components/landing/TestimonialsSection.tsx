@@ -5,7 +5,7 @@ const testimonials = [
     name: 'Nguyễn Minh Anh',
     score: 'IELTS 7.5',
     avatar: 'MA',
-    text: 'Nhờ hệ thống từ vựng của IELTS Thanh Lê, mình đã tăng từ 6.0 lên 7.5 chỉ trong 3 tháng. Cách học flashcard kết hợp IPA giúp mình nhớ từ rất lâu.',
+    text: 'Nhờ hệ thống từ vựng của MLC, mình đã tăng từ 6.0 lên 7.5 chỉ trong 3 tháng. Cách học flashcard kết hợp IPA giúp mình nhớ từ rất lâu.',
     date: 'Tháng 6, 2025',
   },
   {

@@ -418,7 +418,7 @@ export const ClassDetailPage: React.FC = () => {
                 {cls.code}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'Lớp học IELTS Thanh Loan'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'Lớp học MLC'}</p>
           </div>
         </div>
 

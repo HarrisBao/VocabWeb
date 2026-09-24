@@ -421,7 +421,7 @@ Lịch sử học tập và kết quả trước đây vẫn được giữ lạ
                 {cls.code}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'Lớp học IELTS Thanh Loan'}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{cls.description || 'Lớp học MLC'}</p>
           </div>
         </div>
 

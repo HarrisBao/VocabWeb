@@ -35,7 +35,7 @@ export const StudentHomePage: React.FC = () => {
         {className ? (
           <p className="text-brand-light opacity-90">{className}</p>
         ) : (
-          <p className="text-brand-light opacity-90">Chào mừng bạn đến với hệ thống học tập IELTS Thanh Lê.</p>
+          <p className="text-brand-light opacity-90">Chào mừng bạn đến với hệ thống học tập MLC.</p>
         )}
       </div>
 

@@ -87,7 +87,7 @@ export const DashboardPage: React.FC = () => {
       <div className="bg-gradient-to-r from-green-800 to-green-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
         <div className="relative z-10 max-w-2xl">
           <span className="inline-block bg-white/20 backdrop-blur-sm text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider mb-3">
-            IELTS Thanh Lê Teacher Portal
+            MLC Teacher Portal
           </span>
           <h1 className="text-2xl sm:text-3xl font-black mb-2">
             Xin chào, {user?.fullName || 'Thầy/Cô'}!

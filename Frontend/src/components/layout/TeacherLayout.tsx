@@ -121,12 +121,12 @@ export const TeacherLayout: React.FC<{ children?: React.ReactNode }> = ({ childr
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
-          <div className="w-9 h-9 bg-brand rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-white font-black text-sm">ITL</span>
+          <div className="w-9 h-9 bg-brand rounded-xl flex items-center justify-center shadow-sm shrink-0">
+            <span className="text-white font-black text-[13px] tracking-wide">MLC</span>
           </div>
           <div>
-            <div className="font-bold text-gray-900 text-sm leading-tight">IELTS Thanh Lê</div>
-            <div className="text-xs text-brand-text font-semibold">Cổng Giáo Viên</div>
+            <div className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-1">TRUNG TÂM ANH NGỮ THANH LÊ</div>
+            <div className="text-[10px] text-brand-text font-semibold uppercase tracking-wide mt-0.5">Cổng Giáo Viên</div>
           </div>
         </div>
 

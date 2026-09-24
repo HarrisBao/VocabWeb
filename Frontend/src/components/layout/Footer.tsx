@@ -9,13 +9,13 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center">
-                <span className="text-green-700 font-black text-sm">ITL</span>
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="font-bold text-white text-sm">IELTS Thanh Lê</span>
-                <span className="text-green-300 text-xs">Learning Platform</span>
-              </div>
+              <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shrink-0">
+                  <span className="text-green-700 font-black text-sm">MLC</span>
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-bold text-white text-sm">TRUNG TÂM ANH NGỮ THANH LÊ</span>
+                  <span className="text-green-300 text-[10px] sm:text-xs">Magical Linguistic Center</span>
+                </div>
             </div>
             <p className="text-green-200 text-sm leading-relaxed max-w-xs">
               Nền tảng học IELTS từ vựng toàn diện — từ flashcard thông minh đến
@@ -96,7 +96,7 @@ export const Footer: React.FC = () => {
 
         <div className="border-t border-green-800 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-green-400 text-sm">
-            © 2025 IELTS Thanh Lê Learning. Tất cả quyền được bảo lưu.
+            © TRUNG TÂM ANH NGỮ THANH LÊ (MLC). Tất cả quyền được bảo lưu.
           </p>
           <div className="flex gap-4 text-sm">
             <a href="#" className="text-green-400 hover:text-white transition-colors">
