@@ -41,8 +41,7 @@ public class AdminController : ControllerBase
             {
                 o.Id,
                 o.ClassId,
-                o.Skill,
-                SkillName = o.Skill.ToString(),
+                Skill = o.Skill.ToString(),
                 o.IsActive,
                 Teacher = o.Teacher == null ? null : new
                 {
@@ -425,7 +424,7 @@ public class AdminController : ControllerBase
                 EnrollmentCount = _db.ClassEnrollments.Count(e => e.ClassId == c.Id && e.IsActive),
                 SkillOfferings = c.SkillOfferings.Where(o => o.IsActive).Select(o => new
                 {
-                    o.Skill,
+                    Skill = o.Skill.ToString(),
                     TeacherName = o.Teacher == null ? "(Chưa phân công)" : o.Teacher.FullName
                 })
             })
