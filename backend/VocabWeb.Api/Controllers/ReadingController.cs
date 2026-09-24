@@ -43,7 +43,15 @@ namespace VocabWeb.Api.Controllers
                 return await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == teacherId);
             }
 
-            return await _db.Classes.AnyAsync(c => c.Id == classId && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == classId && sa.UserId == teacherId)));
+            // A Teacher must be assigned to READING for this class to access it.
+            // If the user is a TA, we can check ClassStaffAssignments.
+            var isTa = User.IsInRole("TA");
+            if (isTa)
+            {
+                return await _db.ClassStaffAssignments.AnyAsync(sa => sa.ClassId == classId && sa.UserId == teacherId);
+            }
+
+            return await _db.ClassSkillOfferings.AnyAsync(o => o.ClassId == classId && o.TeacherId == teacherId && o.Skill == IeltsSkill.READING && o.IsActive);
         }
 
         
@@ -52,6 +60,7 @@ namespace VocabWeb.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetClassAssignments(int classId)
         {
+            if (!await HasAccessToClass(classId)) return Forbid();
             var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignments = await _db.ReadingAssignments
@@ -118,6 +127,7 @@ namespace VocabWeb.Api.Controllers
         [HttpDelete("/api/teacher/class/{classId}/reading/{id}")]
         public async Task<IActionResult> RemoveClassAssignment(int classId, int id)
         {
+            if (!await HasAccessToClass(classId)) return Forbid();
             var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = await _db.ReadingClassAssignments
@@ -181,6 +191,7 @@ namespace VocabWeb.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAssignment(int classId, [FromBody] CreateOrUpdateReadingDto dto)
         {
+            if (!await HasAccessToClass(classId)) return Forbid();
             var teacherId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var assignment = new ReadingAssignment
@@ -387,6 +398,7 @@ namespace VocabWeb.Api.Controllers
 
             if (classId.HasValue)
             {
+                if (!await HasAccessToClass(classId.Value)) return Forbid();
                 // Find all enrollments placed here for Reading
                 var crossClassEnrollmentIds = _db.EnrollmentSkillAssignments
                     .Where(e => e.TargetClassId == classId.Value && e.Skill == IeltsSkill.READING && e.IsActive)

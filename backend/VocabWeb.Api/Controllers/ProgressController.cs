@@ -139,7 +139,7 @@ public class ProgressController : ControllerBase
 
         // Teacher must be assigned to this offering or own the class
         var hasAccess = offering.TeacherId == userId ||
-            await _db.Classes.AnyAsync(c => c.Id == offering.ClassId && c.TeacherId == userId);
+            false;
         if (!hasAccess && !User.IsInRole("Admin")) return Forbid();
 
         var existing = await _db.StudentMilestoneProgresses
@@ -187,7 +187,7 @@ public class ProgressController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == offeringId);
         if (offering == null) return NotFound();
 
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId;
+        var hasAccess = offering.TeacherId == userId || false;
         if (!hasAccess && !User.IsInRole("Admin")) return Forbid();
 
         var stages = await _db.ClassLearningStages
@@ -270,7 +270,7 @@ public class ProgressController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == offeringId);
         if (offering == null) return NotFound("Không tìm thấy skill offering.");
 
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         var stages = await _db.ClassLearningStages
@@ -315,7 +315,7 @@ public class ProgressController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == offeringId);
         if (offering == null) return NotFound("Không tìm thấy skill offering.");
 
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         var maxOrder = await _db.ClassLearningStages
@@ -364,7 +364,7 @@ public class ProgressController : ControllerBase
 
         var offering = stage.ClassSkillOffering;
         var userId = GetUserId();
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         stage.Name = dto.Name.Trim();
@@ -411,7 +411,7 @@ public class ProgressController : ControllerBase
 
         var offering = stage.ClassSkillOffering;
         var userId = GetUserId();
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         if (stage.Milestones.Any())
@@ -441,7 +441,7 @@ public class ProgressController : ControllerBase
 
         var offering = stage.ClassSkillOffering;
         var userId = GetUserId();
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         var maxOrder = await _db.LearningMilestones
@@ -486,7 +486,7 @@ public class ProgressController : ControllerBase
 
         var offering = milestone.ClassLearningStage.ClassSkillOffering;
         var userId = GetUserId();
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         milestone.Name = dto.Name.Trim();
@@ -519,7 +519,7 @@ public class ProgressController : ControllerBase
 
         var offering = milestone.ClassLearningStage.ClassSkillOffering;
         var userId = GetUserId();
-        var hasAccess = offering.TeacherId == userId || offering.Class.TeacherId == userId || User.IsInRole("Admin");
+        var hasAccess = offering.TeacherId == userId || User.IsInRole("Admin");
         if (!hasAccess) return Forbid();
 
         var hasProgress = await _db.StudentMilestoneProgresses

@@ -121,7 +121,7 @@ public class FeedbackController : ControllerBase
         // TA must be assigned to this class
         var hasAccess = await _db.ClassStaffAssignments
             .AnyAsync(a => a.ClassId == classId && a.UserId == userId);
-        var isTeacher = await _db.Classes.AnyAsync(c => c.Id == classId && c.TeacherId == userId);
+        var isTeacher = await _db.ClassSkillOfferings.AnyAsync(o => o.ClassId == classId && o.TeacherId == userId && o.IsActive);
         if (!hasAccess && !isTeacher) return Forbid();
 
         // Home enrollments

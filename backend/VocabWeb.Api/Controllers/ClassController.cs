@@ -9,7 +9,7 @@ using VocabWeb.Api.Models;
 namespace VocabWeb.Api.Controllers;
 
 [ApiController]
-[Route("api/teacher/[controller]")]
+[Route("api/teacher/classes")]
 [Authorize(Roles = "Teacher,TA")]
 public partial class ClassController : ControllerBase
 {
@@ -42,8 +42,14 @@ public partial class ClassController : ControllerBase
         var teacherId = GetTeacherId();
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
+        var offerings = await _db.ClassSkillOfferings
+            .Where(o => o.TeacherId == teacherId && o.IsActive)
+            .ToListAsync();
+
+        var allowedClassIds = offerings.Select(o => o.ClassId).Distinct().ToList();
+
         var list = await _db.Classes
-            .Where(c => (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
+            .Where(c => !c.IsArchived && (allowedClassIds.Contains(c.Id) || c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
             .Include(c => c.Lessons)
             .Include(c => c.Members)
             .OrderByDescending(c => c.CreatedAt)
@@ -57,7 +63,11 @@ public partial class ClassController : ControllerBase
                 FixedLinkUrl = $"/class/{c.FixedLinkToken}",
                 LessonCount = c.Lessons.Count,
                 MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == c.Id && ce.IsActive),
-                CreatedAt = c.CreatedAt
+                CreatedAt = c.CreatedAt,
+                Skills = _db.ClassSkillOfferings
+                    .Where(o => o.ClassId == c.Id && o.TeacherId == teacherId && o.IsActive)
+                    .Select(o => o.Skill.ToString())
+                    .ToList()
             })
             .ToListAsync();
 
@@ -70,8 +80,13 @@ public partial class ClassController : ControllerBase
         var teacherId = GetTeacherId();
         if (string.IsNullOrEmpty(teacherId)) return Unauthorized();
 
+        var skills = await _db.ClassSkillOfferings
+            .Where(o => o.ClassId == id && o.TeacherId == teacherId && o.IsActive)
+            .Select(o => o.Skill.ToString())
+            .ToListAsync();
+
         var cls = await _db.Classes
-            .Where(c => c.Id == id && (c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)) && !c.IsArchived)
+            .Where(c => c.Id == id && !c.IsArchived && (skills.Any() || c.TeacherId == teacherId || _db.ClassStaffAssignments.Any(sa => sa.ClassId == c.Id && sa.UserId == teacherId)))
             .Include(c => c.Lessons)
                 .ThenInclude(l => l.VocabularySet)
                     .ThenInclude(vs => vs.Items)
@@ -90,6 +105,7 @@ public partial class ClassController : ControllerBase
             LessonCount = cls.Lessons.Count,
             MemberCount = _db.ClassEnrollments.Count(ce => ce.ClassId == cls.Id && ce.IsActive),
             CreatedAt = cls.CreatedAt,
+            Skills = skills,
             Lessons = cls.Lessons
                 .OrderByDescending(l => l.IsPinned)
                 .ThenBy(l => l.OrderIndex)
@@ -98,26 +114,13 @@ public partial class ClassController : ControllerBase
                     Id = l.Id,
                     ClassId = l.ClassId,
                     VocabularySetId = l.VocabularySetId,
-                    VocabularySetTitle = l.VocabularySet.Title,
-                    VocabularySetLevel = l.VocabularySet.Level,
-                    WordCount = l.VocabularySet.Items.Count,
+                    VocabularySetTitle = l.VocabularySet?.Title ?? "",
+                    VocabularySetLevel = l.VocabularySet?.Level ?? "",
+                    WordCount = l.VocabularySet?.Items?.Count ?? 0,
                     IsPinned = l.IsPinned,
                     IsHidden = l.IsHidden,
                     OrderIndex = l.OrderIndex,
                     AddedAt = l.AddedAt
-                }).ToList(),
-            Members = _db.ClassEnrollments
-                .Include(ce => ce.StudentProfile)
-                .Where(ce => ce.ClassId == cls.Id && ce.IsActive)
-                .OrderBy(ce => ce.JoinedAt)
-                .Select(m => new ClassMemberDto
-                {
-                    Id = m.Id,
-                    StudentProfileId = m.StudentProfileId,
-                    FullName = m.StudentProfile.FullName,
-                    Phone = m.StudentProfile.NormalizedPhone,
-                    UserId = m.StudentProfile.UserId,
-                    JoinedAt = m.JoinedAt
                 }).ToList()
         });
     }

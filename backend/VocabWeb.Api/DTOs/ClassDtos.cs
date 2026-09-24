@@ -15,6 +15,7 @@ public class ClassDto
     public DateTime CreatedAt { get; set; }
     public List<ClassLessonDto> Lessons { get; set; } = new();
     public List<ClassMemberDto> Members { get; set; } = new();
+    public List<string> Skills { get; set; } = new();
 }
 
 public class CreateClassDto
