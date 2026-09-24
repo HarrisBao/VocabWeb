@@ -14,7 +14,7 @@ interface SkillOffering {
 
 const SKILLS = ['READING', 'LISTENING', 'WRITING', 'SPEAKING'];
 const SKILL_LABELS: Record<string, string> = {
-  READING: 'Reading', LISTENING: 'Listening', WRITING: 'Writing', SPEAKING: 'Speaking'
+  READING: 'Đọc hiểu', LISTENING: 'Nghe', WRITING: 'Viết', SPEAKING: 'Nói'
 };
 const SKILL_COLORS: Record<string, string> = {
   READING:   'border-emerald-300 bg-emerald-50',

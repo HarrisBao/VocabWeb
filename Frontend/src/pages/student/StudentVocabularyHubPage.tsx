@@ -121,7 +121,7 @@ export const StudentVocabularyHubPage: React.FC = () => {
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 text-lg mb-2">{unit.title}</h3>
                   <div className="flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider" style={{ background: bgGradient[0], color: titleColor }}>
-                    <span>{unit.wordCount} {vocabularyLabels.words.en}</span>
+                    <span>{unit.wordCount} {vocabularyLabels.words.vi}</span>
                     <span className="opacity-60 px-1">•</span>
                     <span>{unit.wordCount} {vocabularyLabels.words.vi}</span>
                   </div>
@@ -132,13 +132,7 @@ export const StudentVocabularyHubPage: React.FC = () => {
                   className="w-full py-3 rounded-xl font-bold flex items-center justify-center transition-colors gap-2"
                   style={{ background: bgGradient[0], color: titleColor }}
                 >
-                  <BilingualText 
-                    primary={vocabularyLabels.review.en}
-                    secondary={vocabularyLabels.review.vi}
-                    primaryClass=""
-                    secondaryClass="font-normal opacity-80 ml-1"
-                    containerClass="flex items-baseline"
-                  />
+                  <span>{vocabularyLabels.review.vi}</span>
                   <ChevronRight className="w-4 h-4 ml-1 opacity-70" />
                 </Link>
 

@@ -9,10 +9,10 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Trang học', icon: Home, colorClass: 'text-emerald-700', bgActive: 'bg-emerald-50' },
-  { id: 'reading', label: 'Reading', icon: BookOpen, colorClass: 'text-[#1E7A57]', bgActive: 'bg-[#DDF4EA]' },
-  { id: 'listening', label: 'Listening', icon: Headphones, colorClass: 'text-[#7C5CC4]', bgActive: 'bg-[#EEE7FB]' },
-  { id: 'writing', label: 'Writing', icon: Edit3, colorClass: 'text-[#3B82C4]', bgActive: 'bg-[#E6F0FB]' },
-  { id: 'speaking', label: 'Speaking', icon: MessageCircle, colorClass: 'text-[#C96A2E]', bgActive: 'bg-[#FBEEDC]' },
+  { id: 'reading', label: 'Đọc hiểu', icon: BookOpen, colorClass: 'text-[#1E7A57]', bgActive: 'bg-[#DDF4EA]' },
+  { id: 'listening', label: 'Nghe', icon: Headphones, colorClass: 'text-[#7C5CC4]', bgActive: 'bg-[#EEE7FB]' },
+  { id: 'writing', label: 'Viết', icon: Edit3, colorClass: 'text-[#3B82C4]', bgActive: 'bg-[#E6F0FB]' },
+  { id: 'speaking', label: 'Nói', icon: MessageCircle, colorClass: 'text-[#C96A2E]', bgActive: 'bg-[#FBEEDC]' },
 ];
 
 export const StudentSidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, skillContexts }) => {

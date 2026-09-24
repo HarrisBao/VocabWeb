@@ -183,10 +183,10 @@ interface NormalizedRoadmapData {
 type RoadmapSkillType = 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
 
 const ROADMAP_SKILLS: { key: RoadmapSkillType; label: string; icon: React.FC<{ className?: string }> }[] = [
-  { key: 'READING', label: 'Reading', icon: BookOpen },
-  { key: 'LISTENING', label: 'Listening', icon: Headphones },
-  { key: 'WRITING', label: 'Writing', icon: Edit3 },
-  { key: 'SPEAKING', label: 'Speaking', icon: MessageCircle },
+  { key: 'READING', label: 'Đọc hiểu', icon: BookOpen },
+  { key: 'LISTENING', label: 'Nghe', icon: Headphones },
+  { key: 'WRITING', label: 'Viết', icon: Edit3 },
+  { key: 'SPEAKING', label: 'Nói', icon: MessageCircle },
 ];
 
 function normalizeRoadmapProgress(raw: RawProgressResponse | null): NormalizedRoadmapData | null {
@@ -378,7 +378,7 @@ export const StudentClassDetailPage: React.FC = () => {
 
           {activeTab === 'writing' && (
             <StudentEmptySkillHome
-              title="Writing"
+              title="Viết"
               subtitle="Luyện tập kỹ năng Viết"
               icon={Edit3}
               bgGradient={['#E6F0FB', '#D8E9FA']}
@@ -390,7 +390,7 @@ export const StudentClassDetailPage: React.FC = () => {
 
           {activeTab === 'listening' && (
             <StudentEmptySkillHome
-              title="Listening"
+              title="Nghe"
               subtitle="Luyện tập kỹ năng Nghe"
               icon={Headphones}
               bgGradient={['#EEE7FB', '#DED1F7']}
@@ -403,7 +403,7 @@ export const StudentClassDetailPage: React.FC = () => {
           
           {activeTab === 'speaking' && (
             <StudentEmptySkillHome
-              title="Speaking"
+              title="Nói"
               subtitle="Luyện tập kỹ năng Nói"
               icon={MessageCircle}
               bgGradient={['#FBEEDC', '#F8DFC2']}

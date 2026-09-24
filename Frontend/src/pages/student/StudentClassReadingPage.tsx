@@ -43,8 +43,8 @@ export const StudentClassReadingPage: React.FC = () => {
           </svg>
           Quay lại Lớp học
         </Link>
-        <h1 className="text-3xl font-black text-gray-900 mb-2">Reading</h1>
-        <p className="text-gray-500">Các bài tập Reading được giao cho lớp này.</p>
+        <h1 className="text-3xl font-black text-gray-900 mb-2">Đọc hiểu</h1>
+        <p className="text-gray-500">Các bài tập Đọc hiểu được giao cho lớp này.</p>
       </div>
 
       {readings.length === 0 ? (

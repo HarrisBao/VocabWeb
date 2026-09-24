@@ -40,22 +40,12 @@ export const StudentEmptySkillHome: React.FC<EmptySkillHomeProps> = ({
 
       {vocabUnits.length > 0 && (
         <section className="space-y-4">
-          <BilingualText 
-            primary={vocabularyLabels.vocabulary.en}
-            secondary={vocabularyLabels.vocabulary.vi}
-            primaryClass="text-lg font-black text-gray-900 px-2"
-            secondaryClass="text-sm font-medium text-gray-500 px-2 -mt-1 block"
-          />
+          <span className="text-lg font-black text-gray-900 px-2">{vocabularyLabels.vocabulary.vi}</span>
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:shadow-md transition-all">
             <div>
-              <BilingualText 
-                primary={title.toLowerCase() === 'listening' ? vocabularyLabels.vocabularyForListening.en : vocabularyLabels.vocabularyForReading.en}
-                secondary={title.toLowerCase() === 'listening' ? vocabularyLabels.vocabularyForListening.vi : vocabularyLabels.vocabularyForReading.vi}
-                primaryClass="font-bold text-gray-900 text-lg"
-                secondaryClass="text-gray-500 font-medium text-sm block mt-0.5"
-              />
+              <span className="font-bold text-gray-900 text-lg block mb-1">{title.toLowerCase() === 'listening' ? vocabularyLabels.vocabularyForListening.vi : vocabularyLabels.vocabularyForReading.vi}</span>
               <div className="flex items-center gap-3 mt-3 text-sm font-bold w-fit px-3 py-1 rounded-xl" style={{ background: bgGradient[0], color: titleColor }}>
-                <span>{vocabUnits.length} {vocabularyLabels.vocabularySets.en}</span>
+                <span>{vocabUnits.length} {vocabularyLabels.vocabularySets.vi}</span>
               </div>
             </div>
             
@@ -64,13 +54,7 @@ export const StudentEmptySkillHome: React.FC<EmptySkillHomeProps> = ({
               className="w-full md:w-auto px-6 py-3 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors border border-transparent"
               style={{ background: bgGradient[0], color: titleColor }}
             >
-              <BilingualText 
-                primary={vocabularyLabels.viewVocabulary.en}
-                secondary={vocabularyLabels.viewVocabulary.vi}
-                primaryClass=""
-                secondaryClass="font-normal opacity-80 ml-1"
-                containerClass="flex items-baseline"
-              />
+              <span className="font-bold">{vocabularyLabels.viewVocabulary.vi}</span>
               <ChevronRight className="w-4 h-4 ml-1 opacity-70" />
             </Link>
           </div>

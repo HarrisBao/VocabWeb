@@ -111,28 +111,28 @@ const SCORE_OPTIONS = [
 
 const SKILL_THEMES: Record<string, { label: string; border: string; bg: string; text: string; lightBg: string }> = {
   READING: {
-    label: 'Reading',
+    label: 'Đọc hiểu',
     border: 'border-[#1E7A57]',
     bg: 'bg-[#1E7A57]',
     text: 'text-[#1E7A57]',
     lightBg: 'bg-[#DDF4EA]'
   },
   LISTENING: {
-    label: 'Listening',
+    label: 'Nghe',
     border: 'border-[#7C5CC4]',
     bg: 'bg-[#7C5CC4]',
     text: 'text-[#7C5CC4]',
     lightBg: 'bg-[#EEE7FB]'
   },
   WRITING: {
-    label: 'Writing',
+    label: 'Viết',
     border: 'border-[#3B82C4]',
     bg: 'bg-[#3B82C4]',
     text: 'text-[#3B82C4]',
     lightBg: 'bg-[#E6F0FB]'
   },
   SPEAKING: {
-    label: 'Speaking',
+    label: 'Nói',
     border: 'border-[#C96A2E]',
     bg: 'bg-[#C96A2E]',
     text: 'text-[#C96A2E]',

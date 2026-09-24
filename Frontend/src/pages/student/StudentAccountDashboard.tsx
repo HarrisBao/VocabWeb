@@ -43,10 +43,10 @@ interface DashboardData {
 }
 
 const SKILL_PILLS = [
-  { id: 'READING', label: 'Reading', bg: 'bg-[#DDF4EA]', text: 'text-[#1E7A57]' },
-  { id: 'LISTENING', label: 'Listening', bg: 'bg-[#EEE7FB]', text: 'text-[#7C5CC4]' },
-  { id: 'WRITING', label: 'Writing', bg: 'bg-[#E6F0FB]', text: 'text-[#3B82C4]' },
-  { id: 'SPEAKING', label: 'Speaking', bg: 'bg-[#FBEEDC]', text: 'text-[#C96A2E]' }
+  { id: 'READING', label: 'Đọc hiểu', bg: 'bg-[#DDF4EA]', text: 'text-[#1E7A57]' },
+  { id: 'LISTENING', label: 'Nghe', bg: 'bg-[#EEE7FB]', text: 'text-[#7C5CC4]' },
+  { id: 'WRITING', label: 'Viết', bg: 'bg-[#E6F0FB]', text: 'text-[#3B82C4]' },
+  { id: 'SPEAKING', label: 'Nói', bg: 'bg-[#FBEEDC]', text: 'text-[#C96A2E]' }
 ];
 
 export const StudentAccountDashboard: React.FC = () => {

@@ -8,10 +8,10 @@ interface BottomNavProps {
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Trang học', icon: Home, activeColor: 'text-emerald-700' },
-  { id: 'reading', label: 'Reading', icon: BookOpen, activeColor: 'text-[#1E7A57]' },
-  { id: 'listening', label: 'Listening', icon: Headphones, activeColor: 'text-[#7C5CC4]' },
-  { id: 'writing', label: 'Writing', icon: Edit3, activeColor: 'text-[#3B82C4]' },
-  { id: 'speaking', label: 'Speaking', icon: MessageCircle, activeColor: 'text-[#C96A2E]' },
+  { id: 'reading', label: 'Đọc hiểu', icon: BookOpen, activeColor: 'text-[#1E7A57]' },
+  { id: 'listening', label: 'Nghe', icon: Headphones, activeColor: 'text-[#7C5CC4]' },
+  { id: 'writing', label: 'Viết', icon: Edit3, activeColor: 'text-[#3B82C4]' },
+  { id: 'speaking', label: 'Nói', icon: MessageCircle, activeColor: 'text-[#C96A2E]' },
 ];
 
 export const StudentBottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab }) => {

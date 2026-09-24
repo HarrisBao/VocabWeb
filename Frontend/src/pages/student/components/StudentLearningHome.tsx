@@ -10,10 +10,10 @@ interface LearningHomeProps {
 }
 
 const SKILL_CARDS = [
-  { id: 'reading', label: 'Reading', icon: BookOpen, color: 'text-[#1E7A57]', bg: 'bg-[#DDF4EA]', border: 'border-[#1E7A57]/20', hover: 'hover:border-[#1E7A57]/40 hover:shadow-[#1E7A57]/10' },
-  { id: 'listening', label: 'Listening', icon: Headphones, color: 'text-[#7C5CC4]', bg: 'bg-[#EEE7FB]', border: 'border-[#7C5CC4]/20', hover: 'hover:border-[#7C5CC4]/40 hover:shadow-[#7C5CC4]/10' },
-  { id: 'writing', label: 'Writing', icon: Edit3, color: 'text-[#3B82C4]', bg: 'bg-[#E6F0FB]', border: 'border-[#3B82C4]/20', hover: 'hover:border-[#3B82C4]/40 hover:shadow-[#3B82C4]/10' },
-  { id: 'speaking', label: 'Speaking', icon: MessageCircle, color: 'text-[#C96A2E]', bg: 'bg-[#FBEEDC]', border: 'border-[#C96A2E]/20', hover: 'hover:border-[#C96A2E]/40 hover:shadow-[#C96A2E]/10' },
+  { id: 'reading', label: 'Đọc hiểu', icon: BookOpen, color: 'text-[#1E7A57]', bg: 'bg-[#DDF4EA]', border: 'border-[#1E7A57]/20', hover: 'hover:border-[#1E7A57]/40 hover:shadow-[#1E7A57]/10' },
+  { id: 'listening', label: 'Nghe', icon: Headphones, color: 'text-[#7C5CC4]', bg: 'bg-[#EEE7FB]', border: 'border-[#7C5CC4]/20', hover: 'hover:border-[#7C5CC4]/40 hover:shadow-[#7C5CC4]/10' },
+  { id: 'writing', label: 'Viết', icon: Edit3, color: 'text-[#3B82C4]', bg: 'bg-[#E6F0FB]', border: 'border-[#3B82C4]/20', hover: 'hover:border-[#3B82C4]/40 hover:shadow-[#3B82C4]/10' },
+  { id: 'speaking', label: 'Nói', icon: MessageCircle, color: 'text-[#C96A2E]', bg: 'bg-[#FBEEDC]', border: 'border-[#C96A2E]/20', hover: 'hover:border-[#C96A2E]/40 hover:shadow-[#C96A2E]/10' },
 ];
 
 export const StudentLearningHome: React.FC<LearningHomeProps> = ({ cls, skillContexts, setActiveTab, classId }) => {
@@ -94,16 +94,16 @@ export const StudentLearningHome: React.FC<LearningHomeProps> = ({ cls, skillCon
               <BookOpen className="w-6 h-6" />
             </div>
             <div>
-              <p className="font-bold text-gray-900">Vocabulary</p>
-              <p className="text-sm font-medium text-gray-500">Truy cập qua các kỹ năng Reading hoặc Listening</p>
+              <p className="font-bold text-gray-900">Từ vựng</p>
+              <p className="text-sm font-medium text-gray-500">Truy cập qua các kỹ năng Đọc hiểu hoặc Nghe</p>
             </div>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button onClick={() => setActiveTab('reading')} className="flex-1 md:flex-none px-5 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition-colors text-sm">
-              Ôn Reading
+              Ôn Đọc hiểu
             </button>
             <button onClick={() => setActiveTab('listening')} className="flex-1 md:flex-none px-5 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition-colors text-sm">
-              Ôn Listening
+              Ôn Nghe
             </button>
           </div>
         </div>

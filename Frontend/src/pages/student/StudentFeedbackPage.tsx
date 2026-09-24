@@ -60,7 +60,7 @@ interface SkillDefinition {
 const SKILLS_CONFIG: SkillDefinition[] = [
   {
     key: 'READING',
-    name: 'Reading',
+    name: 'Đọc hiểu',
     vietnameseName: 'Kỹ năng Đọc',
     icon: BookOpen,
     accentColor: '#1E7A57',
@@ -68,7 +68,7 @@ const SKILLS_CONFIG: SkillDefinition[] = [
   },
   {
     key: 'LISTENING',
-    name: 'Listening',
+    name: 'Nghe',
     vietnameseName: 'Kỹ năng Nghe',
     icon: Headphones,
     accentColor: '#7C5CC4',
@@ -76,7 +76,7 @@ const SKILLS_CONFIG: SkillDefinition[] = [
   },
   {
     key: 'WRITING',
-    name: 'Writing',
+    name: 'Viết',
     vietnameseName: 'Kỹ năng Viết',
     icon: PenLine,
     accentColor: '#3B82C4',
@@ -84,7 +84,7 @@ const SKILLS_CONFIG: SkillDefinition[] = [
   },
   {
     key: 'SPEAKING',
-    name: 'Speaking',
+    name: 'Nói',
     vietnameseName: 'Kỹ năng Nói',
     icon: Mic,
     accentColor: '#C96A2E',

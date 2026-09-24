@@ -20,7 +20,7 @@ export interface SkillMetadata {
 export const SKILL_REGISTRY: Record<SkillType, SkillMetadata> = {
   READING: {
     id: 'READING',
-    label: 'Reading',
+    label: 'Đọc hiểu',
     description: 'Từ vựng & bài đọc',
     status: 'ACTIVE',
     accentClass: 'bg-reading-bg text-reading-text',
@@ -28,7 +28,7 @@ export const SKILL_REGISTRY: Record<SkillType, SkillMetadata> = {
   },
   LISTENING: {
     id: 'LISTENING',
-    label: 'Listening',
+    label: 'Nghe',
     description: 'Luyện nghe',
     status: 'COMING_SOON',
     accentClass: 'bg-listening-bg text-listening-text',
@@ -37,7 +37,7 @@ export const SKILL_REGISTRY: Record<SkillType, SkillMetadata> = {
   },
   WRITING: {
     id: 'WRITING',
-    label: 'Writing',
+    label: 'Viết',
     description: 'Luyện viết',
     status: 'COMING_SOON',
     accentClass: 'bg-writing-bg text-writing-text',
@@ -46,7 +46,7 @@ export const SKILL_REGISTRY: Record<SkillType, SkillMetadata> = {
   },
   SPEAKING: {
     id: 'SPEAKING',
-    label: 'Speaking',
+    label: 'Nói',
     description: 'Luyện nói',
     status: 'COMING_SOON',
     accentClass: 'bg-speaking-bg text-speaking-text',

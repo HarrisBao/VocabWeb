@@ -25,7 +25,7 @@ const SKILL_COLORS: Record<string, string> = {
 };
 
 const SKILL_LABELS: Record<string, string> = {
-  READING: 'Reading', LISTENING: 'Listening', WRITING: 'Writing', SPEAKING: 'Speaking'
+  READING: 'Đọc hiểu', LISTENING: 'Nghe', WRITING: 'Viết', SPEAKING: 'Nói'
 };
 
 export default function AdminDashboardPage() {

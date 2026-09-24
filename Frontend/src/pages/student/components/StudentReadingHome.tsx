@@ -18,7 +18,7 @@ export const StudentReadingHome: React.FC<ReadingHomeProps> = ({ classId, readin
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
       <SkillBanner
-        title="Reading"
+        title="Đọc hiểu"
         subtitle="Luyện tập kỹ năng Đọc hiểu"
         icon={BookOpen}
         bgGradient={['#DDF4EA', '#CDEEE2']}
@@ -29,22 +29,12 @@ export const StudentReadingHome: React.FC<ReadingHomeProps> = ({ classId, readin
 
       {/* VOCABULARY OVERVIEW CARD */}
       <section className="space-y-4">
-        <BilingualText 
-          primary={vocabularyLabels.vocabulary.en}
-          secondary={vocabularyLabels.vocabulary.vi}
-          primaryClass="text-lg font-black text-gray-900 px-2"
-          secondaryClass="text-sm font-medium text-gray-500 px-2 -mt-1 block"
-        />
+        <span className="text-lg font-black text-gray-900 px-2">{vocabularyLabels.vocabulary.vi}</span>
         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:border-[#1D7A61]/30 hover:shadow-md transition-all">
           <div>
-            <BilingualText 
-              primary={vocabularyLabels.vocabularyForReading.en}
-              secondary={vocabularyLabels.vocabularyForReading.vi}
-              primaryClass="font-bold text-gray-900 text-lg"
-              secondaryClass="text-gray-500 font-medium text-sm block mt-0.5"
-            />
+            <span className="font-bold text-gray-900 text-lg block mb-1">{vocabularyLabels.vocabularyForReading.vi}</span>
             <div className="flex items-center gap-3 mt-3 text-sm font-bold text-emerald-700 bg-emerald-50 w-fit px-3 py-1 rounded-xl">
-              <span>{vocabUnits.length} {vocabularyLabels.vocabularySets.en}</span>
+              <span>{vocabUnits.length} {vocabularyLabels.vocabularySets.vi}</span>
             </div>
           </div>
           
@@ -52,13 +42,7 @@ export const StudentReadingHome: React.FC<ReadingHomeProps> = ({ classId, readin
             to={`/student/classes/${classId}/reading-vocabulary`}
             className="w-full md:w-auto px-6 py-3 bg-gray-50 hover:bg-emerald-50 text-emerald-700 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors border border-transparent hover:border-emerald-100"
           >
-            <BilingualText 
-              primary={vocabularyLabels.viewVocabulary.en}
-              secondary={vocabularyLabels.viewVocabulary.vi}
-              primaryClass=""
-              secondaryClass="font-normal opacity-80 ml-1"
-              containerClass="flex items-baseline"
-            />
+            <span className="font-bold">{vocabularyLabels.viewVocabulary.vi}</span>
             <ChevronRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
@@ -66,7 +50,7 @@ export const StudentReadingHome: React.FC<ReadingHomeProps> = ({ classId, readin
 
       {/* BÀI TẬP READING */}
       <section className="space-y-4">
-        <h2 className="text-lg font-black text-gray-900 px-2">Bài tập Reading</h2>
+        <h2 className="text-lg font-black text-gray-900 px-2">Bài tập Đọc hiểu</h2>
         {readings.length === 0 ? (
           <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center shadow-sm">
             <p className="text-gray-500 font-medium">Hiện chưa có bài tập nào.</p>
