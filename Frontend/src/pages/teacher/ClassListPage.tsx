@@ -20,7 +20,7 @@ interface ClassItem {
 export const ClassListPage: React.FC = () => {
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  
   const [newClassName, setNewClassName] = useState('')
   const [newClassCode, setNewClassCode] = useState('')
   const [newClassDesc, setNewClassDesc] = useState('')
@@ -97,9 +97,7 @@ export const ClassListPage: React.FC = () => {
             Mỗi lớp sở hữu 1 đường link cố định. Gửi link 1 lần, học viên có thể truy cập toàn bộ bài học được giao.
           </p>
         </div>
-        <Button size="md" onClick={() => setIsCreateModalOpen(true)} className="font-bold shadow-sm">
-          + Tạo lớp học mới
-        </Button>
+        
       </div>
 
       {/* Message alert */}
@@ -188,7 +186,7 @@ export const ClassListPage: React.FC = () => {
           <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
             Tạo lớp học để tập hợp các bài học từ vựng và bài kiểm tra cho học viên.
           </p>
-          <Button size="md" onClick={() => setIsCreateModalOpen(true)}>+ Tạo lớp học mới</Button>
+          
         </div>
       )}
 

@@ -1,3 +1,4 @@
+using VocabWeb.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -333,6 +334,81 @@ public class AdminController : ControllerBase
     // ============================================================
     // OVERVIEW — classes with skill offering summary
     // ============================================================
+
+    
+    
+    [HttpPost("classes")]
+    public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        
+        var adminId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(adminId)) return Unauthorized();
+
+        var code = !string.IsNullOrWhiteSpace(dto.Code)
+            ? dto.Code.Trim().ToUpperInvariant()
+            : "ITL-" + Guid.NewGuid().ToString("N").Substring(0, 6).ToUpperInvariant();
+
+        var codeExists = await _db.Classes.AnyAsync(c => c.Code == code);
+        if (codeExists)
+        {
+            code = "ITL-" + Guid.NewGuid().ToString("N").Substring(0, 6).ToUpperInvariant();
+        }
+
+        var cls = new Class
+        {
+            Name = dto.Name.Trim(),
+            Code = code,
+            Description = dto.Description?.Trim(),
+            FixedLinkToken = Guid.NewGuid().ToString("N"),
+            TeacherId = adminId, // Use admin ID as creator to satisfy FK
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Classes.Add(cls);
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Tạo lớp học thành công.", id = cls.Id });
+    }
+
+    [HttpPut("classes/{id}")]
+    public async Task<IActionResult> UpdateClass(int id, [FromBody] CreateClassDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var cls = await _db.Classes.Where(c => c.Id == id && !c.IsArchived).FirstOrDefaultAsync();
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
+
+        cls.Name = dto.Name.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.Code))
+        {
+            cls.Code = dto.Code.Trim().ToUpperInvariant();
+        }
+        cls.Description = dto.Description?.Trim();
+        cls.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Cập nhật thông tin lớp thành công." });
+    }
+
+    [HttpDelete("classes/{id}")]
+    public async Task<IActionResult> DeleteClass(int id)
+    {
+        var cls = await _db.Classes.Where(c => c.Id == id && !c.IsArchived).FirstOrDefaultAsync();
+        if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học." });
+
+        cls.IsArchived = true;
+        cls.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Đã xóa lớp học thành công." });
+    }
+
+
+    [HttpGet("teachers")]
+    public async Task<IActionResult> GetTeachers()
+    {
+        var teachers = await _userManager.GetUsersInRoleAsync("Teacher");
+        return Ok(teachers.Where(t => t.IsActive).Select(t => new { t.Id, t.FullName, t.Email }));
+    }
 
     [HttpGet("overview")]
     public async Task<IActionResult> GetAdminOverview()
