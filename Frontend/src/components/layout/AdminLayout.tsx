@@ -84,13 +84,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     <Link
                       key={item.to}
                       to={item.to}
-                      className={\`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors \${
+                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                         isActive
                           ? 'bg-emerald-500/10 text-emerald-400'
                           : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                      }\`}
+                      }`}
                     >
-                      <Icon className={\`w-4 h-4 \${isActive ? 'text-emerald-400' : 'text-gray-400'}\`} />
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-gray-400'}`} />
                       {item.label}
                     </Link>
                   );

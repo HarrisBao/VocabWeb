@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
                     <div className="space-y-1.5">
                       {cls.skillOfferings.map(off => (
                         <div key={off.skill} className="flex items-center justify-between text-xs">
-                          <span className={\`px-1.5 py-0.5 rounded font-medium \${SKILL_COLORS[off.skill]}\`}>
+                          <span className={`px-1.5 py-0.5 rounded font-medium ${SKILL_COLORS[off.skill]}`}>
                             {SKILL_LABELS[off.skill] || off.skill}
                           </span>
                           <span className="text-gray-600 truncate ml-2 text-right">
@@ -164,7 +164,7 @@ export default function AdminDashboardPage() {
 
                 <div className="mt-4 pt-4 border-t flex justify-end">
                   <Link
-                    to={\`/admin/classes/\${cls.id}\`}
+                    to={`/admin/classes/${cls.id}`}
                     className="flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700"
                   >
                     Quản lý lớp <ChevronRight className="w-3.5 h-3.5 ml-0.5" />

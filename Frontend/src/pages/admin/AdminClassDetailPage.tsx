@@ -40,7 +40,7 @@ export default function AdminClassDetailPage() {
   const [classCode, setClassCode] = useState('');
 
   const loadOfferings = async () => {
-    const data = await api.get<SkillOffering[]>(`/admin/classes/\${classId}/skill-offerings`);
+    const data = await api.get<SkillOffering[]>(`/admin/classes/${classId}/skill-offerings`);
     setOfferings(data);
   };
 
@@ -53,7 +53,7 @@ export default function AdminClassDetailPage() {
           api.get<TeacherInfo[]>('/admin/teachers')
         ]);
         const cls = overviewData.find(c => c.id === classId);
-        setClassName(cls?.name ?? \`Lớp #\${classId}\`);
+        setClassName(cls?.name ?? `Lớp #${classId}`);
         setClassCode(cls?.code ?? '');
         setTeachers(teachersData);
       } finally {
@@ -73,7 +73,7 @@ export default function AdminClassDetailPage() {
     if (!activeSkill || !selectedTeacherId) return;
     setSaving(true);
     try {
-      await api.put(\`/admin/classes/\${classId}/skill-offerings/\${activeSkill}\`, {
+      await api.put(`/admin/classes/${classId}/skill-offerings/${activeSkill}`, {
         teacherId: selectedTeacherId,
         isActive: true,
       });
@@ -87,9 +87,9 @@ export default function AdminClassDetailPage() {
   };
 
   const handleClearAssignment = async (skill: string) => {
-    if (!confirm(\`Xóa phân công giáo viên cho \${SKILL_LABELS[skill]}?\`)) return;
+    if (!confirm(`Xóa phân công giáo viên cho ${SKILL_LABELS[skill]}?`)) return;
     try {
-      await api.put(\`/admin/classes/\${classId}/skill-offerings/\${skill}\`, {
+      await api.put(`/admin/classes/${classId}/skill-offerings/${skill}`, {
         teacherId: null,
         isActive: true,
       });
